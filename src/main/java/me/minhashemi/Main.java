@@ -2,7 +2,6 @@ package me.minhashemi;
 
 public class Main {
     public static void main(String[] args) {
-
+        new me.minhashemi.view.Window();
         }
-    }
 }
