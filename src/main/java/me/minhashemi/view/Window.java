@@ -90,7 +90,6 @@ public class Window extends JFrame {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-        // Placeholder for actual stage buttons
         for (int i = 1; i <= 5; i++) {
             JButton stageButton = new JButton("Level " + i);
             int finalI = i;
@@ -108,18 +107,59 @@ public class Window extends JFrame {
     private void handleContinue() {
         String playerName = JOptionPane.showInputDialog(this, "Enter Your name: ");
         if (playerName != null && !playerName.trim().isEmpty()) {
-            // TODO: Load saved stage from config or save file
-            int lastStage = Config.lastPlayedStage; // suppose you store it
+            int lastStage = Config.lastPlayedStage;
             startStage(lastStage);
         }
     }
 
-    private void startStage(int stageNumber) {
-        // TODO: Load the stage scene
-//        JPanel gameScreen = new Screen(Config.WIDTH, Config.HEIGHT, stageNumber); // assuming Screen supports this
-//        mainPanel.add(gameScreen, "GameScreen");
-//        showCard("GameScreen");
+//    private void startStage(int stageNumber) {
+//        // Minimize all other windows
+//        for (Frame frame : Frame.getFrames()) {
+//            if (frame != this) frame.setState(Frame.ICONIFIED);
+//        }
+//
+//        // Set frame properties as described
+//        setResizable(false);
+//        setUndecorated(true);
+//        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+//
+//        // Load stage view
+//        mainPanel.removeAll();
+//        System.out.println("working!");
+////        JPanel gameScreen = new GameScreen(Config.WIDTH, Config.HEIGHT, stageNumber);
+////        mainPanel.add(gameScreen, "GameScreen");
+////        showCard("GameScreen");
+//
+//        revalidate();
+//        repaint();
+//    }
+
+private void startStage(int stageNumber) {
+    dispose(); // Make frame undisplayable
+    setUndecorated(true);
+    setResizable(false);
+    setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+
+    GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+    if (gd.isFullScreenSupported()) {
+        gd.setFullScreenWindow(this); // goes fullscreen
+    } else {
+        setSize(Config.WIDTH, Config.HEIGHT);
+        setLocationRelativeTo(null);
+        setVisible(true);
     }
+
+    mainPanel = new JPanel(new BorderLayout());
+    JLabel label = new JLabel("Stage " + stageNumber + " started!");
+    label.setFont(new Font("Arial", Font.BOLD, 24));
+    label.setHorizontalAlignment(SwingConstants.CENTER);
+    mainPanel.add(label, BorderLayout.CENTER);
+
+    setContentPane(mainPanel);
+    revalidate();
+    repaint();
+}
+
 
     private void showCard(String name) {
         CardLayout cl = (CardLayout) mainPanel.getLayout();
@@ -131,9 +171,7 @@ public class Window extends JFrame {
 
         try {
             InputStream audioSrc = getClass().getClassLoader().getResourceAsStream("theme.wav");
-            if (audioSrc == null) {
-                throw new IOException("Resource not found: theme.wav");
-            }
+            if (audioSrc == null) throw new IOException("Resource not found: theme.wav");
 
             InputStream bufferedIn = new BufferedInputStream(audioSrc);
             AudioInputStream audioStream = AudioSystem.getAudioInputStream(bufferedIn);
@@ -145,7 +183,6 @@ public class Window extends JFrame {
             System.err.println("Failed to play music: " + e.getMessage());
         }
     }
-
 
     private void stopMusic() {
         if (clip != null) {
