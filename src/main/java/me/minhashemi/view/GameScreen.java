@@ -1,34 +1,55 @@
 package me.minhashemi.view;
 
-import me.minhashemi.model.Packet;
-import me.minhashemi.model.PortType;
+import me.minhashemi.model.*;
+import me.minhashemi.model.Config;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;
 
 public class GameScreen extends JPanel {
-    public GameScreen() {
-        setLayout(null);
-        setBackground(Color.DARK_GRAY);
+    private final LevelData levelData;
 
-        Packet packet1 = new Packet(
-                List.of(PortType.SQUARE, PortType.TRIANGLE),
-                List.of(PortType.SQUARE)
-        );
 
-        Packet packet2 = new Packet(
-                List.of(PortType.TRIANGLE),
-                List.of(PortType.TRIANGLE, PortType.SQUARE, PortType.TRIANGLE)
-        );
-
-        addPacket(packet1, 100, 100);
-        addPacket(packet2, 250, 200);
+    public GameScreen(LevelData levelData) {
+        this.levelData = levelData;
+        setLayout(null); // we'll manually position everything
     }
 
-    private void addPacket(Packet packet, int x, int y) {
-        PacketComponent comp = new PacketComponent(packet);
-        comp.setBounds(x, y, 100, packet.getHeight());
-        add(comp);
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        for (Packet packet : levelData.packets) {
+            drawPacket(g, packet);
+        }
+    }
+
+    private void drawPacket(Graphics g, Packet packet) {
+        int maxPorts = Math.max(packet.inputs.size(), packet.outputs.size());
+        int height = maxPorts * Config.STANDARD_HEIGHT;
+
+        int x = packet.position.x;
+        int y = packet.position.y;
+
+        g.setColor(Color.GRAY);
+        g.fillRect(x, y, Config.PACKET_WIDTH, height);
+
+        for (int i = 0; i < packet.inputs.size(); i++) {
+            drawPort(g, packet.inputs.get(i), x - Config.PORT_SIZE, y + i * Config.STANDARD_HEIGHT + (Config.STANDARD_HEIGHT - Config.PORT_SIZE) / 2);
+        }
+
+        for (int i = 0; i < packet.outputs.size(); i++) {
+            drawPort(g, packet.outputs.get(i), x + Config.PACKET_WIDTH, y + i * Config.STANDARD_HEIGHT + (Config.STANDARD_HEIGHT - Config.PORT_SIZE) / 2);
+        }
+    }
+
+    private void drawPort(Graphics g, PortType type, int x, int y) {
+        g.setColor(Color.BLACK);
+        if (type == PortType.SQUARE) {
+            g.fillRect(x, y, Config.PORT_SIZE, Config.PORT_SIZE);
+        } else {
+            int[] xs = {x, x + Config.PORT_SIZE / 2, x + Config.PORT_SIZE};
+            int[] ys = {y + Config.PORT_SIZE, y, y + Config.PORT_SIZE};
+            g.fillPolygon(xs, ys, 3);
+        }
     }
 }

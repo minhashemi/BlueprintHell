@@ -1,6 +1,8 @@
 package me.minhashemi.view;
 
 import me.minhashemi.model.Config;
+import me.minhashemi.model.LevelData;
+import me.minhashemi.model.LevelLoader;
 
 import javax.sound.sampled.*;
 import javax.swing.*;
@@ -113,7 +115,13 @@ public class Window extends JFrame {
     }
 
     private void startStage(int stageNumber) {
-        dispose();
+        LevelData levelData = LevelLoader.loadLevel(stageNumber);
+
+        // Remove previous content
+        getContentPane().removeAll();
+
+        // Set to full screen
+        dispose(); // Remove decorations before going fullscreen
         setUndecorated(true);
         setResizable(false);
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -122,15 +130,20 @@ public class Window extends JFrame {
         if (gd.isFullScreenSupported()) {
             gd.setFullScreenWindow(this);
         } else {
+            // fallback if fullscreen is not supported
             setSize(Config.WIDTH, Config.HEIGHT);
             setLocationRelativeTo(null);
             setVisible(true);
         }
 
-        setContentPane(new GameScreen());
+        // Add new game screen
+        GameScreen gameScreen = new GameScreen(levelData);
+        setContentPane(gameScreen);
+
         revalidate();
         repaint();
     }
+
 
 
     private void showCard(String name) {

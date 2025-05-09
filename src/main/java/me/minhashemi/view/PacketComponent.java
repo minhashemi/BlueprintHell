@@ -2,6 +2,7 @@ package me.minhashemi.view;
 
 import me.minhashemi.model.Packet;
 import me.minhashemi.model.PortType;
+import me.minhashemi.model.Config;
 
 import javax.swing.*;
 import java.awt.*;
@@ -26,7 +27,7 @@ public class PacketComponent extends JComponent {
         g2d.setColor(Color.LIGHT_GRAY);
         int rows = Math.max(packet.getInputs().size(), packet.getOutputs().size());
         for (int i = 0; i < rows; i++) {
-            g2d.fillRect(20, i * Packet.STANDARD_PORT_HEIGHT, WIDTH - 40, Packet.STANDARD_PORT_HEIGHT - 2);
+            g2d.fillRect(20, i * Config.STANDARD_HEIGHT, WIDTH - 40, Config.STANDARD_HEIGHT - 2);
         }
 
         g2d.setColor(Color.BLACK);
@@ -34,13 +35,13 @@ public class PacketComponent extends JComponent {
 
         // Draw input ports (left side)
         for (int i = 0; i < packet.getInputs().size(); i++) {
-            int y = i * Packet.STANDARD_PORT_HEIGHT + Packet.STANDARD_PORT_HEIGHT / 2;
+            int y = i * Config.STANDARD_HEIGHT + Config.STANDARD_HEIGHT / 2;
             drawPort(g2d, 5, y, packet.getInputs().get(i));
         }
 
         // Draw output ports (right side)
         for (int i = 0; i < packet.getOutputs().size(); i++) {
-            int y = i * Packet.STANDARD_PORT_HEIGHT + Packet.STANDARD_PORT_HEIGHT / 2;
+            int y = i * Config.STANDARD_HEIGHT + Config.STANDARD_HEIGHT / 2;
             drawPort(g2d, WIDTH - 5 - PORT_SIZE, y, packet.getOutputs().get(i));
         }
     }

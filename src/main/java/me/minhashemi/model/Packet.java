@@ -1,17 +1,13 @@
 package me.minhashemi.model;
 
 import java.util.List;
+import me.minhashemi.model.Config;
 
 public class Packet {
-    public static final int STANDARD_PORT_HEIGHT = 30;
-
-    private final List<PortType> inputs;
-    private final List<PortType> outputs;
-
-    public Packet(List<PortType> inputs, List<PortType> outputs) {
-        this.inputs = inputs;
-        this.outputs = outputs;
-    }
+    public int packet_id;
+    public Position position;
+    public List<PortType> inputs;
+    public List<PortType> outputs;
 
     public List<PortType> getInputs() {
         return inputs;
@@ -22,6 +18,15 @@ public class Packet {
     }
 
     public int getHeight() {
-        return Math.max(inputs.size(), outputs.size()) * STANDARD_PORT_HEIGHT;
+        int rows = Math.max(inputs.size(), outputs.size());
+        return rows * Config.STANDARD_HEIGHT;
+    }
+
+    public int getX() {
+        return position.x;
+    }
+
+    public int getY() {
+        return position.y;
     }
 }
