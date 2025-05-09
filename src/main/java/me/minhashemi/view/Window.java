@@ -112,53 +112,25 @@ public class Window extends JFrame {
         }
     }
 
-//    private void startStage(int stageNumber) {
-//        // Minimize all other windows
-//        for (Frame frame : Frame.getFrames()) {
-//            if (frame != this) frame.setState(Frame.ICONIFIED);
-//        }
-//
-//        // Set frame properties as described
-//        setResizable(false);
-//        setUndecorated(true);
-//        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-//
-//        // Load stage view
-//        mainPanel.removeAll();
-//        System.out.println("working!");
-////        JPanel gameScreen = new GameScreen(Config.WIDTH, Config.HEIGHT, stageNumber);
-////        mainPanel.add(gameScreen, "GameScreen");
-////        showCard("GameScreen");
-//
-//        revalidate();
-//        repaint();
-//    }
+    private void startStage(int stageNumber) {
+        dispose();
+        setUndecorated(true);
+        setResizable(false);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
-private void startStage(int stageNumber) {
-    dispose(); // Make frame undisplayable
-    setUndecorated(true);
-    setResizable(false);
-    setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+        if (gd.isFullScreenSupported()) {
+            gd.setFullScreenWindow(this);
+        } else {
+            setSize(Config.WIDTH, Config.HEIGHT);
+            setLocationRelativeTo(null);
+            setVisible(true);
+        }
 
-    GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-    if (gd.isFullScreenSupported()) {
-        gd.setFullScreenWindow(this); // goes fullscreen
-    } else {
-        setSize(Config.WIDTH, Config.HEIGHT);
-        setLocationRelativeTo(null);
-        setVisible(true);
+        setContentPane(new GameScreen());
+        revalidate();
+        repaint();
     }
-
-    mainPanel = new JPanel(new BorderLayout());
-    JLabel label = new JLabel("Stage " + stageNumber + " started!");
-    label.setFont(new Font("Arial", Font.BOLD, 24));
-    label.setHorizontalAlignment(SwingConstants.CENTER);
-    mainPanel.add(label, BorderLayout.CENTER);
-
-    setContentPane(mainPanel);
-    revalidate();
-    repaint();
-}
 
 
     private void showCard(String name) {
