@@ -9,6 +9,9 @@ public class Config {
     public static boolean recordTime = false;
     public static int lastPlayedStage = 1;
 
+    // wires
+    public static final int TOLERANCE = 10; // distance
+
     // packet
     public static final int PORT_SIZE = 10;
     public static final int STANDARD_HEIGHT = 30;
