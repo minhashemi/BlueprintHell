@@ -28,8 +28,8 @@ public class GameScreen extends JPanel {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                // Check if mouse is near any port (input or output)
-                wireStartPort = findNearbyPort(e.getPoint());
+                // Check if mouse is near any output port (starting point)
+                wireStartPort = findNearbyOutputPort(e.getPoint());
                 if (wireStartPort != null && !wireStartPort.isConnected()) {
                     Point startPos = wireStartPort.getPosition();
                     wireStart = new Point(startPos.x + Config.PORT_SIZE / 2, startPos.y + Config.PORT_SIZE / 2);
@@ -46,19 +46,19 @@ public class GameScreen extends JPanel {
 
                 // If a wire was drawn, add it to the list of wires
                 if (wireStart != null && wireStartPort != null) {
-                    PacketPort endPort = findNearbyPort(e.getPoint());
+                    // Check if mouse is near an input port (ending point)
+                    PacketPort endPort = findNearbyInputPort(e.getPoint());
 
                     if (endPort != null && !wireStartPort.isConnected() && !endPort.isConnected()) {
                         Point endPos = endPort.getPosition();
                         wireEnd = new Point(endPos.x + Config.PORT_SIZE / 2, endPos.y + Config.PORT_SIZE / 2);
 
+                        // Add the wire if the port is not already connected
                         wires.add(new Line(wireStart, wireEnd));
                         wireStartPort.setConnected(true);
                         endPort.setConnected(true);
                     }
                 }
-
-
                 repaint();
             }
         });
@@ -136,24 +136,28 @@ public class GameScreen extends JPanel {
         }
     }
 
-    private PacketPort findNearbyPort(Point mousePosition) {
+    private PacketPort findNearbyOutputPort(Point mousePosition) {
         for (Packet packet : levelData.packets) {
-            // Check if mouse is near any input port
-            for (PacketPort port : packet.getInputPorts()) {
-                if (isNearPort(mousePosition, port.getPosition())) {
-                    return port;
-                }
-            }
-
-            // Check if mouse is near any output port
+            // Check if mouse is near any output port (only outputs are allowed to start wires)
             for (PacketPort port : packet.getOutputPorts()) {
-                if (isNearPort(mousePosition, port.getPosition())) {
+                if (!port.isConnected() && isNearPort(mousePosition, port.getPosition())) {
                     return port;
                 }
             }
-
         }
-        return null; // No nearby port found
+        return null; // No nearby output port found
+    }
+
+    private PacketPort findNearbyInputPort(Point mousePosition) {
+        for (Packet packet : levelData.packets) {
+            // Check if mouse is near any input port (only inputs can end wires)
+            for (PacketPort port : packet.getInputPorts()) {
+                if (!port.isConnected() && isNearPort(mousePosition, port.getPosition())) {
+                    return port;
+                }
+            }
+        }
+        return null; // No nearby input port found
     }
 
     private boolean isNearPort(Point mousePosition, Point portPosition) {
