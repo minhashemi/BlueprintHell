@@ -22,7 +22,7 @@ public class GameScreen extends JPanel {
         this.levelData = levelData;
         setLayout(null); // manually position packets
 
-        // ✅ Initialize ports once at setup time
+        // Initialize ports once at setup time
         for (Packet packet : levelData.packets) {
             packet.initializePorts();
         }
@@ -30,6 +30,30 @@ public class GameScreen extends JPanel {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    Line nearby = findNearbyWire(e.getPoint());
+                    if (nearby != null) {
+                        // Free the associated ports
+                        for (Packet packet : levelData.packets) {
+                            for (PacketPort port : packet.getInputPorts()) {
+                                if (isNearPort(nearby.end, port.getPosition())) {
+                                    port.setConnected(false);
+                                }
+                            }
+                            for (PacketPort port : packet.getOutputPorts()) {
+                                if (isNearPort(nearby.start, port.getPosition())) {
+                                    port.setConnected(false);
+                                }
+                            }
+                        }
+
+                        wires.remove(nearby);
+                        repaint();
+                        return; // don't process further
+                    }
+                }
+
+                // Existing left-click logic
                 wireStartPort = findNearbyOutputPort(e.getPoint());
                 if (wireStartPort != null && !wireStartPort.isConnected()) {
                     Point startPos = wireStartPort.getPosition();
@@ -37,6 +61,7 @@ public class GameScreen extends JPanel {
                     wireEnd = wireStart;
                     draggingWire = true;
                 }
+
                 repaint();
             }
 
@@ -160,5 +185,48 @@ public class GameScreen extends JPanel {
             this.start = start;
             this.end = end;
         }
+    }
+    // Detect a wire close to a point (e.g., mouse click)
+    private Line findNearbyWire(Point p) {
+
+        for (Line wire : wires) {
+            if (isPointNearLine(p, wire.start, wire.end, Config.TOLERANCE)) {
+                return wire;
+            }
+        }
+        return null;
+    }
+
+    // Check if point is near a line segment
+    private boolean isPointNearLine(Point p, Point a, Point b, int tolerance) {
+        double dist = ptLineDist(a.x, a.y, b.x, b.y, p.x, p.y);
+        return dist < tolerance;
+    }
+
+    // Compute the shortest distance from a point to a line segment
+    private double ptLineDist(double x1, double y1, double x2, double y2, double px, double py) {
+        double dx = x2 - x1;
+        double dy = y2 - y1;
+        if (dx == 0 && dy == 0) {
+            dx = px - x1;
+            dy = py - y1;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        double t = ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy);
+        if (t < 0) {
+            dx = px - x1;
+            dy = py - y1;
+        } else if (t > 1) {
+            dx = px - x2;
+            dy = py - y2;
+        } else {
+            double nearestX = x1 + t * dx;
+            double nearestY = y1 + t * dy;
+            dx = px - nearestX;
+            dy = py - nearestY;
+        }
+
+        return Math.sqrt(dx * dx + dy * dy);
     }
 }
