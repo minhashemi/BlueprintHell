@@ -6,6 +6,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.CubicCurve2D;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,7 +34,6 @@ public class GameScreen extends JPanel {
                 if (SwingUtilities.isRightMouseButton(e)) {
                     Line nearby = findNearbyWire(e.getPoint());
                     if (nearby != null) {
-                        // Free the associated ports
                         for (Packet packet : levelData.packets) {
                             for (PacketPort port : packet.getInputPorts()) {
                                 if (isNearPort(nearby.end, port.getPosition())) {
@@ -49,11 +49,10 @@ public class GameScreen extends JPanel {
 
                         wires.remove(nearby);
                         repaint();
-                        return; // don't process further
+                        return;
                     }
                 }
 
-                // Existing left-click logic
                 wireStartPort = findNearbyOutputPort(e.getPoint());
                 if (wireStartPort != null && !wireStartPort.isConnected()) {
                     Point startPos = wireStartPort.getPosition();
@@ -112,11 +111,11 @@ public class GameScreen extends JPanel {
         g2.setStroke(new BasicStroke(2));
 
         for (Line wire : wires) {
-            g2.drawLine(wire.start.x, wire.start.y, wire.end.x, wire.end.y);
+            drawBezierWire(g2, wire.start, wire.end);
         }
 
         if (draggingWire && wireStart != null && wireEnd != null) {
-            g2.drawLine(wireStart.x, wireStart.y, wireEnd.x, wireEnd.y);
+            drawBezierWire(g2, wireStart, wireEnd);
         }
     }
 
@@ -177,6 +176,23 @@ public class GameScreen extends JPanel {
         return distance < Config.PORT_SIZE * 2;
     }
 
+    // NEW: draw a smooth wire using a cubic Bézier curve
+    private void drawBezierWire(Graphics2D g2, Point start, Point end) {
+        int ctrlOffset = Math.abs(end.x - start.x) / 2;
+
+        Point ctrl1 = new Point(start.x + ctrlOffset, start.y);
+        Point ctrl2 = new Point(end.x - ctrlOffset, end.y);
+
+        CubicCurve2D curve = new CubicCurve2D.Float(
+                start.x, start.y,
+                ctrl1.x, ctrl1.y,
+                ctrl2.x, ctrl2.y,
+                end.x, end.y
+        );
+
+        g2.draw(curve);
+    }
+
     static class Line {
         Point start;
         Point end;
@@ -186,9 +202,8 @@ public class GameScreen extends JPanel {
             this.end = end;
         }
     }
-    // Detect a wire close to a point (e.g., mouse click)
-    private Line findNearbyWire(Point p) {
 
+    private Line findNearbyWire(Point p) {
         for (Line wire : wires) {
             if (isPointNearLine(p, wire.start, wire.end, Config.TOLERANCE)) {
                 return wire;
@@ -197,13 +212,11 @@ public class GameScreen extends JPanel {
         return null;
     }
 
-    // Check if point is near a line segment
     private boolean isPointNearLine(Point p, Point a, Point b, int tolerance) {
         double dist = ptLineDist(a.x, a.y, b.x, b.y, p.x, p.y);
         return dist < tolerance;
     }
 
-    // Compute the shortest distance from a point to a line segment
     private double ptLineDist(double x1, double y1, double x2, double y2, double px, double py) {
         double dx = x2 - x1;
         double dy = y2 - y1;
