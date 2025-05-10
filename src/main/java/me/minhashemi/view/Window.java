@@ -107,11 +107,12 @@ public class Window extends JFrame {
     }
 
     private void handleContinue() {
-        String playerName = JOptionPane.showInputDialog(this, "Enter Your name: ");
-        if (playerName != null && !playerName.trim().isEmpty()) {
-            int lastStage = Config.lastPlayedStage;
-            startStage(lastStage);
-        }
+//        String playerName = JOptionPane.showInputDialog(this, "Enter Your name: ");
+//        if (playerName != null && !playerName.trim().isEmpty()) {
+//            int lastStage = Config.lastPlayedStage;
+//            startStage(lastStage);
+//        }
+        startStage(Config.lastPlayedStage);
     }
 
     private void startStage(int stageNumber) {

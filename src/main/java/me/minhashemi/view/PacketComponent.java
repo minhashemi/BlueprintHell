@@ -36,14 +36,14 @@ public class PacketComponent extends JComponent {
         // Draw input ports (left side)
         for (int i = 0; i < packet.getInputs().size(); i++) {
             int y = i * Config.STANDARD_HEIGHT + Config.STANDARD_HEIGHT / 2;
-            drawPort(g2d, 5, y, packet.getInputs().get(i));
+            drawPort(g2d, 5, y, packet.getInputs().get(i)); // ← PortType directly
         }
-
         // Draw output ports (right side)
         for (int i = 0; i < packet.getOutputs().size(); i++) {
             int y = i * Config.STANDARD_HEIGHT + Config.STANDARD_HEIGHT / 2;
-            drawPort(g2d, WIDTH - 5 - PORT_SIZE, y, packet.getOutputs().get(i));
+            drawPort(g2d, WIDTH - 5 - PORT_SIZE, y, packet.getOutputs().get(i)); // ← PortType directly
         }
+
     }
 
     private void drawPort(Graphics2D g2d, int x, int yCenter, PortType type) {
