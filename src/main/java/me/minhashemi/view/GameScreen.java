@@ -30,9 +30,9 @@ public class GameScreen extends JPanel {
             public void mousePressed(MouseEvent e) {
                 // Check if mouse is near any port (input or output)
                 wireStartPort = findNearbyPort(e.getPoint());
-                if (wireStartPort != null) {
-                    Point pos = wireStartPort.getPosition();
-                    wireStart = new Point(pos.x + Config.PORT_SIZE / 2, pos.y + Config.PORT_SIZE / 2);
+                if (wireStartPort != null && !wireStartPort.isConnected()) {
+                    Point startPos = wireStartPort.getPosition();
+                    wireStart = new Point(startPos.x + Config.PORT_SIZE / 2, startPos.y + Config.PORT_SIZE / 2);
                     wireEnd = wireStart;
                     draggingWire = true;
                 }
@@ -47,12 +47,17 @@ public class GameScreen extends JPanel {
                 // If a wire was drawn, add it to the list of wires
                 if (wireStart != null && wireStartPort != null) {
                     PacketPort endPort = findNearbyPort(e.getPoint());
-                    if (endPort != null) {
+
+                    if (endPort != null && !wireStartPort.isConnected() && !endPort.isConnected()) {
                         Point endPos = endPort.getPosition();
                         wireEnd = new Point(endPos.x + Config.PORT_SIZE / 2, endPos.y + Config.PORT_SIZE / 2);
+
                         wires.add(new Line(wireStart, wireEnd));
+                        wireStartPort.setConnected(true);
+                        endPort.setConnected(true);
                     }
                 }
+
 
                 repaint();
             }

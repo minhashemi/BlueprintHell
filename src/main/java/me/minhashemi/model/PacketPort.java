@@ -3,8 +3,9 @@ package me.minhashemi.model;
 import java.awt.Point;
 
 public class PacketPort {
-    private Point position;
-    private PortType type;
+    private final Point position;
+    private final PortType type;
+    private boolean connected = false;
 
     public PacketPort(Point position, PortType type) {
         this.position = position;
@@ -17,5 +18,13 @@ public class PacketPort {
 
     public PortType getType() {
         return type;
+    }
+
+    public boolean isConnected() {
+        return connected;
+    }
+
+    public void setConnected(boolean connected) {
+        this.connected = connected;
     }
 }
