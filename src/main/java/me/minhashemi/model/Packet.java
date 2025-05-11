@@ -6,7 +6,7 @@ import java.util.List;
 
 public class Packet {
     public int packetId;
-    public Position position;
+    public Point position;
     private List<PortType> inputs;
     private List<PortType> outputs;
 
@@ -39,22 +39,25 @@ public class Packet {
         outputPorts.clear();
     }
 
-
-    // ✅ Initialize ports only once
+    // Initialize ports only once
     public void initializePorts() {
         inputPorts.clear();
         outputPorts.clear();
 
+        // Place input ports on the left side of the packet
+        // Initialize input ports on the left side of the packet
         for (int i = 0; i < inputs.size(); i++) {
-            int y = position.y + i * Config.STANDARD_HEIGHT + (Config.STANDARD_HEIGHT - Config.PORT_SIZE) / 2;
-            int x = position.x - Config.PORT_SIZE;
-            inputPorts.add(new PacketPort(new Point(x, y), inputs.get(i)));
+            inputPorts.add(new PacketPort(this, false, inputs.get(i), true, i));  // true for input, passing index
         }
 
+        // Initialize output ports on the right side of the packet
         for (int i = 0; i < outputs.size(); i++) {
-            int y = position.y + i * Config.STANDARD_HEIGHT + (Config.STANDARD_HEIGHT - Config.PORT_SIZE) / 2;
-            int x = position.x + Config.PACKET_WIDTH;
-            outputPorts.add(new PacketPort(new Point(x, y), outputs.get(i)));
+            outputPorts.add(new PacketPort(this, false, outputs.get(i), false, i));  // false for output, passing index
         }
+
+    }
+
+    public void setPosition(Point newPosition) {
+        this.position = newPosition;
     }
 }

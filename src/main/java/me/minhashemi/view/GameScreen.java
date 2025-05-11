@@ -17,13 +17,15 @@ public class GameScreen extends JPanel {
     private boolean draggingWire = false;
     private PacketPort wireStartPort = null;
 
-    private final List<Line> wires = new ArrayList<>();
+    private final List<Wire> wires = new ArrayList<>();
+
+    private Packet selectedPacket = null;
+    private Point dragOffset = null;
 
     public GameScreen(LevelData levelData) {
         this.levelData = levelData;
         setLayout(null); // manually position packets
 
-        // Initialize ports once at setup time
         for (Packet packet : levelData.packets) {
             packet.initializePorts();
         }
@@ -32,21 +34,10 @@ public class GameScreen extends JPanel {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (SwingUtilities.isRightMouseButton(e)) {
-                    Line nearby = findNearbyWire(e.getPoint());
+                    Wire nearby = findNearbyWire(e.getPoint());
                     if (nearby != null) {
-                        for (Packet packet : levelData.packets) {
-                            for (PacketPort port : packet.getInputPorts()) {
-                                if (isNearPort(nearby.end, port.getPosition())) {
-                                    port.setConnected(false);
-                                }
-                            }
-                            for (PacketPort port : packet.getOutputPorts()) {
-                                if (isNearPort(nearby.start, port.getPosition())) {
-                                    port.setConnected(false);
-                                }
-                            }
-                        }
-
+                        nearby.fromPort.setConnected(false);
+                        nearby.toPort.setConnected(false);
                         wires.remove(nearby);
                         repaint();
                         return;
@@ -59,31 +50,43 @@ public class GameScreen extends JPanel {
                     wireStart = new Point(startPos.x + Config.PORT_SIZE / 2, startPos.y + Config.PORT_SIZE / 2);
                     wireEnd = wireStart;
                     draggingWire = true;
+                    repaint();
+                    return;
                 }
 
-                repaint();
+                for (Packet packet : levelData.packets) {
+                    Rectangle bounds = new Rectangle(packet.position.x, packet.position.y, Config.PACKET_WIDTH, packet.getHeight());
+                    if (bounds.contains(e.getPoint())) {
+                        selectedPacket = packet;
+                        dragOffset = new Point(e.getX() - packet.position.x, e.getY() - packet.position.y);
+                        return;
+                    }
+                }
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                wireEnd = e.getPoint();
-                draggingWire = false;
+                if (draggingWire) {
+                    wireEnd = e.getPoint();
+                    draggingWire = false;
 
-                if (wireStart != null && wireStartPort != null) {
-                    PacketPort endPort = findNearbyInputPort(e.getPoint());
+                    if (wireStart != null && wireStartPort != null) {
+                        PacketPort endPort = findNearbyInputPort(e.getPoint());
 
-                    if (endPort != null && !wireStartPort.isConnected() && !endPort.isConnected()) {
-                        Point endPos = endPort.getPosition();
-                        wireEnd = new Point(endPos.x + Config.PORT_SIZE / 2, endPos.y + Config.PORT_SIZE / 2);
-                        wires.add(new Line(wireStart, wireEnd));
-                        wireStartPort.setConnected(true);
-                        endPort.setConnected(true);
+                        if (endPort != null && !wireStartPort.isConnected() && !endPort.isConnected()) {
+                            wireStartPort.setConnected(true);
+                            endPort.setConnected(true);
+                            wires.add(new Wire(wireStartPort, endPort));
+                        }
                     }
+
+                    wireStart = null;
+                    wireStartPort = null;
+                    repaint();
                 }
 
-                wireStart = null;
-                wireStartPort = null;
-                repaint();
+                selectedPacket = null;
+                dragOffset = null;
             }
         });
 
@@ -93,6 +96,10 @@ public class GameScreen extends JPanel {
                 if (draggingWire) {
                     wireEnd = e.getPoint();
                     repaint();
+                } else if (selectedPacket != null && dragOffset != null) {
+                    selectedPacket.setPosition(new Point(e.getX() - dragOffset.x, e.getY() - dragOffset.y));
+                    selectedPacket.initializePorts(); // update port positions
+                    repaint(); // ✅ Ensures wires repaint with updated port positions
                 }
             }
         });
@@ -110,8 +117,8 @@ public class GameScreen extends JPanel {
         Graphics2D g2 = (Graphics2D) g;
         g2.setStroke(new BasicStroke(2));
 
-        for (Line wire : wires) {
-            drawBezierWire(g2, wire.start, wire.end);
+        for (Wire wire : wires) {
+            drawBezierWire(g2, wire.getStart(), wire.getEnd());
         }
 
         if (draggingWire && wireStart != null && wireEnd != null) {
@@ -149,6 +156,21 @@ public class GameScreen extends JPanel {
         }
     }
 
+    private void drawBezierWire(Graphics2D g2, Point start, Point end) {
+        int ctrlOffset = Math.abs(end.x - start.x) / 2;
+        Point ctrl1 = new Point(start.x + ctrlOffset, start.y);
+        Point ctrl2 = new Point(end.x - ctrlOffset, end.y);
+
+        CubicCurve2D curve = new CubicCurve2D.Float(
+                start.x, start.y,
+                ctrl1.x, ctrl1.y,
+                ctrl2.x, ctrl2.y,
+                end.x, end.y
+        );
+
+        g2.draw(curve);
+    }
+
     private PacketPort findNearbyOutputPort(Point mousePosition) {
         for (Packet packet : levelData.packets) {
             for (PacketPort port : packet.getOutputPorts()) {
@@ -176,36 +198,9 @@ public class GameScreen extends JPanel {
         return distance < Config.PORT_SIZE * 2;
     }
 
-    // NEW: draw a smooth wire using a cubic Bézier curve
-    private void drawBezierWire(Graphics2D g2, Point start, Point end) {
-        int ctrlOffset = Math.abs(end.x - start.x) / 2;
-
-        Point ctrl1 = new Point(start.x + ctrlOffset, start.y);
-        Point ctrl2 = new Point(end.x - ctrlOffset, end.y);
-
-        CubicCurve2D curve = new CubicCurve2D.Float(
-                start.x, start.y,
-                ctrl1.x, ctrl1.y,
-                ctrl2.x, ctrl2.y,
-                end.x, end.y
-        );
-
-        g2.draw(curve);
-    }
-
-    static class Line {
-        Point start;
-        Point end;
-
-        Line(Point start, Point end) {
-            this.start = start;
-            this.end = end;
-        }
-    }
-
-    private Line findNearbyWire(Point p) {
-        for (Line wire : wires) {
-            if (isPointNearLine(p, wire.start, wire.end, Config.TOLERANCE)) {
+    private Wire findNearbyWire(Point p) {
+        for (Wire wire : wires) {
+            if (isPointNearLine(p, wire.getStart(), wire.getEnd(), Config.TOLERANCE)) {
                 return wire;
             }
         }
@@ -241,5 +236,26 @@ public class GameScreen extends JPanel {
         }
 
         return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    // ✅ Wire references ports and gets positions live
+    static class Wire {
+        PacketPort fromPort;
+        PacketPort toPort;
+
+        Wire(PacketPort fromPort, PacketPort toPort) {
+            this.fromPort = fromPort;
+            this.toPort = toPort;
+        }
+
+        Point getStart() {
+            Point p = fromPort.getPosition();
+            return new Point(p.x + Config.PORT_SIZE / 2, p.y + Config.PORT_SIZE / 2);
+        }
+
+        Point getEnd() {
+            Point p = toPort.getPosition();
+            return new Point(p.x + Config.PORT_SIZE / 2, p.y + Config.PORT_SIZE / 2);
+        }
     }
 }
