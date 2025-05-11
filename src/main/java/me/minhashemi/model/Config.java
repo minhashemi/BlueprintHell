@@ -11,6 +11,8 @@ public class Config {
 
     // wires
     public static final int TOLERANCE = 10; // distance
+    public static final int PORT_MARGIN = 5; // Margin from the edge of the packet to the first port
+    public static final int PORT_SPACING = 20; // Spacing between ports (vertically)
 
     // packet
     public static final int PORT_SIZE = 10;
