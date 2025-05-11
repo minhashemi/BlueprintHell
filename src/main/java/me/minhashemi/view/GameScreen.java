@@ -73,10 +73,21 @@ public class GameScreen extends JPanel {
                     if (wireStart != null && wireStartPort != null) {
                         PacketPort endPort = findNearbyInputPort(e.getPoint());
 
-                        if (endPort != null && !wireStartPort.isConnected() && !endPort.isConnected()) {
-                            wireStartPort.setConnected(true);
-                            endPort.setConnected(true);
-                            wires.add(new Wire(wireStartPort, endPort));
+                        if (endPort != null
+                                && !wireStartPort.isConnected()
+                                && !endPort.isConnected()
+                                && wireStartPort.isInput() != endPort.isInput()
+                                && wireStartPort.getType() == endPort.getType()) {
+
+                            // Determine correct direction: always connect output → input
+                            PacketPort from = wireStartPort.isInput() ? endPort : wireStartPort;
+                            PacketPort to = wireStartPort.isInput() ? wireStartPort : endPort;
+
+                            wires.add(new Wire(from, to));
+                            from.setConnected(true);
+                            to.setConnected(true);
+                        } else {
+                            System.out.println("Cannot connect ports: must be opposite directions and same type.");
                         }
                     }
 
@@ -88,6 +99,7 @@ public class GameScreen extends JPanel {
                 selectedPacket = null;
                 dragOffset = null;
             }
+
         });
 
         addMouseMotionListener(new MouseAdapter() {
