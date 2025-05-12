@@ -8,6 +8,7 @@ public class Config {
     public static boolean isMusicOn = true;
     public static boolean recordTime = false;
     public static int lastPlayedStage = 1;
+    public static final int CALLOUT_DURATION = 3000; // ms
 
     // wires
     public static final int TOLERANCE = 10; // distance
