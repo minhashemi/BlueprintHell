@@ -12,19 +12,36 @@ import java.util.List;
 
 public class GameScreen extends JPanel {
     private final LevelData levelData;
+
     private Point wireStart = null;
     private Point wireEnd = null;
     private boolean draggingWire = false;
     private PacketPort wireStartPort = null;
 
     private final List<Wire> wires = new ArrayList<>();
+    private double lastTotalWireLength = 0;
 
     private Packet selectedPacket = null;
     private Point dragOffset = null;
 
+    private int temporalProgress = 0;
+    private int packetLoss = 0;
+    private int coins = 0;
+
+    private String calloutMessage = null;
+    private long calloutTimestamp = 0;
+    private static final int CALLOUT_DURATION = 3000; // ms
+
+    private void recalculateTotalWireLength() {
+        lastTotalWireLength = 0;
+        for (Wire wire : wires) {
+            lastTotalWireLength += wire.getLength();
+        }
+    }
+
     public GameScreen(LevelData levelData) {
         this.levelData = levelData;
-        setLayout(null); // manually position packets
+        setLayout(null);
 
         for (Packet packet : levelData.packets) {
             packet.initializePorts();
@@ -39,6 +56,10 @@ public class GameScreen extends JPanel {
                         nearby.fromPort.setConnected(false);
                         nearby.toPort.setConnected(false);
                         wires.remove(nearby);
+                        recalculateTotalWireLength();
+                        Config.remainingWireLength += nearby.getLength();
+                        updateHUD();
+                        showCallout("🗑️ Wire removed. Refunded: " + (int) nearby.getLength());
                         repaint();
                         return;
                     }
@@ -79,15 +100,24 @@ public class GameScreen extends JPanel {
                                 && wireStartPort.isInput() != endPort.isInput()
                                 && wireStartPort.getType() == endPort.getType()) {
 
-                            // Determine correct direction: always connect output → input
                             PacketPort from = wireStartPort.isInput() ? endPort : wireStartPort;
                             PacketPort to = wireStartPort.isInput() ? wireStartPort : endPort;
 
-                            wires.add(new Wire(from, to));
-                            from.setConnected(true);
-                            to.setConnected(true);
+                            Wire wire = new Wire(from, to);
+                            if (wire.getLength() <= Config.remainingWireLength) {
+                                wires.add(wire);
+                                recalculateTotalWireLength();
+                                from.setConnected(true);
+                                to.setConnected(true);
+                                Config.remainingWireLength -= wire.getLength();
+                                coins += 1;
+                                updateHUD();
+                                showCallout("✅ Wire connected. Remaining: " + (int) Config.remainingWireLength);
+                            } else {
+                                showCallout("❌ Not enough wire! Needed: " + (int) wire.getLength());
+                            }
                         } else {
-                            System.out.println("Cannot connect ports: must be opposite directions and same type.");
+                            showCallout("❌ Ports must be opposite directions and same type.");
                         }
                     }
 
@@ -95,6 +125,21 @@ public class GameScreen extends JPanel {
                     wireStartPort = null;
                     repaint();
                 }
+
+                if (selectedPacket != null) {
+                    double newTotalLength = 0;
+                    for (Wire wire : wires) {
+                        newTotalLength += wire.getLength();
+                    }
+
+                    double delta = newTotalLength - lastTotalWireLength;
+                    Config.remainingWireLength -= delta;
+                    lastTotalWireLength = newTotalLength;
+
+                    updateHUD();
+                    repaint();
+                }
+
 
                 selectedPacket = null;
                 dragOffset = null;
@@ -110,23 +155,65 @@ public class GameScreen extends JPanel {
                     repaint();
                 } else if (selectedPacket != null && dragOffset != null) {
                     selectedPacket.setPosition(new Point(e.getX() - dragOffset.x, e.getY() - dragOffset.y));
-                    selectedPacket.initializePorts(); // update port positions
-                    repaint(); // ✅ Ensures wires repaint with updated port positions
+                    selectedPacket.initializePorts();
+                    repaint();
                 }
             }
         });
+
+        Timer calloutTimer = new Timer(100, e -> {
+            if (calloutMessage != null && System.currentTimeMillis() - calloutTimestamp > CALLOUT_DURATION) {
+                calloutMessage = null;
+                repaint();
+            }
+        });
+        calloutTimer.start();
+
+        updateHUD();
+    }
+
+    private void updateHUD() {
+        // Logic only. Drawing happens in paintComponent
+    }
+
+    private void showCallout(String message) {
+        this.calloutMessage = message;
+        this.calloutTimestamp = System.currentTimeMillis();
+        repaint();
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // HUD
+        g.setColor(Color.BLACK);
+        g.setFont(new Font("SansSerif", Font.BOLD, 14));
+        int hudY = 20;
+        g.drawString("Remaining Wire Length: " + (int) Config.remainingWireLength, 10, hudY);
+        g.drawString("Temporal Progress: " + temporalProgress, 250, hudY);
+        g.drawString("Packet Loss: " + packetLoss, 450, hudY);
+        g.drawString("Coins: " + coins, 600, hudY);
+
+        if (calloutMessage != null && System.currentTimeMillis() - calloutTimestamp < CALLOUT_DURATION) {
+            int boxWidth = g.getFontMetrics().stringWidth(calloutMessage) + 20;
+            int boxHeight = 30;
+            int x = (getWidth() - boxWidth) / 2;
+            int y = 40;
+            g.setColor(new Color(255, 220, 220));
+            g.fillRoundRect(x, y, boxWidth, boxHeight, 10, 10);
+            g.setColor(Color.RED);
+            g.drawRoundRect(x, y, boxWidth, boxHeight, 10, 10);
+            g.drawString(calloutMessage, x + 10, y + 20);
+        }
 
         for (Packet packet : levelData.packets) {
             drawPacket(g, packet);
         }
 
         g.setColor(Color.RED);
-        Graphics2D g2 = (Graphics2D) g;
         g2.setStroke(new BasicStroke(2));
 
         for (Wire wire : wires) {
@@ -250,24 +337,58 @@ public class GameScreen extends JPanel {
         return Math.sqrt(dx * dx + dy * dy);
     }
 
-    // ✅ Wire references ports and gets positions live
-    static class Wire {
-        PacketPort fromPort;
-        PacketPort toPort;
+    public static class Wire {
+        public final PacketPort fromPort;
+        public final PacketPort toPort;
 
-        Wire(PacketPort fromPort, PacketPort toPort) {
+        public Wire(PacketPort fromPort, PacketPort toPort) {
             this.fromPort = fromPort;
             this.toPort = toPort;
         }
 
-        Point getStart() {
+        public Point getStart() {
             Point p = fromPort.getPosition();
             return new Point(p.x + Config.PORT_SIZE / 2, p.y + Config.PORT_SIZE / 2);
         }
 
-        Point getEnd() {
+        public Point getEnd() {
             Point p = toPort.getPosition();
             return new Point(p.x + Config.PORT_SIZE / 2, p.y + Config.PORT_SIZE / 2);
+        }
+
+        public double getLength() {
+            return calculateBezierLength(getStart(), getEnd());
+        }
+
+        private double calculateBezierLength(Point start, Point end) {
+            int segments = 20;
+            double length = 0.0;
+
+            int ctrlOffset = Math.abs(end.x - start.x) / 2;
+            Point ctrl1 = new Point(start.x + ctrlOffset, start.y);
+            Point ctrl2 = new Point(end.x - ctrlOffset, end.y);
+
+            Point prev = start;
+            for (int i = 1; i <= segments; i++) {
+                double t = i / (double) segments;
+                Point curr = evaluateBezier(start, ctrl1, ctrl2, end, t);
+                length += prev.distance(curr);
+                prev = curr;
+            }
+
+            return length;
+        }
+
+        private Point evaluateBezier(Point p0, Point c1, Point c2, Point p3, double t) {
+            double x = Math.pow(1 - t, 3) * p0.x
+                    + 3 * Math.pow(1 - t, 2) * t * c1.x
+                    + 3 * (1 - t) * t * t * c2.x
+                    + t * t * t * p3.x;
+            double y = Math.pow(1 - t, 3) * p0.y
+                    + 3 * Math.pow(1 - t, 2) * t * c1.y
+                    + 3 * (1 - t) * t * t * c2.y
+                    + t * t * t * p3.y;
+            return new Point((int) x, (int) y);
         }
     }
 }
