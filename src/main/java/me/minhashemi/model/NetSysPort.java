@@ -6,12 +6,12 @@ public class NetSysPort {
     private final PortType type;
     private boolean connected = false;
     private final boolean isInput;  // Track whether the port is input or output
-    private final NetSys packet;    // Reference to the parent packet
-    private final int index;        // Port index within the packet
+    private final NetSys netsys;    // reference to netsys
+    private final int index;        // port index within netsys
 
-    // Constructor: Accepting Packet, connection status, PortType, and isInput
-    public NetSysPort(NetSys packet, boolean connected, PortType type, boolean isInput, int index) {
-        this.packet = packet;
+    // Constructor: Accepting netsys, connection status, PortType, and isInput
+    public NetSysPort(NetSys netsys, boolean connected, PortType type, boolean isInput, int index) {
+        this.netsys = netsys;
         this.connected = connected;
         this.type = type;
         this.isInput = isInput;
@@ -19,13 +19,13 @@ public class NetSysPort {
     }
 
     public Point getPosition() {
-        int x = packet.position.x;
-        int y = packet.position.y;
+        int x = netsys.position.x;
+        int y = netsys.position.y;
 
         // Calculate the Y position considering margins and spacing
         int portY = y + Config.PORT_MARGIN + index * (Config.PORT_SIZE + Config.PORT_SPACING);
         // Calculate the X position depending on whether it's an input or output port
-        int portX = isInput ? x - Config.PORT_SIZE : x + Config.PACKET_WIDTH;
+        int portX = isInput ? x - Config.PORT_SIZE : x + Config.NETSYS_WIDTH;
 
         return new Point(portX, portY);
     }

@@ -15,7 +15,7 @@ public class InputController {
     private final LevelData levelData;
     private final WireManager wireManager;
     private final HUD hud;
-    private NetSys selectedPacket = null;
+    private NetSys selectedNetSys = null;
     private Point dragOffset = null;
 
     public InputController(GameScreen gameScreen, LevelData levelData, WireManager wireManager, HUD hud) {
@@ -54,11 +54,11 @@ public class InputController {
                     return;
                 }
 
-                for (NetSys packet : levelData.packets) {
-                    Rectangle bounds = new Rectangle(packet.position.x, packet.position.y, Config.PACKET_WIDTH, packet.getHeight());
+                for (NetSys netsys : levelData.packets) {
+                    Rectangle bounds = new Rectangle(netsys.position.x, netsys.position.y, Config.NETSYS_WIDTH, netsys.getHeight());
                     if (bounds.contains(e.getPoint())) {
-                        selectedPacket = packet;
-                        dragOffset = new Point(e.getX() - packet.position.x, e.getY() - packet.position.y);
+                        selectedNetSys = netsys;
+                        dragOffset = new Point(e.getX() - netsys.position.x, e.getY() - netsys.position.y);
                         return;
                     }
                 }
@@ -105,7 +105,7 @@ public class InputController {
                     gameScreen.repaint();
                 }
 
-                if (selectedPacket != null) {
+                if (selectedNetSys != null) {
                     double newTotalLength = 0;
                     for (WireManager.Wire wire : wireManager.getWires()) {
                         newTotalLength += wire.getLength();
@@ -119,7 +119,7 @@ public class InputController {
                     gameScreen.repaint();
                 }
 
-                selectedPacket = null;
+                selectedNetSys = null;
                 dragOffset = null;
             }
         });
@@ -130,9 +130,9 @@ public class InputController {
                 if (wireManager.isDraggingWire()) {
                     wireManager.setWireEnd(e.getPoint());
                     gameScreen.repaint();
-                } else if (selectedPacket != null && dragOffset != null) {
-                    selectedPacket.setPosition(new Point(e.getX() - dragOffset.x, e.getY() - dragOffset.y));
-                    selectedPacket.initializePorts();
+                } else if (selectedNetSys != null && dragOffset != null) {
+                    selectedNetSys.setPosition(new Point(e.getX() - dragOffset.x, e.getY() - dragOffset.y));
+                    selectedNetSys.initializePorts();
                     gameScreen.repaint();
                 }
             }

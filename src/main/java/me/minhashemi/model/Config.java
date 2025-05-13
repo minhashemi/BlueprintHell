@@ -20,5 +20,5 @@ public class Config {
     // packet
     public static final int PORT_SIZE = 10;
     public static final int STANDARD_HEIGHT = 30;
-    public static final int PACKET_WIDTH = 60;
+    public static final int NETSYS_WIDTH = 60;
 }
