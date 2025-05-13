@@ -2,15 +2,15 @@ package me.minhashemi.model;
 
 import java.awt.Point;
 
-public class PacketPort {
+public class NetSysPort {
     private final PortType type;
     private boolean connected = false;
     private final boolean isInput;  // Track whether the port is input or output
-    private final Packet packet;    // Reference to the parent packet
+    private final NetSys packet;    // Reference to the parent packet
     private final int index;        // Port index within the packet
 
     // Constructor: Accepting Packet, connection status, PortType, and isInput
-    public PacketPort(Packet packet, boolean connected, PortType type, boolean isInput, int index) {
+    public NetSysPort(NetSys packet, boolean connected, PortType type, boolean isInput, int index) {
         this.packet = packet;
         this.connected = connected;
         this.type = type;
