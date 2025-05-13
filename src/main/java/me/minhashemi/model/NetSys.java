@@ -44,13 +44,12 @@ public class NetSys {
         inputPorts.clear();
         outputPorts.clear();
 
-        // Place input ports on the left side of the packet
-        // Initialize input ports on the left side of the packet
+        // Initialize input ports on the left side of the network system
         for (int i = 0; i < inputs.size(); i++) {
             inputPorts.add(new NetSysPort(this, false, inputs.get(i), true, i));  // true for input, passing index
         }
 
-        // Initialize output ports on the right side of the packet
+        // Initialize output ports on the right side of the network system
         for (int i = 0; i < outputs.size(); i++) {
             outputPorts.add(new NetSysPort(this, false, outputs.get(i), false, i));  // false for output, passing index
         }
