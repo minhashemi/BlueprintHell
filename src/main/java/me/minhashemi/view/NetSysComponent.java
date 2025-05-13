@@ -1,31 +1,31 @@
 package me.minhashemi.view;
 
-import me.minhashemi.model.Packet;
+import me.minhashemi.model.NetSys;
 import me.minhashemi.model.PortType;
 import me.minhashemi.model.Config;
 
 import javax.swing.*;
 import java.awt.*;
 
-public class PacketComponent extends JComponent {
-    private final Packet packet;
+public class NetSysComponent extends JComponent {
+    private final NetSys netsys;
     private static final int WIDTH = 100;
     private static final int PORT_SIZE = 12;
 
-    public PacketComponent(Packet packet) {
-        this.packet = packet;
-        setPreferredSize(new Dimension(WIDTH, packet.getHeight()));
+    public NetSysComponent(NetSys netsys) {
+        this.netsys = netsys;
+        setPreferredSize(new Dimension(WIDTH, netsys.getHeight()));
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        int height = packet.getHeight();
+        int height = netsys.getHeight();
         Graphics2D g2d = (Graphics2D) g;
 
         // Draw stacked square body
         g2d.setColor(Color.LIGHT_GRAY);
-        int rows = Math.max(packet.getInputs().size(), packet.getOutputs().size());
+        int rows = Math.max(netsys.getInputs().size(), netsys.getOutputs().size());
         for (int i = 0; i < rows; i++) {
             g2d.fillRect(20, i * Config.STANDARD_HEIGHT, WIDTH - 40, Config.STANDARD_HEIGHT - 2);
         }
@@ -34,14 +34,14 @@ public class PacketComponent extends JComponent {
         g2d.drawRect(20, 0, WIDTH - 40, height);
 
         // Draw input ports (left side)
-        for (int i = 0; i < packet.getInputs().size(); i++) {
+        for (int i = 0; i < netsys.getInputs().size(); i++) {
             int y = i * Config.STANDARD_HEIGHT + Config.STANDARD_HEIGHT / 2;
-            drawPort(g2d, 5, y, packet.getInputs().get(i)); // ← PortType directly
+            drawPort(g2d, 5, y, netsys.getInputs().get(i)); // ← PortType directly
         }
         // Draw output ports (right side)
-        for (int i = 0; i < packet.getOutputs().size(); i++) {
+        for (int i = 0; i < netsys.getOutputs().size(); i++) {
             int y = i * Config.STANDARD_HEIGHT + Config.STANDARD_HEIGHT / 2;
-            drawPort(g2d, WIDTH - 5 - PORT_SIZE, y, packet.getOutputs().get(i)); // ← PortType directly
+            drawPort(g2d, WIDTH - 5 - PORT_SIZE, y, netsys.getOutputs().get(i)); // ← PortType directly
         }
 
     }

@@ -4,14 +4,14 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Packet {
+public class NetSys {
     public int packetId;
     public Point position;
     private List<PortType> inputs;
     private List<PortType> outputs;
 
-    private final List<PacketPort> inputPorts = new ArrayList<>();
-    private final List<PacketPort> outputPorts = new ArrayList<>();
+    private final List<NetSysPort> inputPorts = new ArrayList<>();
+    private final List<NetSysPort> outputPorts = new ArrayList<>();
 
     public List<PortType> getInputs() {
         return inputs;
@@ -21,11 +21,11 @@ public class Packet {
         return outputs;
     }
 
-    public List<PacketPort> getInputPorts() {
+    public List<NetSysPort> getInputPorts() {
         return inputPorts;
     }
 
-    public List<PacketPort> getOutputPorts() {
+    public List<NetSysPort> getOutputPorts() {
         return outputPorts;
     }
 
@@ -47,12 +47,12 @@ public class Packet {
         // Place input ports on the left side of the packet
         // Initialize input ports on the left side of the packet
         for (int i = 0; i < inputs.size(); i++) {
-            inputPorts.add(new PacketPort(this, false, inputs.get(i), true, i));  // true for input, passing index
+            inputPorts.add(new NetSysPort(this, false, inputs.get(i), true, i));  // true for input, passing index
         }
 
         // Initialize output ports on the right side of the packet
         for (int i = 0; i < outputs.size(); i++) {
-            outputPorts.add(new PacketPort(this, false, outputs.get(i), false, i));  // false for output, passing index
+            outputPorts.add(new NetSysPort(this, false, outputs.get(i), false, i));  // false for output, passing index
         }
 
     }

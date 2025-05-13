@@ -12,7 +12,7 @@ public class WireManager {
     private Point wireStart = null;
     private Point wireEnd = null;
     private boolean draggingWire = false;
-    private PacketPort wireStartPort = null;
+    private NetSysPort wireStartPort = null;
     private double lastTotalWireLength = 0;
     private final LevelData levelData;
 
@@ -41,7 +41,7 @@ public class WireManager {
         return wires;
     }
 
-    public void setWireStart(Point wireStart, PacketPort wireStartPort) {
+    public void setWireStart(Point wireStart, NetSysPort wireStartPort) {
         this.wireStart = wireStart;
         this.wireStartPort = wireStartPort;
     }
@@ -58,7 +58,7 @@ public class WireManager {
         return wireStart;
     }
 
-    public PacketPort getWireStartPort() {
+    public NetSysPort getWireStartPort() {
         return wireStartPort;
     }
 
@@ -89,9 +89,9 @@ public class WireManager {
         }
     }
 
-    public PacketPort findNearbyOutputPort(Point mousePosition) {
-        for (Packet packet : levelData.packets) {
-            for (PacketPort port : packet.getOutputPorts()) {
+    public NetSysPort findNearbyOutputPort(Point mousePosition) {
+        for (NetSys packet : levelData.packets) {
+            for (NetSysPort port : packet.getOutputPorts()) {
                 if (!port.isConnected() && isNearPort(mousePosition, port.getPosition())) {
                     return port;
                 }
@@ -100,9 +100,9 @@ public class WireManager {
         return null;
     }
 
-    public PacketPort findNearbyInputPort(Point mousePosition) {
-        for (Packet packet : levelData.packets) {
-            for (PacketPort port : packet.getInputPorts()) {
+    public NetSysPort findNearbyInputPort(Point mousePosition) {
+        for (NetSys packet : levelData.packets) {
+            for (NetSysPort port : packet.getInputPorts()) {
                 if (!port.isConnected() && isNearPort(mousePosition, port.getPosition())) {
                     return port;
                 }
@@ -172,10 +172,10 @@ public class WireManager {
     }
 
     public static class Wire {
-        public final PacketPort fromPort;
-        public final PacketPort toPort;
+        public final NetSysPort fromPort;
+        public final NetSysPort toPort;
 
-        public Wire(PacketPort fromPort, PacketPort toPort) {
+        public Wire(NetSysPort fromPort, NetSysPort toPort) {
             this.fromPort = fromPort;
             this.toPort = toPort;
         }
