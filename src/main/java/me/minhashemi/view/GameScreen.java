@@ -20,8 +20,8 @@ public class GameScreen extends JPanel {
         this.wireManager = new WireManager(levelData);
         this.inputController = new InputController(this, levelData, wireManager, hud);
 
-        for (Packet packet : levelData.packets) {
-            packet.initializePorts();
+        for (NetSys netsys : levelData.packets) {
+            netsys.initializePorts();
         }
 
         JPanel canvasPanel = new JPanel() {
@@ -35,7 +35,7 @@ public class GameScreen extends JPanel {
                 hud.render(g, getWidth());
 
                 // Render packets
-                for (Packet packet : levelData.packets) {
+                for (NetSys packet : levelData.packets) {
                     drawPacket(g, packet);
                 }
 
@@ -83,7 +83,7 @@ public class GameScreen extends JPanel {
         add(controlsPanel, BorderLayout.SOUTH);
     }
 
-    private void drawPacket(Graphics g, Packet packet) {
+    private void drawPacket(Graphics g, NetSys packet) {
         int x = packet.position.x;
         int y = packet.position.y;
         int height = packet.getHeight();
@@ -91,16 +91,16 @@ public class GameScreen extends JPanel {
         g.setColor(Color.GRAY);
         g.fillRect(x, y, Config.PACKET_WIDTH, height);
 
-        for (PacketPort input : packet.getInputPorts()) {
+        for (NetSysPort input : packet.getInputPorts()) {
             drawPort(g, input);
         }
 
-        for (PacketPort output : packet.getOutputPorts()) {
+        for (NetSysPort output : packet.getOutputPorts()) {
             drawPort(g, output);
         }
     }
 
-    private void drawPort(Graphics g, PacketPort port) {
+    private void drawPort(Graphics g, NetSysPort port) {
         g.setColor(Color.BLACK);
         Point pos = port.getPosition();
 

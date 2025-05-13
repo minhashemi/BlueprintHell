@@ -15,7 +15,7 @@ public class InputController {
     private final LevelData levelData;
     private final WireManager wireManager;
     private final HUD hud;
-    private Packet selectedPacket = null;
+    private NetSys selectedPacket = null;
     private Point dragOffset = null;
 
     public InputController(GameScreen gameScreen, LevelData levelData, WireManager wireManager, HUD hud) {
@@ -43,7 +43,7 @@ public class InputController {
                     }
                 }
 
-                PacketPort wireStartPort = wireManager.findNearbyOutputPort(e.getPoint());
+                NetSysPort wireStartPort = wireManager.findNearbyOutputPort(e.getPoint());
                 if (wireStartPort != null && !wireStartPort.isConnected()) {
                     Point startPos = wireStartPort.getPosition();
                     Point wireStart = new Point(startPos.x + Config.PORT_SIZE / 2, startPos.y + Config.PORT_SIZE / 2);
@@ -54,7 +54,7 @@ public class InputController {
                     return;
                 }
 
-                for (Packet packet : levelData.packets) {
+                for (NetSys packet : levelData.packets) {
                     Rectangle bounds = new Rectangle(packet.position.x, packet.position.y, Config.PACKET_WIDTH, packet.getHeight());
                     if (bounds.contains(e.getPoint())) {
                         selectedPacket = packet;
@@ -71,10 +71,10 @@ public class InputController {
                     wireManager.setDraggingWire(false);
 
                     Point wireStart = wireManager.getWireStart();
-                    PacketPort wireStartPort = wireManager.getWireStartPort();
+                    NetSysPort wireStartPort = wireManager.getWireStartPort();
 
                     if (wireStart != null && wireStartPort != null) {
-                        PacketPort endPort = wireManager.findNearbyInputPort(e.getPoint());
+                        NetSysPort endPort = wireManager.findNearbyInputPort(e.getPoint());
 
                         if (endPort != null
                                 && !wireStartPort.isConnected()
@@ -82,8 +82,8 @@ public class InputController {
                                 && wireStartPort.isInput() != endPort.isInput()
                                 && wireStartPort.getType() == endPort.getType()) {
 
-                            PacketPort from = wireStartPort.isInput() ? endPort : wireStartPort;
-                            PacketPort to = wireStartPort.isInput() ? wireStartPort : endPort;
+                            NetSysPort from = wireStartPort.isInput() ? endPort : wireStartPort;
+                            NetSysPort to = wireStartPort.isInput() ? wireStartPort : endPort;
 
                             WireManager.Wire wire = new WireManager.Wire(from, to);
                             if (wire.getLength() <= Config.remainingWireLength) {
