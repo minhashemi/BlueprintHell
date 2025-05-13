@@ -34,9 +34,9 @@ public class GameScreen extends JPanel {
                 // Render HUD
                 hud.render(g, getWidth());
 
-                // Render packets
-                for (NetSys packet : levelData.packets) {
-                    drawPacket(g, packet);
+                // Render netsys
+                for (NetSys netsys : levelData.packets) {
+                    drawNetSys(g, netsys);
                 }
 
                 // Render wires
@@ -83,13 +83,13 @@ public class GameScreen extends JPanel {
         add(controlsPanel, BorderLayout.SOUTH);
     }
 
-    private void drawPacket(Graphics g, NetSys packet) {
+    private void drawNetSys(Graphics g, NetSys packet) {
         int x = packet.position.x;
         int y = packet.position.y;
         int height = packet.getHeight();
 
         g.setColor(Color.GRAY);
-        g.fillRect(x, y, Config.PACKET_WIDTH, height);
+        g.fillRect(x, y, Config.NETSYS_WIDTH, height);
 
         for (NetSysPort input : packet.getInputPorts()) {
             drawPort(g, input);

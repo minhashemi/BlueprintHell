@@ -90,8 +90,8 @@ public class WireManager {
     }
 
     public NetSysPort findNearbyOutputPort(Point mousePosition) {
-        for (NetSys packet : levelData.packets) {
-            for (NetSysPort port : packet.getOutputPorts()) {
+        for (NetSys netsys : levelData.packets) {
+            for (NetSysPort port : netsys.getOutputPorts()) {
                 if (!port.isConnected() && isNearPort(mousePosition, port.getPosition())) {
                     return port;
                 }
@@ -101,8 +101,8 @@ public class WireManager {
     }
 
     public NetSysPort findNearbyInputPort(Point mousePosition) {
-        for (NetSys packet : levelData.packets) {
-            for (NetSysPort port : packet.getInputPorts()) {
+        for (NetSys netsys : levelData.packets) {
+            for (NetSysPort port : netsys.getInputPorts()) {
                 if (!port.isConnected() && isNearPort(mousePosition, port.getPosition())) {
                     return port;
                 }
