@@ -86,19 +86,35 @@ public class GameScreen extends JPanel {
     private void drawNetSys(Graphics g, NetSys packet) {
         int x = packet.position.x;
         int y = packet.position.y;
+        int width = Config.NETSYS_WIDTH;
         int height = packet.getHeight();
 
-        g.setColor(Color.GRAY);
-        g.fillRect(x, y, Config.NETSYS_WIDTH, height);
+        // Update state and possibly trigger beep
+        packet.updateConnectionStatus();
 
+        // Draw filled background
+        g.setColor(Color.GRAY);
+        g.fillRect(x, y, width, height);
+
+        // Optional: Draw border
+        g.setColor(Color.DARK_GRAY);
+        g.drawRect(x, y, width, height);
+
+        // Draw status dot
+        boolean isConnected = packet.isFullyConnected();
+        g.setColor(isConnected ? Color.GREEN : Color.RED);
+        g.fillOval(x + width - 10, y + 4, 8, 8);
+
+        // Draw ports
         for (NetSysPort input : packet.getInputPorts()) {
             drawPort(g, input);
         }
-
         for (NetSysPort output : packet.getOutputPorts()) {
             drawPort(g, output);
         }
     }
+
+
 
     private void drawPort(Graphics g, NetSysPort port) {
         g.setColor(Color.BLACK);
