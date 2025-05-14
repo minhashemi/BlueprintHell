@@ -3,7 +3,7 @@ package me.minhashemi.model;
 import java.awt.Point;
 
 public class NetSysPort {
-    private final PortType type;
+    private PortType type;
     private boolean connected = false;
     private final boolean isInput;  // Track whether the port is input or output
     private final NetSys netsys;    // reference to netsys
@@ -45,5 +45,9 @@ public class NetSysPort {
     // New method to help in determining if the port is an input or output
     public boolean isInput() {
         return isInput;
+    }
+
+    public void update(NetSys netsys, PortType type, boolean isInput, int index) {
+        this.netsys.position = netsys.position; // Update position reference
     }
 }
