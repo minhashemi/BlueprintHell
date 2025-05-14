@@ -224,5 +224,23 @@ public class WireManager {
                     + t * t * t * p3.y;
             return new Point((int) x, (int) y);
         }
+
+        public NetSysPort getFromPort() {
+            return fromPort;
+        }
+
+        public NetSysPort getToPort() {
+            return toPort;
+        }
     }
+
+    public boolean isPortConnected(NetSysPort port) {
+        for (Wire wire : wires) {
+            if (wire.getFromPort() == port || wire.getToPort() == port) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

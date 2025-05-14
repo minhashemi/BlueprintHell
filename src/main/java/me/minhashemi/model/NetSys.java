@@ -13,6 +13,8 @@ public class NetSys {
     private final List<NetSysPort> inputPorts = new ArrayList<>();
     private final List<NetSysPort> outputPorts = new ArrayList<>();
 
+    private boolean lastConnectionStatus = false;
+
     public List<PortType> getInputs() {
         return inputs;
     }
@@ -59,4 +61,49 @@ public class NetSys {
     public void setPosition(Point newPosition) {
         this.position = newPosition;
     }
+
+    public boolean isFullyConnected() {
+        for (NetSysPort port : inputPorts) {
+            if (!port.isConnected()) {
+                return false;
+            }
+        }
+        for (NetSysPort port : outputPorts) {
+            if (!port.isConnected()) {
+                return false;
+            }
+        }
+        return true;
+    }
+    public boolean getLastConnectionStatus() {
+        return lastConnectionStatus;
+    }
+
+    public void updateConnectionStatus() {
+        boolean current = isFullyConnected();
+        if (current != lastConnectionStatus) {
+            lastConnectionStatus = current;
+
+            // Play different beeps for red/green
+            if (current) {
+                playGreenBeep();
+            } else {
+                playRedBeep();
+            }
+        }
+    }
+
+    private void playGreenBeep() {
+        // Different beep (could be a higher tone or just a placeholder)
+        java.awt.Toolkit.getDefaultToolkit().beep();
+//        System.out.println("Beep: GREEN (connected)");
+    }
+
+    private void playRedBeep() {
+        // Different beep (could be a lower tone or same if just using default beep)
+        java.awt.Toolkit.getDefaultToolkit().beep();
+//        System.out.println("Beep: RED (disconnected)");
+    }
+
+
 }
