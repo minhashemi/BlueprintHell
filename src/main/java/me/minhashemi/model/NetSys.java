@@ -43,20 +43,32 @@ public class NetSys {
 
     // Initialize ports only once
     public void initializePorts() {
-        inputPorts.clear();
-        outputPorts.clear();
-
-        // Initialize input ports on the left side of the network system
+        // Resize input port list only if necessary, preserving connections
+        while (inputPorts.size() < inputs.size()) {
+            int i = inputPorts.size();
+            inputPorts.add(new NetSysPort(this, false, inputs.get(i), true, i));
+        }
+        while (inputPorts.size() > inputs.size()) {
+            inputPorts.remove(inputPorts.size() - 1);
+        }
         for (int i = 0; i < inputs.size(); i++) {
-            inputPorts.add(new NetSysPort(this, false, inputs.get(i), true, i));  // true for input, passing index
+            NetSysPort port = inputPorts.get(i);
+            port.update(this, inputs.get(i), true, i);  // update position-related data
         }
 
-        // Initialize output ports on the right side of the network system
+        while (outputPorts.size() < outputs.size()) {
+            int i = outputPorts.size();
+            outputPorts.add(new NetSysPort(this, false, outputs.get(i), false, i));
+        }
+        while (outputPorts.size() > outputs.size()) {
+            outputPorts.remove(outputPorts.size() - 1);
+        }
         for (int i = 0; i < outputs.size(); i++) {
-            outputPorts.add(new NetSysPort(this, false, outputs.get(i), false, i));  // false for output, passing index
+            NetSysPort port = outputPorts.get(i);
+            port.update(this, outputs.get(i), false, i);
         }
-
     }
+
 
     public void setPosition(Point newPosition) {
         this.position = newPosition;
