@@ -50,4 +50,8 @@ public class NetSysPort {
     public void update(NetSys netsys, PortType type, boolean isInput, int index) {
         this.netsys.position = netsys.position; // Update position reference
     }
+
+    public NetSys getParent() {
+        return netsys;
+    }
 }

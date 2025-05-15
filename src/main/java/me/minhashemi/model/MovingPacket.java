@@ -7,11 +7,14 @@ import java.awt.geom.Point2D;
 
 public class MovingPacket {
     private final WireManager.Wire wire;
+    private final NetSys destinationNetSys;
+
     private float t; // Bezier interpolation value [0..1]
     private float speed; // How fast to move along the wire
     private float noise;
     private boolean lost;
     private Point2D.Float position;
+    private boolean delivered = false;
 
     public static final float NOISE_THRESHOLD = 100f;
     public static final float MAX_DISTANCE_FROM_WIRE = 20f;
@@ -19,10 +22,14 @@ public class MovingPacket {
     public MovingPacket(WireManager.Wire wire) {
         this.wire = wire;
         this.t = 0;
-        this.speed = 0.01f; // You can scale this based on wire length
+        this.speed = 0.01f;
         this.noise = 0;
         this.lost = false;
         this.position = evaluateBezier(wire.getStart(), wire.getEnd(), t);
+
+        // Get destination NetSys from the wire's end port
+        NetSysPort endPort = wire.getToPort();
+        this.destinationNetSys = endPort != null ? endPort.getParent() : null;
     }
 
     public void update() {
@@ -33,7 +40,11 @@ public class MovingPacket {
 
         position = evaluateBezier(wire.getStart(), wire.getEnd(), t);
 
-        // Noise logic (can be expanded with external forces)
+        if (t >= 1f && !lost && !delivered && destinationNetSys != null) {
+            destinationNetSys.markReceived();
+            delivered = true;
+        }
+
         if (noise >= NOISE_THRESHOLD) {
             lost = true;
         }
