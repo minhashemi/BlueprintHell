@@ -115,13 +115,16 @@ public class GameScreen extends JPanel {
 
     private void spawnPackets() {
         for (NetSys netSys : levelData.packets) {
-            for (NetSysPort output : netSys.getOutputPorts()) {
-                if (output.isConnected()) {
-                    for (WireManager.Wire wire : wireManager.getWires()) {
-                        if (wire.getFromPort() == output) {
-                            MovingPacket packet = new MovingPacket(wire);
-                            movingPackets.add(packet);
-                            break;
+            // Only start blocks — must have no input ports
+            if (netSys.getInputPorts().isEmpty()) {
+                for (NetSysPort output : netSys.getOutputPorts()) {
+                    if (output.isConnected()) {
+                        for (WireManager.Wire wire : wireManager.getWires()) {
+                            if (wire.getFromPort() == output) {
+                                MovingPacket packet = new MovingPacket(wire);
+                                movingPackets.add(packet);
+                                break;
+                            }
                         }
                     }
                 }
