@@ -117,16 +117,21 @@ public class GameScreen extends JPanel {
         for (NetSys netSys : levelData.packets) {
             // Only start blocks — must have no input ports
             if (netSys.getInputPorts().isEmpty()) {
+                boolean spawned = false;
                 for (NetSysPort output : netSys.getOutputPorts()) {
                     if (output.isConnected()) {
                         for (WireManager.Wire wire : wireManager.getWires()) {
                             if (wire.getFromPort() == output) {
                                 MovingPacket packet = new MovingPacket(wire);
                                 movingPackets.add(packet);
+                                spawned = true;
                                 break;
                             }
                         }
                     }
+                }
+                if (spawned) {
+                    netSys.markReceived(); // ✅ Turn the start block green
                 }
             }
         }
@@ -146,7 +151,8 @@ public class GameScreen extends JPanel {
         g.setColor(Color.DARK_GRAY);
         g.drawRect(x, y, width, height);
 
-        g.setColor(packet.isFullyConnected() ? Color.GREEN : Color.RED);
+        // ✅ Draw status indicator: green only if packet received
+        g.setColor(packet.hasReceivedPacket() ? Color.GREEN : Color.RED);
         g.fillOval(x + width - 10, y + 4, 8, 8);
 
         for (NetSysPort input : packet.getInputPorts()) {
