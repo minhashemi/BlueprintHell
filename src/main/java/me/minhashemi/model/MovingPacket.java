@@ -35,6 +35,17 @@ public class MovingPacket {
     public void update() {
         if (lost || t >= 1f) return;
 
+        // Adjust speed based on port type (shape)
+        NetSysPort fromPort = wire.getFromPort();
+        if (fromPort != null) {
+            PortType type = fromPort.getType();
+            if (type == PortType.SQUARE) {
+                speed = 0.02f; // 2 units per frame
+            } else if (type == PortType.TRIANGLE) {
+                speed = 0.03f; // 3 units per frame
+            }
+        }
+
         t += speed;
         if (t > 1f) t = 1f;
 
