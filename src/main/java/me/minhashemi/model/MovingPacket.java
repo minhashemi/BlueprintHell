@@ -90,4 +90,8 @@ public class MovingPacket {
 
         return new Point2D.Float(x, y);
     }
+
+    public WireManager.Wire getWire() {
+        return wire;
+    }
 }

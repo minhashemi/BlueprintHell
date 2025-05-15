@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+// All imports stay the same
+
 public class GameScreen extends JPanel {
     private final LevelData levelData;
     private final HUD hud;
@@ -47,24 +49,47 @@ public class GameScreen extends JPanel {
                 // Render Wires
                 wireManager.render(g);
 
-                // Render and update moving packets
+                // Render and update moving packets safely
                 Iterator<MovingPacket> iterator = movingPackets.iterator();
+                List<MovingPacket> toAdd = new ArrayList<>();
+
                 while (iterator.hasNext()) {
                     MovingPacket packet = iterator.next();
                     packet.update();
 
-                    if (packet.isLost() || packet.isArrived()) {
-                        iterator.remove(); // Remove finished packets
+                    if (packet.isLost()) {
+                        iterator.remove();
+                    } else if (packet.isArrived()) {
+                        iterator.remove();
+
+                        NetSysPort toPort = packet.getWire().getToPort();
+                        NetSys targetSys = toPort.getParent();
+                        targetSys.markReceived(); // Mark as received (green dot)
+
+                        // Chain: if target has output ports, spawn new packets per connected output
+                        for (NetSysPort out : targetSys.getOutputPorts()) {
+                            if (out.isConnected()) {
+                                for (WireManager.Wire wire : wireManager.getWires()) {
+                                    if (wire.getFromPort() == out) {
+                                        toAdd.add(new MovingPacket(wire)); // buffer it
+                                        break;
+                                    }
+                                }
+                            }
+                        }
                     } else {
                         packet.draw(g2);
                     }
                 }
+
+                // Safely add buffered new packets after iteration
+                movingPackets.addAll(toAdd);
             }
         };
+
         canvasPanel.setOpaque(false);
         canvasPanel.setPreferredSize(new Dimension(800, 600));
 
-        // Add canvas and controls
         add(canvasPanel, BorderLayout.CENTER);
 
         GameControlsPanel controlsPanel = new GameControlsPanel(new GameControlsPanel.GameControlListener() {
@@ -94,10 +119,9 @@ public class GameScreen extends JPanel {
         });
         add(controlsPanel, BorderLayout.SOUTH);
 
-        // Set up key binding for spawning packets
         setupKeyBinding(canvasPanel);
 
-        // Timer for animation (repaint every 16ms)
+        // Animation timer
         Timer timer = new Timer(16, e -> canvasPanel.repaint());
         timer.start();
     }
@@ -115,15 +139,14 @@ public class GameScreen extends JPanel {
 
     private void spawnPackets() {
         for (NetSys netSys : levelData.packets) {
-            // Only start blocks — must have no input ports
+            // Only spawn from blocks with no input ports
             if (netSys.getInputPorts().isEmpty()) {
                 boolean spawned = false;
                 for (NetSysPort output : netSys.getOutputPorts()) {
                     if (output.isConnected()) {
                         for (WireManager.Wire wire : wireManager.getWires()) {
                             if (wire.getFromPort() == output) {
-                                MovingPacket packet = new MovingPacket(wire);
-                                movingPackets.add(packet);
+                                movingPackets.add(new MovingPacket(wire));
                                 spawned = true;
                                 break;
                             }
@@ -131,7 +154,7 @@ public class GameScreen extends JPanel {
                     }
                 }
                 if (spawned) {
-                    netSys.markReceived(); // ✅ Turn the start block green
+                    netSys.markReceived(); // Green dot for start node
                 }
             }
         }
@@ -151,7 +174,7 @@ public class GameScreen extends JPanel {
         g.setColor(Color.DARK_GRAY);
         g.drawRect(x, y, width, height);
 
-        // ✅ Draw status indicator: green only if packet received
+        // Green dot if received, red otherwise
         g.setColor(packet.hasReceivedPacket() ? Color.GREEN : Color.RED);
         g.fillOval(x + width - 10, y + 4, 8, 8);
 
