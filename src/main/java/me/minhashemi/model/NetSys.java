@@ -13,7 +13,7 @@ public class NetSys {
     private final List<NetSysPort> inputPorts = new ArrayList<>();
     private final List<NetSysPort> outputPorts = new ArrayList<>();
 
-    private boolean lastConnectionStatus = false;
+    private boolean hasReceivedPacket = false;
 
     public List<PortType> getInputs() {
         return inputs;
@@ -41,9 +41,7 @@ public class NetSys {
         outputPorts.clear();
     }
 
-    // Initialize ports only once
     public void initializePorts() {
-        // Resize input port list only if necessary, preserving connections
         while (inputPorts.size() < inputs.size()) {
             int i = inputPorts.size();
             inputPorts.add(new NetSysPort(this, false, inputs.get(i), true, i));
@@ -53,7 +51,7 @@ public class NetSys {
         }
         for (int i = 0; i < inputs.size(); i++) {
             NetSysPort port = inputPorts.get(i);
-            port.update(this, inputs.get(i), true, i);  // update position-related data
+            port.update(this, inputs.get(i), true, i);
         }
 
         while (outputPorts.size() < outputs.size()) {
@@ -69,53 +67,50 @@ public class NetSys {
         }
     }
 
-
     public void setPosition(Point newPosition) {
         this.position = newPosition;
     }
 
     public boolean isFullyConnected() {
         for (NetSysPort port : inputPorts) {
-            if (!port.isConnected()) {
-                return false;
-            }
+            if (!port.isConnected()) return false;
         }
         for (NetSysPort port : outputPorts) {
-            if (!port.isConnected()) {
-                return false;
-            }
+            if (!port.isConnected()) return false;
         }
         return true;
     }
-    public boolean getLastConnectionStatus() {
-        return lastConnectionStatus;
-    }
 
+    // This is no longer used for green status
     public void updateConnectionStatus() {
+        // Only optional now, useful if you still want the beep system
         boolean current = isFullyConnected();
-        if (current != lastConnectionStatus) {
-            lastConnectionStatus = current;
-
-            // Play different beeps for red/green
-            if (current) {
-                playGreenBeep();
-            } else {
-                playRedBeep();
-            }
+        if (current != isFullyConnected()) {
+            if (current) playGreenBeep();
+            else playRedBeep();
         }
     }
 
+    public void markReceivedPacket() {
+        if (!hasReceivedPacket) {
+            hasReceivedPacket = true;
+            playGreenBeep(); // play sound when first received
+        }
+    }
+
+    public boolean hasReceivedPacket() {
+        return hasReceivedPacket;
+    }
+
     private void playGreenBeep() {
-        // Different beep (could be a higher tone or just a placeholder)
         java.awt.Toolkit.getDefaultToolkit().beep();
-//        System.out.println("Beep: GREEN (connected)");
     }
 
     private void playRedBeep() {
-        // Different beep (could be a lower tone or same if just using default beep)
         java.awt.Toolkit.getDefaultToolkit().beep();
-//        System.out.println("Beep: RED (disconnected)");
     }
 
-
+    public void markReceived() {
+        hasReceivedPacket = true;
+    }
 }
