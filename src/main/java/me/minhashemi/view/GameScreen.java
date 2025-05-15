@@ -5,12 +5,17 @@ import me.minhashemi.model.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class GameScreen extends JPanel {
     private final LevelData levelData;
     private final HUD hud;
     private final WireManager wireManager;
     private final InputController inputController;
+    private final List<MovingPacket> movingPackets = new ArrayList<>();
 
     public GameScreen(LevelData levelData) {
         this.levelData = levelData;
@@ -34,18 +39,32 @@ public class GameScreen extends JPanel {
                 // Render HUD
                 hud.render(g, getWidth());
 
-                // Render netsys
+                // Render NetSys devices
                 for (NetSys netsys : levelData.packets) {
                     drawNetSys(g, netsys);
                 }
 
-                // Render wires
+                // Render Wires
                 wireManager.render(g);
+
+                // Render and update moving packets
+                Iterator<MovingPacket> iterator = movingPackets.iterator();
+                while (iterator.hasNext()) {
+                    MovingPacket packet = iterator.next();
+                    packet.update();
+
+                    if (packet.isLost() || packet.isArrived()) {
+                        iterator.remove(); // Remove finished packets
+                    } else {
+                        packet.draw(g2);
+                    }
+                }
             }
         };
         canvasPanel.setOpaque(false);
-        canvasPanel.setPreferredSize(new Dimension(800, 600)); // Or your desired size
+        canvasPanel.setPreferredSize(new Dimension(800, 600));
 
+        // Add canvas and controls
         add(canvasPanel, BorderLayout.CENTER);
 
         GameControlsPanel controlsPanel = new GameControlsPanel(new GameControlsPanel.GameControlListener() {
@@ -64,23 +83,50 @@ public class GameScreen extends JPanel {
             @Override
             public void onQuitToMenu() {
                 JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(GameScreen.this);
-
-                // Exit fullscreen
                 topFrame.dispose();
                 topFrame.setUndecorated(false);
                 topFrame.setExtendedState(JFrame.NORMAL);
-
-                // Now set the main menu as the content pane
                 topFrame.setContentPane(new me.minhashemi.view.Window());
-                topFrame.pack();         // pack to recalculate layout
-                topFrame.setLocationRelativeTo(null); // center on screen
-                topFrame.setVisible(true); // show again
+                topFrame.pack();
+                topFrame.setLocationRelativeTo(null);
+                topFrame.setVisible(true);
             }
-
-
         });
-
         add(controlsPanel, BorderLayout.SOUTH);
+
+        // Set up key binding for spawning packets
+        setupKeyBinding(canvasPanel);
+
+        // Timer for animation (repaint every 16ms)
+        Timer timer = new Timer(16, e -> canvasPanel.repaint());
+        timer.start();
+    }
+
+    private void setupKeyBinding(JComponent component) {
+        component.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke("SPACE"), "spawnPacket");
+        component.getActionMap().put("spawnPacket", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                spawnPackets();
+            }
+        });
+    }
+
+    private void spawnPackets() {
+        for (NetSys netSys : levelData.packets) {
+            for (NetSysPort output : netSys.getOutputPorts()) {
+                if (output.isConnected()) {
+                    for (WireManager.Wire wire : wireManager.getWires()) {
+                        if (wire.getFromPort() == output) {
+                            MovingPacket packet = new MovingPacket(wire);
+                            movingPackets.add(packet);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private void drawNetSys(Graphics g, NetSys packet) {
@@ -89,23 +135,17 @@ public class GameScreen extends JPanel {
         int width = Config.NETSYS_WIDTH;
         int height = packet.getHeight();
 
-        // Update state and possibly trigger beep
         packet.updateConnectionStatus();
 
-        // Draw filled background
         g.setColor(Color.GRAY);
         g.fillRect(x, y, width, height);
 
-        // Optional: Draw border
         g.setColor(Color.DARK_GRAY);
         g.drawRect(x, y, width, height);
 
-        // Draw status dot
-        boolean isConnected = packet.isFullyConnected();
-        g.setColor(isConnected ? Color.GREEN : Color.RED);
+        g.setColor(packet.isFullyConnected() ? Color.GREEN : Color.RED);
         g.fillOval(x + width - 10, y + 4, 8, 8);
 
-        // Draw ports
         for (NetSysPort input : packet.getInputPorts()) {
             drawPort(g, input);
         }
@@ -113,8 +153,6 @@ public class GameScreen extends JPanel {
             drawPort(g, output);
         }
     }
-
-
 
     private void drawPort(Graphics g, NetSysPort port) {
         g.setColor(Color.BLACK);

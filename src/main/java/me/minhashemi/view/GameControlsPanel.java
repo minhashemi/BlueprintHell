@@ -18,6 +18,11 @@ public class GameControlsPanel extends JPanel {
         JButton backBtn = new JButton("⏪ Time -");
         JButton quitBtn = new JButton("🚪 Quit");
 
+        // Prevent SPACE from triggering these buttons
+        forwardBtn.setFocusable(false);
+        backBtn.setFocusable(false);
+        quitBtn.setFocusable(false);
+
         forwardBtn.addActionListener(e -> listener.onTimeForward());
         backBtn.addActionListener(e -> listener.onTimeBackward());
         quitBtn.addActionListener(e -> listener.onQuitToMenu());
