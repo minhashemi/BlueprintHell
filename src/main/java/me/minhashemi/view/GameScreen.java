@@ -3,16 +3,17 @@ package me.minhashemi.view;
 import me.minhashemi.controller.InputController;
 import me.minhashemi.model.*;
 
-import javax.sound.sampled.Port;
+// keep all your existing imports
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 import java.util.List;
-import java.util.Random;
-
-// All imports stay the same
+import javax.sound.sampled.*;
+import javax.swing.Timer;
 
 public class GameScreen extends JPanel {
     private final LevelData levelData;
@@ -20,6 +21,7 @@ public class GameScreen extends JPanel {
     private final WireManager wireManager;
     private final InputController inputController;
     private final List<MovingPacket> movingPackets = new ArrayList<>();
+    private boolean victoryShown = false;
 
     public GameScreen(LevelData levelData) {
         this.levelData = levelData;
@@ -40,18 +42,14 @@ public class GameScreen extends JPanel {
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                // Render HUD
                 hud.render(g, getWidth());
 
-                // Render NetSys devices
                 for (NetSys netsys : levelData.packets) {
                     drawNetSys(g, netsys);
                 }
 
-                // Render Wires
                 wireManager.render(g);
 
-                // Render and update moving packets safely
                 Iterator<MovingPacket> iterator = movingPackets.iterator();
                 List<MovingPacket> toAdd = new ArrayList<>();
 
@@ -63,19 +61,20 @@ public class GameScreen extends JPanel {
                         iterator.remove();
                     } else if (packet.isArrived()) {
                         iterator.remove();
+                        packet.getWire().setHasPacket(false); // mark wire as free
 
                         NetSysPort toPort = packet.getWire().getToPort();
                         NetSys targetSys = toPort.getParent();
-                        targetSys.markReceived(); // Mark as received (green dot)
+                        targetSys.markReceived();
 
-                        // Chain: if target has output ports, spawn new packets per connected output
                         for (NetSysPort out : targetSys.getOutputPorts()) {
                             if (out.isConnected()) {
                                 for (WireManager.Wire wire : wireManager.getWires()) {
                                     if (wire.getFromPort() == out) {
                                         PortType[] packetType = PortType.values();
                                         PortType packetShape = packetType[new Random().nextInt(packetType.length)];
-                                        toAdd.add(new MovingPacket(wire, packetShape)); // buffer it
+                                        toAdd.add(new MovingPacket(wire, packetShape));
+                                        wire.setHasPacket(true);
                                         break;
                                     }
                                 }
@@ -86,14 +85,19 @@ public class GameScreen extends JPanel {
                     }
                 }
 
-                // Safely add buffered new packets after iteration
                 movingPackets.addAll(toAdd);
+
+                // Check for victory only when there are no packets and all blocks are green
+                if (!victoryShown && movingPackets.isEmpty() && allBlocksGreen()) {
+                    victoryShown = true;
+                    victoryMsc();
+                    SwingUtilities.invokeLater(() -> showVictoryMessage("Victory! All packets delivered."));
+                }
             }
         };
 
         canvasPanel.setOpaque(false);
         canvasPanel.setPreferredSize(new Dimension(800, 600));
-
         add(canvasPanel, BorderLayout.CENTER);
 
         GameControlsPanel controlsPanel = new GameControlsPanel(new GameControlsPanel.GameControlListener() {
@@ -115,7 +119,7 @@ public class GameScreen extends JPanel {
                 topFrame.dispose();
                 topFrame.setUndecorated(false);
                 topFrame.setExtendedState(JFrame.NORMAL);
-                topFrame.setContentPane(new me.minhashemi.view.Window());
+                topFrame.setContentPane(new Window());
                 topFrame.pack();
                 topFrame.setLocationRelativeTo(null);
                 topFrame.setVisible(true);
@@ -125,7 +129,7 @@ public class GameScreen extends JPanel {
 
         setupKeyBinding(canvasPanel);
 
-        // Animation timer
+        // Repainting timer
         Timer timer = new Timer(16, e -> canvasPanel.repaint());
         timer.start();
     }
@@ -143,35 +147,29 @@ public class GameScreen extends JPanel {
 
     private void spawnPackets() {
         for (NetSys netSys : levelData.packets) {
-            // Only spawn from blocks with no input ports
             if (netSys.getInputPorts().isEmpty()) {
                 boolean spawned = false;
                 for (NetSysPort output : netSys.getOutputPorts()) {
                     if (output.isConnected()) {
                         for (WireManager.Wire wire : wireManager.getWires()) {
                             if (wire.getFromPort() == output && !wire.hasPacket()) {
-                                // Assign a random shape to the packet
                                 PortType[] types = PortType.values();
                                 PortType randomShape = types[new Random().nextInt(types.length)];
-
-                                // Spawn the packet only if wire is free
                                 movingPackets.add(new MovingPacket(wire, randomShape));
-                                wire.setHasPacket(true); // mark the wire as occupied
+                                wire.setHasPacket(true);
                                 spawned = true;
                                 break;
                             }
                         }
                     }
-                    if (spawned) break; // Stop checking other output ports if one packet has spawned
+                    if (spawned) break;
                 }
-
                 if (spawned) {
-                    netSys.markReceived(); // Green dot for start node
+                    netSys.markReceived();
                 }
             }
         }
     }
-
 
     private void drawNetSys(Graphics g, NetSys packet) {
         int x = packet.position.x;
@@ -187,7 +185,6 @@ public class GameScreen extends JPanel {
         g.setColor(Color.DARK_GRAY);
         g.drawRect(x, y, width, height);
 
-        // Green dot if received, red otherwise
         g.setColor(packet.hasReceivedPacket() ? Color.GREEN : Color.RED);
         g.fillOval(x + width - 10, y + 4, 8, 8);
 
@@ -211,4 +208,79 @@ public class GameScreen extends JPanel {
             g.fillPolygon(xs, ys, 3);
         }
     }
+
+    private boolean allBlocksGreen() {
+        for (NetSys netsys : levelData.packets) {
+            if (!netsys.hasReceivedPacket()) return false;
+        }
+        return true;
+    }
+
+    private void victoryMsc() {
+        new Thread(() -> {
+            try {
+                InputStream audioSrc = getClass().getClassLoader().getResourceAsStream("victory.wav");
+                if (audioSrc == null) throw new IOException("Resource not found: victory.wav");
+
+                InputStream bufferedIn = new BufferedInputStream(audioSrc);
+                AudioInputStream audioStream = AudioSystem.getAudioInputStream(bufferedIn);
+                Clip clip = AudioSystem.getClip();
+                clip.open(audioStream);
+                clip.start();
+            } catch (Exception e) {
+                System.err.println("Failed to play music: " + e.getMessage());
+            }
+        }).start();
+    }
+
+    public void showVictoryMessage(String msg) {
+        JPanel overlay = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                g.setColor(new Color(0, 0, 0, 180)); // semi-transparent background
+                g.fillRect(0, 0, getWidth(), getHeight());
+            }
+        };
+        overlay.setLayout(new GridBagLayout());
+        overlay.setOpaque(false);
+        overlay.setBounds(0, 0, getWidth(), getHeight());
+        overlay.setFocusable(false);
+
+        JPanel victoryPanel = new JPanel();
+        victoryPanel.setLayout(new BoxLayout(victoryPanel, BoxLayout.Y_AXIS));
+        victoryPanel.setBackground(Color.DARK_GRAY);
+        victoryPanel.setBorder(BorderFactory.createLineBorder(Color.WHITE, 2));
+
+        JLabel messageLabel = new JLabel(msg, SwingConstants.CENTER);
+        messageLabel.setForeground(Color.WHITE);
+        messageLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        messageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JButton returnButton = new JButton("Return to Menu");
+        returnButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        returnButton.addActionListener(e -> {
+            JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
+            topFrame.dispose();
+            new Window(); // Open main menu
+        });
+
+        victoryPanel.add(Box.createVerticalGlue());
+        victoryPanel.add(messageLabel);
+        victoryPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        victoryPanel.add(returnButton);
+        victoryPanel.add(Box.createVerticalGlue());
+
+        overlay.add(victoryPanel, new GridBagConstraints());
+
+        this.setLayout(null);
+        overlay.setSize(this.getSize());
+        this.add(overlay);
+        this.setComponentZOrder(overlay, 0);
+
+        this.revalidate();
+        this.repaint();
+    }
+
+
 }
