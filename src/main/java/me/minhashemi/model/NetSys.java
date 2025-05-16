@@ -2,7 +2,9 @@ package me.minhashemi.model;
 
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 public class NetSys {
     public int packetId;
@@ -13,8 +15,16 @@ public class NetSys {
     private final List<NetSysPort> inputPorts = new ArrayList<>();
     private final List<NetSysPort> outputPorts = new ArrayList<>();
 
+    private Queue<MovingPacket> buff = new LinkedList<>(); // buffer packets when wire is busy.
     private boolean hasReceivedPacket = false;
 
+    public boolean enqueuePacket(MovingPacket packet){
+        if (buff.size() < Config.MAX_BUFFER_SIZE){
+            buff.add(packet);
+            return true;
+        }
+        return false;
+    }
     public List<PortType> getInputs() {
         return inputs;
     }

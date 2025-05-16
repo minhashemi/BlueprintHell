@@ -174,6 +174,7 @@ public class WireManager {
     public static class Wire {
         public final NetSysPort fromPort;
         public final NetSysPort toPort;
+        private boolean hasPacket = false;
 
         public Wire(NetSysPort fromPort, NetSysPort toPort) {
             this.fromPort = fromPort;
@@ -192,6 +193,14 @@ public class WireManager {
 
         public double getLength() {
             return calculateBezierLength(getStart(), getEnd());
+        }
+
+        public boolean hasPacket() {
+            return hasPacket;
+        }
+
+        public void setHasPacket(boolean hasPacket) {
+            this.hasPacket = hasPacket;
         }
 
         private double calculateBezierLength(Point start, Point end) {
