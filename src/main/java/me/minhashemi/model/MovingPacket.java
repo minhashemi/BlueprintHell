@@ -8,6 +8,7 @@ import java.awt.geom.Point2D;
 public class MovingPacket {
     private final WireManager.Wire wire;
     private final NetSys destinationNetSys;
+    private final PortType shape;
 
     private float t; // Bezier interpolation value [0..1]
     private float speed; // How fast to move along the wire
@@ -19,31 +20,28 @@ public class MovingPacket {
     public static final float NOISE_THRESHOLD = 100f;
     public static final float MAX_DISTANCE_FROM_WIRE = 20f;
 
-    public MovingPacket(WireManager.Wire wire) {
+    public MovingPacket(WireManager.Wire wire, PortType shape) {
         this.wire = wire;
+        this.shape = shape;
         this.t = 0;
         this.speed = 0.01f;
         this.noise = 0;
         this.lost = false;
         this.position = evaluateBezier(wire.getStart(), wire.getEnd(), t);
 
-        // Get destination NetSys from the wire's end port
         NetSysPort endPort = wire.getToPort();
         this.destinationNetSys = endPort != null ? endPort.getParent() : null;
     }
 
+
     public void update() {
         if (lost || t >= 1f) return;
 
-        // Adjust speed based on port type (shape)
-        NetSysPort fromPort = wire.getFromPort();
-        if (fromPort != null) {
-            PortType type = fromPort.getType();
-            if (type == PortType.SQUARE) {
-                speed = 0.02f; // 2 units per frame
-            } else if (type == PortType.TRIANGLE) {
-                speed = 0.03f; // 3 units per frame
-            }
+        // Adjust speed based on packet's shape
+        if (shape == PortType.SQUARE) {
+            speed = 0.02f;
+        } else if (shape == PortType.TRIANGLE) {
+            speed = 0.03f;
         }
 
         t += speed;
@@ -63,8 +61,28 @@ public class MovingPacket {
 
     public void draw(Graphics2D g) {
         if (lost) return;
+
         g.setColor(Color.CYAN);
-        g.fillOval((int) position.x - 5, (int) position.y - 5, 10, 10);
+        int x = (int) position.x;
+        int y = (int) position.y;
+        int size = 10;
+
+        switch (shape) {
+            case SQUARE:
+                g.fillRect(x - size / 2, y - size / 2, size, size);
+                break;
+            case TRIANGLE:
+                Polygon triangle = new Polygon();
+                triangle.addPoint(x, y - size / 2); // top
+                triangle.addPoint(x - size / 2, y + size / 2); // bottom left
+                triangle.addPoint(x + size / 2, y + size / 2); // bottom right
+                g.fillPolygon(triangle);
+                break;
+            default:
+                // Fallback to circle
+                g.fillOval(x - size / 2, y - size / 2, size, size);
+                break;
+        }
     }
 
     public void applyImpact(Point2D.Float forceVector, float distanceFromImpact) {
