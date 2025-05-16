@@ -1,0 +1,448 @@
+{
+  "coins": 65,
+  "usedWireLength": 1367,
+  "totalWireLength": 6000,
+  "isWiringMode": false,
+  "impactWavesDisabled": false,
+  "packetCollisionsDisabled": false,
+  "packetNoiseZeroed": false,
+  "gameStartTime": 1758481457724,
+  "currentGameTime": 182518,
+  "isTestRunning": true,
+  "testPacketsReleased": 9,
+  "testPacketsReturned": 7,
+  "testStartTime": 1758481630297,
+  "lastPacketReleaseTime": 1758481639297,
+  "testCompleted": false,
+  "gameWon": false,
+  "gameLost": false,
+  "isTimeTravelMode": false,
+  "isPaused": false,
+  "currentSnapshotIndex": -1,
+  "timeTravelWindowSeconds": 5,
+  "systems": [
+    {
+      "type": "REFERENCE",
+      "x": 50,
+      "y": 150,
+      "id": "ref_sys_start",
+      "inputPorts": [],
+      "outputPorts": [
+        {
+          "type": "SQUARE",
+          "index": 0,
+          "isInput": false
+        },
+        {
+          "type": "TRIANGLE",
+          "index": 1,
+          "isInput": false
+        },
+        {
+          "type": "DIAMOND",
+          "index": 2,
+          "isInput": false
+        },
+        {
+          "type": "INFINITY",
+          "index": 3,
+          "isInput": false
+        },
+        {
+          "type": "PADLOCK",
+          "index": 4,
+          "isInput": false
+        },
+        {
+          "type": "CAMOUFLAGE",
+          "index": 5,
+          "isInput": false
+        },
+        {
+          "type": "VPN",
+          "index": 6,
+          "isInput": false
+        },
+        {
+          "type": "MALICIOUS",
+          "index": 7,
+          "isInput": false
+        },
+        {
+          "type": "SPY",
+          "index": 8,
+          "isInput": false
+        }
+      ],
+      "properties": {
+        "lastSpawnTime": 0,
+        "packetGenerationRate": 1000
+      }
+    },
+    {
+      "type": "REFERENCE",
+      "x": 1000,
+      "y": 500,
+      "id": "ref_sys_end",
+      "inputPorts": [
+        {
+          "type": "SQUARE",
+          "index": 0,
+          "isInput": true
+        },
+        {
+          "type": "TRIANGLE",
+          "index": 1,
+          "isInput": true
+        },
+        {
+          "type": "DIAMOND",
+          "index": 2,
+          "isInput": true
+        },
+        {
+          "type": "INFINITY",
+          "index": 3,
+          "isInput": true
+        },
+        {
+          "type": "PADLOCK",
+          "index": 4,
+          "isInput": true
+        },
+        {
+          "type": "CAMOUFLAGE",
+          "index": 5,
+          "isInput": true
+        },
+        {
+          "type": "VPN",
+          "index": 6,
+          "isInput": true
+        },
+        {
+          "type": "MALICIOUS",
+          "index": 7,
+          "isInput": true
+        },
+        {
+          "type": "SPY",
+          "index": 8,
+          "isInput": true
+        }
+      ],
+      "outputPorts": [],
+      "properties": {
+        "lastSpawnTime": 0,
+        "packetGenerationRate": 1000
+      }
+    },
+    {
+      "type": "VPN",
+      "x": 200,
+      "y": 200,
+      "id": "vpn_secure",
+      "inputPorts": [
+        {
+          "type": "PADLOCK",
+          "index": 0,
+          "isInput": true
+        },
+        {
+          "type": "CAMOUFLAGE",
+          "index": 1,
+          "isInput": true
+        },
+        {
+          "type": "VPN",
+          "index": 2,
+          "isInput": true
+        }
+      ],
+      "outputPorts": [
+        {
+          "type": "PADLOCK",
+          "index": 0,
+          "isInput": false
+        },
+        {
+          "type": "CAMOUFLAGE",
+          "index": 1,
+          "isInput": false
+        },
+        {
+          "type": "VPN",
+          "index": 2,
+          "isInput": false
+        }
+      ],
+      "properties": {}
+    },
+    {
+      "type": "MALICIOUS",
+      "x": 400,
+      "y": 300,
+      "id": "malicious_1",
+      "inputPorts": [
+        {
+          "type": "CAMOUFLAGE",
+          "index": 0,
+          "isInput": true
+        },
+        {
+          "type": "MALICIOUS",
+          "index": 1,
+          "isInput": true
+        }
+      ],
+      "outputPorts": [
+        {
+          "type": "CAMOUFLAGE",
+          "index": 0,
+          "isInput": false
+        },
+        {
+          "type": "MALICIOUS",
+          "index": 1,
+          "isInput": false
+        }
+      ],
+      "properties": {}
+    },
+    {
+      "type": "SPY",
+      "x": 600,
+      "y": 250,
+      "id": "spy_system",
+      "inputPorts": [
+        {
+          "type": "SPY",
+          "index": 0,
+          "isInput": true
+        },
+        {
+          "type": "DIAMOND",
+          "index": 1,
+          "isInput": true
+        },
+        {
+          "type": "INFINITY",
+          "index": 2,
+          "isInput": true
+        }
+      ],
+      "outputPorts": [
+        {
+          "type": "SPY",
+          "index": 0,
+          "isInput": false
+        },
+        {
+          "type": "DIAMOND",
+          "index": 1,
+          "isInput": false
+        },
+        {
+          "type": "INFINITY",
+          "index": 2,
+          "isInput": false
+        }
+      ],
+      "properties": {
+        "isActive": true
+      }
+    },
+    {
+      "type": "MALICIOUS",
+      "x": 800,
+      "y": 400,
+      "id": "malicious_2",
+      "inputPorts": [
+        {
+          "type": "MALICIOUS",
+          "index": 0,
+          "isInput": true
+        },
+        {
+          "type": "SPY",
+          "index": 1,
+          "isInput": true
+        }
+      ],
+      "outputPorts": [
+        {
+          "type": "MALICIOUS",
+          "index": 0,
+          "isInput": false
+        },
+        {
+          "type": "SPY",
+          "index": 1,
+          "isInput": false
+        }
+      ],
+      "properties": {}
+    },
+    {
+      "type": "VPN",
+      "x": 700,
+      "y": 450,
+      "id": "vpn_final",
+      "inputPorts": [
+        {
+          "type": "VPN",
+          "index": 0,
+          "isInput": true
+        },
+        {
+          "type": "PADLOCK",
+          "index": 1,
+          "isInput": true
+        }
+      ],
+      "outputPorts": [
+        {
+          "type": "VPN",
+          "index": 0,
+          "isInput": false
+        },
+        {
+          "type": "PADLOCK",
+          "index": 1,
+          "isInput": false
+        }
+      ],
+      "properties": {}
+    }
+  ],
+  "wires": [
+    {
+      "startPortId": "ref_sys_start_OUT_0",
+      "endPortId": "vpn_secure_IN_0",
+      "arcPoints": [],
+      "style": "POLYLINE",
+      "bulkPacketPasses": 0,
+      "isDestroyed": false
+    },
+    {
+      "startPortId": "ref_sys_start_OUT_1",
+      "endPortId": "malicious_1_IN_0",
+      "arcPoints": [],
+      "style": "POLYLINE",
+      "bulkPacketPasses": 0,
+      "isDestroyed": false
+    },
+    {
+      "startPortId": "ref_sys_start_OUT_2",
+      "endPortId": "spy_system_IN_1",
+      "arcPoints": [],
+      "style": "POLYLINE",
+      "bulkPacketPasses": 0,
+      "isDestroyed": false
+    },
+    {
+      "startPortId": "vpn_secure_OUT_0",
+      "endPortId": "malicious_1_IN_1",
+      "arcPoints": [],
+      "style": "POLYLINE",
+      "bulkPacketPasses": 0,
+      "isDestroyed": false
+    },
+    {
+      "startPortId": "malicious_1_OUT_0",
+      "endPortId": "spy_system_IN_0",
+      "arcPoints": [],
+      "style": "POLYLINE",
+      "bulkPacketPasses": 0,
+      "isDestroyed": false
+    },
+    {
+      "startPortId": "spy_system_OUT_0",
+      "endPortId": "malicious_2_IN_0",
+      "arcPoints": [],
+      "style": "POLYLINE",
+      "bulkPacketPasses": 0,
+      "isDestroyed": false
+    },
+    {
+      "startPortId": "malicious_2_OUT_0",
+      "endPortId": "vpn_final_IN_0",
+      "arcPoints": [],
+      "style": "POLYLINE",
+      "bulkPacketPasses": 0,
+      "isDestroyed": false
+    },
+    {
+      "startPortId": "vpn_final_OUT_0",
+      "endPortId": "ref_sys_end_IN_0",
+      "arcPoints": [],
+      "style": "POLYLINE",
+      "bulkPacketPasses": 0,
+      "isDestroyed": false
+    },
+    {
+      "startPortId": "vpn_final_OUT_1",
+      "endPortId": "ref_sys_end_IN_1",
+      "arcPoints": [],
+      "style": "POLYLINE",
+      "bulkPacketPasses": 0,
+      "isDestroyed": false
+    }
+  ],
+  "movingPackets": [
+    {
+      "packet": {
+        "type": "PADLOCK_ICON",
+        "x": 823,
+        "y": 463,
+        "packetClass": "ProtectedPacket",
+        "properties": {
+          "lastVisibilityToggle": 1758481638523,
+          "originalPacketType": "PADLOCK_ICON",
+          "isVisible": true
+        }
+      },
+      "sourceSystemId": "vpn_final",
+      "destinationSystemId": "ref_sys_end",
+      "wireId": "vpn_final_OUT_0_ref_sys_end_IN_0",
+      "progress": 0.1617518516703283,
+      "noiseLevel": 0.0,
+      "hasSpawnProtection": false,
+      "spawnProtectionEndTime": 0,
+      "currentSpeed": 1.1607415676116943,
+      "acceleration": 0.0,
+      "isOnCurve": false,
+      "wirePassCount": 0
+    },
+    {
+      "packet": {
+        "type": "PADLOCK_ICON",
+        "x": 706,
+        "y": 275,
+        "packetClass": "ProtectedPacket",
+        "properties": {
+          "lastVisibilityToggle": 1758481639523,
+          "originalPacketType": "PADLOCK_ICON",
+          "isVisible": true
+        }
+      },
+      "sourceSystemId": "spy_system",
+      "destinationSystemId": "malicious_2",
+      "wireId": "spy_system_OUT_0_malicious_2_IN_0",
+      "progress": 0.14512079726093888,
+      "noiseLevel": 0.0,
+      "hasSpawnProtection": false,
+      "spawnProtectionEndTime": 0,
+      "currentSpeed": 0.8097355961799622,
+      "acceleration": 0.0,
+      "isOnCurve": false,
+      "wirePassCount": 0
+    }
+  ],
+  "wireLengths": {
+    "vpn_sys_OUT_0_ref_sys_B_IN_2": 373,
+    "vpn_sys_OUT_0_ref_sys_B_IN_5": 383,
+    "ref_sys_A_OUT_2_vpn_sys_IN_0": 305,
+    "ref_sys_A_OUT_4_vpn_sys_IN_1": 306
+  }
+}

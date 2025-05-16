@@ -1,5 +1,7 @@
 package me.minhashemi.model;
 
+import javax.swing.KeyStroke;
+
 public class Config {
     // screen
     public static final int WIDTH = 800;
@@ -20,4 +22,12 @@ public class Config {
     public static final int NETSYS_WIDTH = 60;
     public static final int MAX_BUFFER_SIZE = 5;
     public static final int PACKET_SIZE = 15;
+    
+    // Key bindings
+    public static KeyStroke SPAWN_PACKET_KEY = KeyStroke.getKeyStroke("SPACE");
+    public static KeyStroke PAUSE_KEY = KeyStroke.getKeyStroke("P");
+    
+    // Key binding names for display
+    public static final String SPAWN_PACKET_ACTION = "Spawn Packet";
+    public static final String PAUSE_ACTION = "Pause Game";
 }

@@ -94,14 +94,28 @@ public class GameScreen extends JPanel {
     }
 
     private void setupKeyBinding(JComponent component) {
+        // Use KeyBindingManager to get current key bindings
+        me.minhashemi.utils.KeyBindingManager keyManager = me.minhashemi.utils.KeyBindingManager.getInstance();
+        
+        // Spawn packet key binding
         component.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-                .put(KeyStroke.getKeyStroke("SPACE"), "spawnPacket");
+                .put(keyManager.getKeyStroke(me.minhashemi.model.Config.SPAWN_PACKET_ACTION), "spawnPacket");
         component.getActionMap().put("spawnPacket", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 for (NetSys netSys : levelData.packets) {
                     netSys.spawnInitialPackets(wireManager, movingPackets);
                 }
+            }
+        });
+        
+        // Pause key binding
+        component.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(keyManager.getKeyStroke(me.minhashemi.model.Config.PAUSE_ACTION), "pauseGame");
+        component.getActionMap().put("pauseGame", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                pauseGame();
             }
         });
     }
