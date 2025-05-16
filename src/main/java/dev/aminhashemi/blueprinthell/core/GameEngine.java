@@ -1129,7 +1129,17 @@ public class GameEngine implements Runnable {
         
         if (packetType != null) {
             Point pos = selectedSpawner.getPosition();
-            spawnPacket(new MessengerPacket(pos.x, pos.y, packetType), selectedSpawner, true); // Mark as player-spawned
+            Packet newPacket;
+            if (packetType == PacketType.BULK_PACKET_LARGE) {
+                newPacket = new BulkPacket(pos.x, pos.y, BulkPacket.BulkType.LARGE);
+            } else if (packetType == PacketType.BULK_PACKET_SMALL) {
+                newPacket = new BulkPacket(pos.x, pos.y, BulkPacket.BulkType.SMALL);
+            } else {
+                // Use MessengerPacket for all other types (the original behavior)
+                newPacket = new MessengerPacket(pos.x, pos.y, packetType);
+            }
+
+            spawnPacket(newPacket, selectedSpawner, true); // Use the correctly instantiated newPacket
             lastSpawnTime = currentTime; // Update spawn time
             Logger.getInstance().info("=== PACKET SPAWNED: " + packetType + " ===");
         }
@@ -1143,7 +1153,7 @@ public class GameEngine implements Runnable {
             case SQUARE:
                 return PacketType.SQUARE_MESSENGER;
             case TRIANGLE:
-                return PacketType.TRIANGLE_MESSENGER;
+                return PacketType.BULK_PACKET_LARGE;
             case DIAMOND:
                 // Randomly choose one diamond type
                 return Math.random() < 0.5 ? PacketType.GREEN_DIAMOND_SMALL : PacketType.GREEN_DIAMOND_LARGE;
