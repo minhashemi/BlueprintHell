@@ -37,11 +37,15 @@ public class MovingPacket {
     public void update() {
         if (lost || t >= 1f) return;
 
-        // Adjust speed based on packet's shape
-        if (shape == PortType.SQUARE) {
-            speed = 0.02f;
-        } else if (shape == PortType.TRIANGLE) {
-            speed = 0.03f;
+        // Adjust speed based on shape
+        NetSysPort fromPort = wire.getFromPort();
+        if (fromPort != null) {
+            PortType type = fromPort.getType();
+            if (type == PortType.SQUARE) {
+                speed = 0.02f;
+            } else if (type == PortType.TRIANGLE) {
+                speed = 0.03f;
+            }
         }
 
         t += speed;
@@ -50,12 +54,14 @@ public class MovingPacket {
         position = evaluateBezier(wire.getStart(), wire.getEnd(), t);
 
         if (t >= 1f && !lost && !delivered && destinationNetSys != null) {
-            destinationNetSys.markReceived();
             delivered = true;
+            wire.setHasPacket(false);
+            destinationNetSys.markReceived();
         }
 
-        if (noise >= NOISE_THRESHOLD) {
+        if (noise >= NOISE_THRESHOLD && !lost) {
             lost = true;
+            wire.setHasPacket(false);
         }
     }
 

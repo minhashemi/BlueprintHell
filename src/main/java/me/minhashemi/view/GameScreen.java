@@ -143,24 +143,30 @@ public class GameScreen extends JPanel {
 
     private void spawnPackets() {
         for (NetSys netSys : levelData.packets) {
+            // Only spawn from blocks with no input ports
             if (netSys.getInputPorts().isEmpty()) {
                 boolean spawned = false;
                 for (NetSysPort output : netSys.getOutputPorts()) {
                     if (output.isConnected()) {
                         for (WireManager.Wire wire : wireManager.getWires()) {
-                            if (wire.getFromPort() == output) {
-                                // Random shape assignment
+                            if (wire.getFromPort() == output && !wire.hasPacket()) {
+                                // Assign a random shape to the packet
                                 PortType[] types = PortType.values();
                                 PortType randomShape = types[new Random().nextInt(types.length)];
+
+                                // Spawn the packet only if wire is free
                                 movingPackets.add(new MovingPacket(wire, randomShape));
+                                wire.setHasPacket(true); // mark the wire as occupied
                                 spawned = true;
                                 break;
                             }
                         }
                     }
+                    if (spawned) break; // Stop checking other output ports if one packet has spawned
                 }
+
                 if (spawned) {
-                    netSys.markReceived();
+                    netSys.markReceived(); // Green dot for start node
                 }
             }
         }
