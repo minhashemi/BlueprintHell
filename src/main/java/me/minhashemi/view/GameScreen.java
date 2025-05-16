@@ -3,12 +3,14 @@ package me.minhashemi.view;
 import me.minhashemi.controller.InputController;
 import me.minhashemi.model.*;
 
+import javax.sound.sampled.Port;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 // All imports stay the same
 
@@ -71,7 +73,9 @@ public class GameScreen extends JPanel {
                             if (out.isConnected()) {
                                 for (WireManager.Wire wire : wireManager.getWires()) {
                                     if (wire.getFromPort() == out) {
-                                        toAdd.add(new MovingPacket(wire)); // buffer it
+                                        PortType[] packetType = PortType.values();
+                                        PortType packetShape = packetType[new Random().nextInt(packetType.length)];
+                                        toAdd.add(new MovingPacket(wire, packetShape)); // buffer it
                                         break;
                                     }
                                 }
@@ -139,14 +143,16 @@ public class GameScreen extends JPanel {
 
     private void spawnPackets() {
         for (NetSys netSys : levelData.packets) {
-            // Only spawn from blocks with no input ports
             if (netSys.getInputPorts().isEmpty()) {
                 boolean spawned = false;
                 for (NetSysPort output : netSys.getOutputPorts()) {
                     if (output.isConnected()) {
                         for (WireManager.Wire wire : wireManager.getWires()) {
                             if (wire.getFromPort() == output) {
-                                movingPackets.add(new MovingPacket(wire));
+                                // Random shape assignment
+                                PortType[] types = PortType.values();
+                                PortType randomShape = types[new Random().nextInt(types.length)];
+                                movingPackets.add(new MovingPacket(wire, randomShape));
                                 spawned = true;
                                 break;
                             }
@@ -154,11 +160,12 @@ public class GameScreen extends JPanel {
                     }
                 }
                 if (spawned) {
-                    netSys.markReceived(); // Green dot for start node
+                    netSys.markReceived();
                 }
             }
         }
     }
+
 
     private void drawNetSys(Graphics g, NetSys packet) {
         int x = packet.position.x;
