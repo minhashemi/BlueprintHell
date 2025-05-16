@@ -95,6 +95,18 @@ public class Window extends JFrame {
             player.setVolume(volume);
         });
 
+        // Key Bindings button
+        JButton keyBindingsButton = new JButton("Key Bindings");
+        keyBindingsButton.setFont(new Font("Arial", Font.BOLD, 16));
+        keyBindingsButton.setBackground(new Color(70, 130, 180));
+        keyBindingsButton.setForeground(Color.WHITE);
+        keyBindingsButton.setFocusPainted(false);
+        keyBindingsButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        keyBindingsButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        keyBindingsButton.addActionListener(e -> {
+            KeyBindingDialog.showDialog(this);
+        });
+
         // Back button
         JButton backButton = new JButton("Return");
         backButton.addActionListener(e -> showCard("MainMenu"));
@@ -104,6 +116,8 @@ public class Window extends JFrame {
         panel.add(Box.createVerticalStrut(10));
         panel.add(volumeLabel);
         panel.add(volumeSlider);
+        panel.add(Box.createVerticalStrut(20));
+        panel.add(keyBindingsButton);
         panel.add(Box.createVerticalStrut(10));
         panel.add(backButton);
 
