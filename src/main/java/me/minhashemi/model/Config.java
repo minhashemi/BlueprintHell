@@ -1,6 +1,8 @@
 package me.minhashemi.model;
 
 public class Config {
+    // level
+    public static int LEVEL_NUM = 1;
     // screen
     public static final int WIDTH = 800;
     public static final int HEIGHT = 600;
