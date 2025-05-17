@@ -37,7 +37,6 @@ public class MovingPacket {
         this.destinationNetSys = endPort != null ? endPort.getParent() : null;
     }
 
-
     public void update() {
         if (lost || t >= 1f) return;
 
@@ -132,5 +131,9 @@ public class MovingPacket {
 
     public Wire getWire() {
         return wire;
+    }
+
+    public PortType getType() {
+        return shape;
     }
 }
