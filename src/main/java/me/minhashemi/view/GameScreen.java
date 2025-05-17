@@ -2,6 +2,11 @@ package me.minhashemi.view;
 
 import me.minhashemi.controller.InputController;
 import me.minhashemi.model.*;
+import me.minhashemi.model.block.NetSys;
+import me.minhashemi.model.block.NetSysPort;
+import me.minhashemi.model.block.PortType;
+import me.minhashemi.model.level.LevelData;
+import me.minhashemi.model.level.LevelLoader;
 import me.minhashemi.model.shop.ShopPanel;
 
 import javax.sound.sampled.*;
@@ -75,7 +80,7 @@ public class GameScreen extends JPanel {
                         // Spawn new packets from targetSys output ports if connected
                         for (NetSysPort out : targetSys.getOutputPorts()) {
                             if (out.isConnected()) {
-                                for (WireManager.Wire wire : wireManager.getWires()) {
+                                for (Wire wire : wireManager.getWires()) {
                                     if (wire.getFromPort() == out && !wire.hasPacket()) {
                                         PortType[] packetTypes = PortType.values();
                                         PortType randomType = packetTypes[new Random().nextInt(packetTypes.length)];
@@ -128,14 +133,12 @@ public class GameScreen extends JPanel {
             @Override
             public void onQuitToMenu() {
                 JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(GameScreen.this);
-                topFrame.dispose();
-                topFrame.setUndecorated(false);
-                topFrame.setExtendedState(JFrame.NORMAL);
-                topFrame.setContentPane(new Window());
-                topFrame.pack();
-                topFrame.setLocationRelativeTo(null);
-                topFrame.setVisible(true);
+                if (topFrame instanceof Window) {
+                    ((Window) topFrame).quitToMenuFromGame();
+                }
             }
+
+
         });
         add(controlsPanel, BorderLayout.SOUTH);
 
@@ -163,7 +166,7 @@ public class GameScreen extends JPanel {
                 boolean spawned = false;
                 for (NetSysPort output : netSys.getOutputPorts()) {
                     if (output.isConnected()) {
-                        for (WireManager.Wire wire : wireManager.getWires()) {
+                        for (Wire wire : wireManager.getWires()) {
                             if (wire.getFromPort() == output && !wire.hasPacket()) {
                                 PortType[] types = PortType.values();
                                 PortType randomShape = types[new Random().nextInt(types.length)];

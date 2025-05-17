@@ -1,7 +1,7 @@
 package me.minhashemi.view;
 
-import me.minhashemi.model.NetSys;
-import me.minhashemi.model.PortType;
+import me.minhashemi.model.block.NetSys;
+import me.minhashemi.model.block.PortType;
 import me.minhashemi.model.Config;
 
 import javax.swing.*;

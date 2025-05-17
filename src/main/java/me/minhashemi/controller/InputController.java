@@ -1,8 +1,12 @@
 package me.minhashemi.controller;
 
 import me.minhashemi.model.*;
+import me.minhashemi.model.block.NetSys;
+import me.minhashemi.model.block.NetSysPort;
+import me.minhashemi.model.level.LevelData;
 import me.minhashemi.view.GameScreen;
 import me.minhashemi.view.HUD;
+import me.minhashemi.view.Wire;
 import me.minhashemi.view.WireManager;
 
 import javax.swing.*;
@@ -31,7 +35,7 @@ public class InputController {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (SwingUtilities.isRightMouseButton(e)) {
-                    WireManager.Wire nearby = wireManager.findNearbyWire(e.getPoint());
+                    Wire nearby = wireManager.findNearbyWire(e.getPoint());
                     if (nearby != null) {
                         nearby.fromPort.setConnected(false);
                         nearby.toPort.setConnected(false);
@@ -85,7 +89,7 @@ public class InputController {
                             NetSysPort from = wireStartPort.isInput() ? endPort : wireStartPort;
                             NetSysPort to = wireStartPort.isInput() ? wireStartPort : endPort;
 
-                            WireManager.Wire wire = new WireManager.Wire(from, to);
+                            Wire wire = new Wire(from, to);
                             if (wire.getLength() <= Config.remainingWireLength) {
                                 wireManager.addWire(wire);
                                 from.setConnected(true);
@@ -107,7 +111,7 @@ public class InputController {
 
                 if (selectedNetSys != null) {
                     double newTotalLength = 0;
-                    for (WireManager.Wire wire : wireManager.getWires()) {
+                    for (Wire wire : wireManager.getWires()) {
                         newTotalLength += wire.getLength();
                     }
 
