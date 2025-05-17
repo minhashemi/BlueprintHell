@@ -3,8 +3,9 @@ package me.minhashemi.view;
 import me.minhashemi.controller.InputController;
 import me.minhashemi.model.*;
 
-// keep all your existing imports
+import javax.sound.sampled.*;
 import javax.swing.*;
+import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.BufferedInputStream;
@@ -12,8 +13,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.List;
-import javax.sound.sampled.*;
-import javax.swing.Timer;
 
 public class GameScreen extends JPanel {
     private final LevelData levelData;
@@ -31,10 +30,12 @@ public class GameScreen extends JPanel {
         this.wireManager = new WireManager(levelData);
         this.inputController = new InputController(this, levelData, wireManager, hud);
 
+        // Initialize ports for all NetSys
         for (NetSys netsys : levelData.packets) {
             netsys.initializePorts();
         }
 
+        // Canvas panel to draw everything
         JPanel canvasPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -44,12 +45,15 @@ public class GameScreen extends JPanel {
 
                 hud.render(g, getWidth());
 
+                // Draw each NetSys
                 for (NetSys netsys : levelData.packets) {
                     drawNetSys(g, netsys);
                 }
 
+                // Draw all wires
                 wireManager.render(g);
 
+                // Update and draw moving packets
                 Iterator<MovingPacket> iterator = movingPackets.iterator();
                 List<MovingPacket> toAdd = new ArrayList<>();
 
@@ -61,19 +65,20 @@ public class GameScreen extends JPanel {
                         iterator.remove();
                     } else if (packet.isArrived()) {
                         iterator.remove();
-                        packet.getWire().setHasPacket(false); // mark wire as free
+                        packet.getWire().setHasPacket(false);
 
                         NetSysPort toPort = packet.getWire().getToPort();
                         NetSys targetSys = toPort.getParent();
                         targetSys.markReceived();
 
+                        // Spawn new packets from targetSys output ports if connected
                         for (NetSysPort out : targetSys.getOutputPorts()) {
                             if (out.isConnected()) {
                                 for (WireManager.Wire wire : wireManager.getWires()) {
-                                    if (wire.getFromPort() == out) {
-                                        PortType[] packetType = PortType.values();
-                                        PortType packetShape = packetType[new Random().nextInt(packetType.length)];
-                                        toAdd.add(new MovingPacket(wire, packetShape));
+                                    if (wire.getFromPort() == out && !wire.hasPacket()) {
+                                        PortType[] packetTypes = PortType.values();
+                                        PortType randomType = packetTypes[new Random().nextInt(packetTypes.length)];
+                                        toAdd.add(new MovingPacket(wire, randomType));
                                         wire.setHasPacket(true);
                                         break;
                                     }
@@ -87,7 +92,7 @@ public class GameScreen extends JPanel {
 
                 movingPackets.addAll(toAdd);
 
-                // Check for victory only when there are no packets and all blocks are green
+                // Victory check: no moving packets and all blocks green
                 if (!victoryShown && movingPackets.isEmpty() && allBlocksGreen()) {
                     victoryShown = true;
                     victoryMsc();
@@ -100,6 +105,7 @@ public class GameScreen extends JPanel {
         canvasPanel.setPreferredSize(new Dimension(800, 600));
         add(canvasPanel, BorderLayout.CENTER);
 
+        // Controls panel at the bottom
         GameControlsPanel controlsPanel = new GameControlsPanel(new GameControlsPanel.GameControlListener() {
             @Override
             public void onTimeForward() {
@@ -129,7 +135,7 @@ public class GameScreen extends JPanel {
 
         setupKeyBinding(canvasPanel);
 
-        // Repainting timer
+        // Timer for repainting at ~60 FPS
         Timer timer = new Timer(16, e -> canvasPanel.repaint());
         timer.start();
     }
@@ -218,15 +224,16 @@ public class GameScreen extends JPanel {
 
     private void victoryMsc() {
         new Thread(() -> {
-            try {
-                InputStream audioSrc = getClass().getClassLoader().getResourceAsStream("victory.wav");
+            try (InputStream audioSrc = getClass().getClassLoader().getResourceAsStream("victory.wav")) {
                 if (audioSrc == null) throw new IOException("Resource not found: victory.wav");
 
-                InputStream bufferedIn = new BufferedInputStream(audioSrc);
-                AudioInputStream audioStream = AudioSystem.getAudioInputStream(bufferedIn);
-                Clip clip = AudioSystem.getClip();
-                clip.open(audioStream);
-                clip.start();
+                try (InputStream bufferedIn = new BufferedInputStream(audioSrc);
+                     AudioInputStream audioStream = AudioSystem.getAudioInputStream(bufferedIn)) {
+
+                    Clip clip = AudioSystem.getClip();
+                    clip.open(audioStream);
+                    clip.start();
+                }
             } catch (Exception e) {
                 System.err.println("Failed to play music: " + e.getMessage());
             }
@@ -238,7 +245,7 @@ public class GameScreen extends JPanel {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                g.setColor(new Color(0, 0, 0, 180)); // semi-transparent background
+                g.setColor(new Color(0, 0, 0, 180)); // semi-transparent black
                 g.fillRect(0, 0, getWidth(), getHeight());
             }
         };
@@ -273,14 +280,12 @@ public class GameScreen extends JPanel {
 
         overlay.add(victoryPanel, new GridBagConstraints());
 
-        this.setLayout(null);
-        overlay.setSize(this.getSize());
-        this.add(overlay);
-        this.setComponentZOrder(overlay, 0);
+        setLayout(null);
+        overlay.setSize(getSize());
+        add(overlay);
+        setComponentZOrder(overlay, 0);
 
-        this.revalidate();
-        this.repaint();
+        revalidate();
+        repaint();
     }
-
-
 }
