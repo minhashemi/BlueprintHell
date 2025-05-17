@@ -264,18 +264,40 @@ public class GameScreen extends JPanel {
         messageLabel.setFont(new Font("Arial", Font.BOLD, 24));
         messageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JButton returnButton = new JButton("Return to Menu");
-        returnButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        returnButton.addActionListener(e -> {
-            JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
-            topFrame.dispose();
-            new Window(); // Open main menu
+        // Button to go to next level
+        JButton nextLevelButton = new JButton("Next Level");
+        nextLevelButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        nextLevelButton.addActionListener(e -> {
+            // Remove the overlay and trigger your "load next level" logic
+            Container topFrame = SwingUtilities.getWindowAncestor(this);
+            if (topFrame instanceof JFrame frame) {
+                frame.getContentPane().removeAll();
+
+                // TODO: Replace this with your actual logic for getting the next level:
+                Config.LEVEL_NUM = Config.LEVEL_NUM + 1;
+                LevelData nextLevel = LevelLoader.loadLevel(Config.LEVEL_NUM);
+                GameScreen nextGame = new GameScreen(nextLevel);
+                frame.setContentPane(nextGame);
+                frame.revalidate();
+                frame.repaint();
+            }
+        });
+
+        // Button to close the dialog
+        JButton closeButton = new JButton("Close");
+        closeButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        closeButton.addActionListener(e -> {
+            GameScreen.this.remove(overlay);
+            GameScreen.this.revalidate();
+            GameScreen.this.repaint();
         });
 
         victoryPanel.add(Box.createVerticalGlue());
         victoryPanel.add(messageLabel);
         victoryPanel.add(Box.createRigidArea(new Dimension(0, 20)));
-        victoryPanel.add(returnButton);
+        victoryPanel.add(nextLevelButton);
+        victoryPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        victoryPanel.add(closeButton);
         victoryPanel.add(Box.createVerticalGlue());
 
         overlay.add(victoryPanel, new GridBagConstraints());
@@ -288,4 +310,5 @@ public class GameScreen extends JPanel {
         revalidate();
         repaint();
     }
+
 }
