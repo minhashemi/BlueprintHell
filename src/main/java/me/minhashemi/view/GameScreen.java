@@ -2,6 +2,7 @@ package me.minhashemi.view;
 
 import me.minhashemi.controller.InputController;
 import me.minhashemi.model.*;
+import me.minhashemi.model.shop.ShopPanel;
 
 import javax.sound.sampled.*;
 import javax.swing.*;
@@ -107,6 +108,11 @@ public class GameScreen extends JPanel {
 
         // Controls panel at the bottom
         GameControlsPanel controlsPanel = new GameControlsPanel(new GameControlsPanel.GameControlListener() {
+            @Override
+            public void onShop() {
+                openShop();
+            }
+
             @Override
             public void onTimeForward() {
                 hud.updateHUD(hud.getTemporalProgress() + 1, hud.getPacketLoss(), hud.getCoins());
@@ -273,9 +279,8 @@ public class GameScreen extends JPanel {
             if (topFrame instanceof JFrame frame) {
                 frame.getContentPane().removeAll();
 
-                // TODO: Replace this with your actual logic for getting the next level:
-                Config.LEVEL_NUM = Config.LEVEL_NUM + 1;
-                LevelData nextLevel = LevelLoader.loadLevel(Config.LEVEL_NUM);
+                Config.lastPlayedStage = Config.lastPlayedStage + 1;
+                LevelData nextLevel = LevelLoader.loadLevel(Config.lastPlayedStage);
                 GameScreen nextGame = new GameScreen(nextLevel);
                 frame.setContentPane(nextGame);
                 frame.revalidate();
@@ -310,5 +315,59 @@ public class GameScreen extends JPanel {
         revalidate();
         repaint();
     }
+
+
+    // shop handler
+    private JPanel shopOverlay;
+
+    private void openShop() {
+        if (shopOverlay != null) return; // already open
+
+        shopOverlay = new JPanel(null); // absolute layout
+        shopOverlay.setBounds(0, 0, getWidth(), getHeight());
+        shopOverlay.setOpaque(false);
+
+        ShopPanel shopPanel = new ShopPanel(new ShopPanel.ShopListener() {
+            @Override
+            public void onBuy() {
+                hud.updateHUD(hud.getTemporalProgress(), hud.getPacketLoss(), hud.getCoins() - ShopPanel.getPrice());
+//                closeShop();
+            }
+
+            @Override
+            public void onCancel() {
+                closeShop();
+            }
+        });
+
+        shopPanel.setBounds(getWidth() / 2 - 150, getHeight() / 2 - 100, 300, 200);
+        shopOverlay.add(shopPanel);
+        add(shopOverlay);
+        setComponentZOrder(shopOverlay, 0);
+        revalidate();
+        repaint();
+
+        pauseGame();
+    }
+
+    private void closeShop() {
+        if (shopOverlay != null) {
+            remove(shopOverlay);
+            shopOverlay = null;
+            revalidate();
+            repaint();
+            resumeGame();
+        }
+    }
+
+    // Dummy placeholders
+    private void pauseGame() {
+
+    }
+
+    private void resumeGame() {
+
+    }
+
 
 }
