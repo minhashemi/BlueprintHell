@@ -74,17 +74,27 @@ public class GameScreen extends JPanel {
                         NetSys targetSys = toPort.getParent();
                         targetSys.markReceived();
 
-                        // Spawn new packets from targetSys output ports if connected
+                        // Spawn one new packet from a random empty output port if available
+                        List<NetSysPort> availableOutputs = new ArrayList<>();
                         for (NetSysPort out : targetSys.getOutputPorts()) {
                             if (out.isConnected()) {
                                 for (Wire wire : wireManager.getWires()) {
                                     if (wire.getFromPort() == out && !wire.hasPacket()) {
-                                        PortType[] packetTypes = PortType.values();
-                                        PortType randomType = packetTypes[new Random().nextInt(packetTypes.length)];
-                                        toAdd.add(new MovingPacket(wire, randomType));
-                                        wire.setHasPacket(true);
+                                        availableOutputs.add(out);
                                         break;
                                     }
+                                }
+                            }
+                        }
+
+                        if (!availableOutputs.isEmpty()) {
+                            NetSysPort selectedOutput = availableOutputs.get(new Random().nextInt(availableOutputs.size()));
+                            for (Wire wire : wireManager.getWires()) {
+                                if (wire.getFromPort() == selectedOutput && !wire.hasPacket()) {
+                                    // Use the same packet type as the incoming packet
+                                    toAdd.add(new MovingPacket(wire, packet.getType()));
+                                    wire.setHasPacket(true);
+                                    break;
                                 }
                             }
                         }
@@ -134,8 +144,6 @@ public class GameScreen extends JPanel {
                     ((Window) topFrame).quitToMenuFromGame();
                 }
             }
-
-
         });
         add(controlsPanel, BorderLayout.SOUTH);
 
@@ -298,7 +306,6 @@ public class GameScreen extends JPanel {
         repaint();
     }
 
-
     // shop handler
     private JPanel shopOverlay;
 
@@ -313,7 +320,7 @@ public class GameScreen extends JPanel {
             @Override
             public void onBuy() {
                 hud.updateHUD(hud.getTemporalProgress(), hud.getPacketLoss(), hud.getCoins() - ShopPanel.getPrice());
-//                closeShop();
+                closeShop();
             }
 
             @Override
@@ -344,12 +351,8 @@ public class GameScreen extends JPanel {
 
     // Dummy placeholders
     private void pauseGame() {
-
     }
 
     private void resumeGame() {
-
     }
-
-
 }
