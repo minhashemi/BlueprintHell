@@ -1,8 +1,8 @@
 package me.minhashemi.view;
 
 import me.minhashemi.model.Config;
-import me.minhashemi.model.LevelData;
-import me.minhashemi.model.LevelLoader;
+import me.minhashemi.model.level.LevelData;
+import me.minhashemi.model.level.LevelLoader;
 
 import javax.sound.sampled.*;
 import javax.swing.*;
@@ -176,4 +176,30 @@ public class Window extends JFrame {
             clip.close();
         }
     }
+
+    public void quitToMenuFromGame() {
+        // Exit full-screen if active
+        GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+        if (gd.getFullScreenWindow() == this) {
+            gd.setFullScreenWindow(null);
+        }
+
+        // Remove decorations and reset window
+        dispose();  // allow setting decorations again
+        setUndecorated(false);
+        setResizable(true);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // Re-add main panel (menus)
+        setContentPane(mainPanel);
+
+        pack(); // recompute layout
+        setSize(Config.WIDTH, Config.HEIGHT);
+        setLocationRelativeTo(null);
+        setVisible(true);
+
+        // Go to main menu screen
+        showCard("MainMenu");
+    }
+
 }

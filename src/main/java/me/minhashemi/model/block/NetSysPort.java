@@ -1,4 +1,6 @@
-package me.minhashemi.model;
+package me.minhashemi.model.block;
+
+import me.minhashemi.model.Config;
 
 import java.awt.Point;
 

@@ -1,4 +1,4 @@
-package me.minhashemi.model;
+package me.minhashemi.model.level;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

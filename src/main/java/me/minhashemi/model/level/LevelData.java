@@ -1,4 +1,7 @@
-package me.minhashemi.model;
+package me.minhashemi.model.level;
+
+import me.minhashemi.model.Metadata;
+import me.minhashemi.model.block.NetSys;
 
 import java.util.List;
 
