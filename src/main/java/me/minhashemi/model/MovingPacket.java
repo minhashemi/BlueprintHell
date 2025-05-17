@@ -1,12 +1,16 @@
 package me.minhashemi.model;
 
+import me.minhashemi.model.block.NetSys;
+import me.minhashemi.model.block.NetSysPort;
+import me.minhashemi.model.block.PortType;
+import me.minhashemi.view.Wire;
 import me.minhashemi.view.WireManager;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
 
 public class MovingPacket {
-    private final WireManager.Wire wire;
+    private final Wire wire;
     private final NetSys destinationNetSys;
     private final PortType shape;
 
@@ -20,7 +24,7 @@ public class MovingPacket {
     public static final float NOISE_THRESHOLD = 100f;
     public static final float MAX_DISTANCE_FROM_WIRE = 20f;
 
-    public MovingPacket(WireManager.Wire wire, PortType shape) {
+    public MovingPacket(Wire wire, PortType shape) {
         this.wire = wire;
         this.shape = shape;
         this.t = 0;
@@ -126,7 +130,7 @@ public class MovingPacket {
         return new Point2D.Float(x, y);
     }
 
-    public WireManager.Wire getWire() {
+    public Wire getWire() {
         return wire;
     }
 }

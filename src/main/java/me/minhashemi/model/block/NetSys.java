@@ -1,4 +1,7 @@
-package me.minhashemi.model;
+package me.minhashemi.model.block;
+
+import me.minhashemi.model.Config;
+import me.minhashemi.model.MovingPacket;
 
 import java.awt.Point;
 import java.util.ArrayList;
