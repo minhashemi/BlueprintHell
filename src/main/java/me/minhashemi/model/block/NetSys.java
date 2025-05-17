@@ -2,6 +2,7 @@ package me.minhashemi.model.block;
 
 import me.minhashemi.model.Config;
 import me.minhashemi.model.MovingPacket;
+import me.minhashemi.controller.audio.*;
 
 import java.awt.Point;
 import java.util.ArrayList;
@@ -104,19 +105,14 @@ public class NetSys {
         }
     }
 
-    public void markReceivedPacket() {
-        if (!hasReceivedPacket) {
-            hasReceivedPacket = true;
-            playGreenBeep(); // play sound when first received
-        }
-    }
+
 
     public boolean hasReceivedPacket() {
         return hasReceivedPacket;
     }
 
     private void playGreenBeep() {
-        java.awt.Toolkit.getDefaultToolkit().beep();
+        player.playEffect("connect");
     }
 
     private void playRedBeep() {
@@ -124,6 +120,9 @@ public class NetSys {
     }
 
     public void markReceived() {
-        hasReceivedPacket = true;
+        if (!hasReceivedPacket) {
+            hasReceivedPacket = true;
+            playGreenBeep(); // play sound when first received
+        }
     }
 }

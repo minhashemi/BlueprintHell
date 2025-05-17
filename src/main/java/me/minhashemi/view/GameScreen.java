@@ -8,15 +8,12 @@ import me.minhashemi.model.block.PortType;
 import me.minhashemi.model.level.LevelData;
 import me.minhashemi.model.level.LevelLoader;
 import me.minhashemi.model.shop.ShopPanel;
+import me.minhashemi.controller.audio.player;
 
-import javax.sound.sampled.*;
 import javax.swing.*;
 import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 import java.util.List;
 
@@ -101,7 +98,7 @@ public class GameScreen extends JPanel {
                 // Victory check: no moving packets and all blocks green
                 if (!victoryShown && movingPackets.isEmpty() && allBlocksGreen()) {
                     victoryShown = true;
-                    victoryMsc();
+                    player.playEffect("victory");
                     SwingUtilities.invokeLater(() -> showVictoryMessage("Victory! All packets delivered."));
                 }
             }
@@ -229,24 +226,6 @@ public class GameScreen extends JPanel {
             if (!netsys.hasReceivedPacket()) return false;
         }
         return true;
-    }
-
-    private void victoryMsc() {
-        new Thread(() -> {
-            try (InputStream audioSrc = getClass().getClassLoader().getResourceAsStream("victory.wav")) {
-                if (audioSrc == null) throw new IOException("Resource not found: victory.wav");
-
-                try (InputStream bufferedIn = new BufferedInputStream(audioSrc);
-                     AudioInputStream audioStream = AudioSystem.getAudioInputStream(bufferedIn)) {
-
-                    Clip clip = AudioSystem.getClip();
-                    clip.open(audioStream);
-                    clip.start();
-                }
-            } catch (Exception e) {
-                System.err.println("Failed to play music: " + e.getMessage());
-            }
-        }).start();
     }
 
     public void showVictoryMessage(String msg) {
