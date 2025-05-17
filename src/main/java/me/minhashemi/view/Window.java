@@ -3,22 +3,25 @@ package me.minhashemi.view;
 import me.minhashemi.model.Config;
 import me.minhashemi.model.level.LevelData;
 import me.minhashemi.model.level.LevelLoader;
-
-import javax.sound.sampled.*;
+import me.minhashemi.controller.audio.player;
 import javax.swing.*;
 import java.awt.*;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import static me.minhashemi.controller.audio.player.playMusic;
+import static me.minhashemi.controller.audio.player.stopMusic;
+
 public class Window extends JFrame {
-    private Clip clip;
+
     private JPanel mainPanel;
 
     public Window() {
         super("BluePrint Hell");
         initUI();
-        if (Config.isMusicOn) playMusic();
+        if (Config.isMusicOn)
+            playMusic("theme");
     }
 
     private void initUI() {
@@ -72,7 +75,7 @@ public class Window extends JFrame {
         JCheckBox musicToggle = new JCheckBox("Theme Song", Config.isMusicOn);
         musicToggle.addActionListener(e -> {
             Config.isMusicOn = musicToggle.isSelected();
-            if (Config.isMusicOn) playMusic();
+            if (Config.isMusicOn) playMusic("theme");
             else stopMusic();
         });
 
@@ -152,30 +155,7 @@ public class Window extends JFrame {
         cl.show(mainPanel, name);
     }
 
-    private void playMusic() {
-        if (clip != null && clip.isRunning()) return;
 
-        try {
-            InputStream audioSrc = getClass().getClassLoader().getResourceAsStream("theme.wav");
-            if (audioSrc == null) throw new IOException("Resource not found: theme.wav");
-
-            InputStream bufferedIn = new BufferedInputStream(audioSrc);
-            AudioInputStream audioStream = AudioSystem.getAudioInputStream(bufferedIn);
-            clip = AudioSystem.getClip();
-            clip.open(audioStream);
-            clip.loop(Clip.LOOP_CONTINUOUSLY);
-            clip.start();
-        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
-            System.err.println("Failed to play music: " + e.getMessage());
-        }
-    }
-
-    private void stopMusic() {
-        if (clip != null) {
-            clip.stop();
-            clip.close();
-        }
-    }
 
     public void quitToMenuFromGame() {
         // Exit full-screen if active
