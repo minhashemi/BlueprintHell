@@ -7,6 +7,7 @@ import me.minhashemi.model.block.NetSysPort;
 import me.minhashemi.model.block.PortType;
 import me.minhashemi.model.level.LevelData;
 import me.minhashemi.model.level.LevelLoader;
+import me.minhashemi.model.shop.ShopItem;
 import me.minhashemi.model.shop.ShopPanel;
 import me.minhashemi.controller.audio.player;
 import me.minhashemi.view.wire.Wire;
@@ -320,8 +321,9 @@ public class GameScreen extends JPanel {
 
         ShopPanel shopPanel = new ShopPanel(new ShopPanel.ShopListener() {
             @Override
-            public void onBuy() {
-                hud.updateHUD(hud.getTemporalProgress(), hud.getPacketLoss(), hud.getCoins() - ShopPanel.getPrice());
+            public void onBuy(ShopItem item) {
+                int newCoins = hud.getCoins() - item.getPrice();
+                hud.updateHUD(hud.getTemporalProgress(), hud.getPacketLoss(), newCoins);
                 closeShop();
             }
 
@@ -331,7 +333,8 @@ public class GameScreen extends JPanel {
             }
         });
 
-        shopPanel.setBounds(getWidth() / 2 - 150, getHeight() / 2 - 100, 300, 200);
+
+        shopPanel.setBounds(getWidth() / 2 - 250, getHeight() / 2 - 200, 500, 400);
         shopOverlay.add(shopPanel);
         add(shopOverlay);
         setComponentZOrder(shopOverlay, 0);
