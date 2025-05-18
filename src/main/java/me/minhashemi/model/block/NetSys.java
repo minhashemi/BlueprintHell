@@ -3,12 +3,11 @@ package me.minhashemi.model.block;
 import me.minhashemi.model.Config;
 import me.minhashemi.model.MovingPacket;
 import me.minhashemi.controller.audio.*;
+import me.minhashemi.view.wire.Wire;
+import me.minhashemi.view.wire.WireManager;
 
 import java.awt.Point;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 public class NetSys {
     public int packetId;
@@ -19,16 +18,20 @@ public class NetSys {
     private final List<NetSysPort> inputPorts = new ArrayList<>();
     private final List<NetSysPort> outputPorts = new ArrayList<>();
 
-    private Queue<MovingPacket> buff = new LinkedList<>(); // buffer packets when wire is busy.
+    private Queue<MovingPacket> buff = new LinkedList<>();
+    private Queue<PortType> storedPackets = new LinkedList<>();
     private boolean hasReceivedPacket = false;
 
-    public boolean enqueuePacket(MovingPacket packet){
-        if (buff.size() < Config.MAX_BUFFER_SIZE){
+    private final int MAX_STORAGE = 5;
+
+    public boolean enqueuePacket(MovingPacket packet) {
+        if (buff.size() < Config.MAX_BUFFER_SIZE) {
             buff.add(packet);
             return true;
         }
         return false;
     }
+
     public List<PortType> getInputs() {
         return inputs;
     }
@@ -95,17 +98,13 @@ public class NetSys {
         return true;
     }
 
-    // This is no longer used for green status
     public void updateConnectionStatus() {
-        // Only optional now, useful if you still want the beep system
         boolean current = isFullyConnected();
         if (current != isFullyConnected()) {
             if (current) playGreenBeep();
             else playRedBeep();
         }
     }
-
-
 
     public boolean hasReceivedPacket() {
         return hasReceivedPacket;
@@ -123,6 +122,108 @@ public class NetSys {
         if (!hasReceivedPacket) {
             hasReceivedPacket = true;
             playGreenBeep(); // play sound when first received
+        }
+    }
+
+    public void tryToForwardPacket(WireManager wireManager, List<MovingPacket> movingPackets, PortType type) {
+        NetSysPort compatibleFreePort = null;
+        List<NetSysPort> otherFreePorts = new ArrayList<>();
+
+        for (NetSysPort out : getOutputPorts()) {
+            if (out.isConnected()) {
+                for (Wire wire : wireManager.getWires()) {
+                    if (wire.getFromPort() == out && !wire.hasPacket()) {
+                        if (out.getType() == type) {
+                            compatibleFreePort = out;
+                            break;
+                        } else {
+                            otherFreePorts.add(out);
+                        }
+                    }
+                }
+            }
+        }
+
+        NetSysPort selected = null;
+        if (compatibleFreePort != null) {
+            selected = compatibleFreePort;
+        } else if (!otherFreePorts.isEmpty()) {
+            selected = otherFreePorts.get(new Random().nextInt(otherFreePorts.size()));
+        }
+
+        if (selected != null) {
+            for (Wire wire : wireManager.getWires()) {
+                if (wire.getFromPort() == selected && !wire.hasPacket()) {
+                    wire.setHasPacket(true);
+                    movingPackets.add(new MovingPacket(wire, type));
+                    return;
+                }
+            }
+        } else {
+            if (storedPackets.size() < MAX_STORAGE) {
+                storedPackets.add(type);
+            }
+        }
+    }
+
+    public void update(WireManager wireManager, List<MovingPacket> movingPackets) {
+        if (storedPackets.isEmpty()) return;
+
+        PortType type = storedPackets.peek();
+
+        NetSysPort compatibleFreePort = null;
+        List<NetSysPort> otherFreePorts = new ArrayList<>();
+
+        for (NetSysPort out : getOutputPorts()) {
+            if (out.isConnected()) {
+                for (Wire wire : wireManager.getWires()) {
+                    if (wire.getFromPort() == out && !wire.hasPacket()) {
+                        if (out.getType() == type) {
+                            compatibleFreePort = out;
+                            break;
+                        } else {
+                            otherFreePorts.add(out);
+                        }
+                    }
+                }
+            }
+        }
+
+        NetSysPort selected = null;
+        if (compatibleFreePort != null) {
+            selected = compatibleFreePort;
+        } else if (!otherFreePorts.isEmpty()) {
+            selected = otherFreePorts.get(new Random().nextInt(otherFreePorts.size()));
+        }
+
+        if (selected != null) {
+            for (Wire wire : wireManager.getWires()) {
+                if (wire.getFromPort() == selected && !wire.hasPacket()) {
+                    wire.setHasPacket(true);
+                    movingPackets.add(new MovingPacket(wire, type));
+                    storedPackets.poll(); // remove from queue
+                    break;
+                }
+            }
+        }
+    }
+
+    public void spawnInitialPackets(WireManager wireManager, List<MovingPacket> movingPackets) {
+        if (!getInputPorts().isEmpty()) return;
+
+        for (NetSysPort output : getOutputPorts()) {
+            if (output.isConnected()) {
+                for (Wire wire : wireManager.getWires()) {
+                    if (wire.getFromPort() == output && !wire.hasPacket()) {
+                        PortType[] types = PortType.values();
+                        PortType randomType = types[new Random().nextInt(types.length)];
+                        movingPackets.add(new MovingPacket(wire, randomType));
+                        wire.setHasPacket(true);
+                        markReceived();
+                        return;
+                    }
+                }
+            }
         }
     }
 }
