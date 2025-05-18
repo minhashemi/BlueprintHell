@@ -1,4 +1,4 @@
-package me.minhashemi.view;
+package me.minhashemi.view.wire;
 
 import me.minhashemi.model.*;
 import me.minhashemi.model.block.NetSys;
@@ -6,7 +6,6 @@ import me.minhashemi.model.block.NetSysPort;
 import me.minhashemi.model.level.LevelData;
 
 import java.awt.*;
-import java.awt.geom.CubicCurve2D;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -84,12 +83,16 @@ public class WireManager {
         g2.setStroke(new BasicStroke(2));
 
         for (Wire wire : wires) {
-            drawBezierWire(g2, wire.getStart(), wire.getEnd());
+            drawStraightWire(g2, wire.getStart(), wire.getEnd());
         }
 
         if (draggingWire && wireStart != null && wireEnd != null) {
-            drawBezierWire(g2, wireStart, wireEnd);
+            drawStraightWire(g2, wireStart, wireEnd);
         }
+    }
+
+    private void drawStraightWire(Graphics2D g2, Point start, Point end) {
+        g2.drawLine(start.x, start.y, end.x, end.y);
     }
 
     public NetSysPort findNearbyOutputPort(Point mousePosition) {
@@ -128,21 +131,6 @@ public class WireManager {
         return distance < Config.PORT_SIZE * 2;
     }
 
-    private void drawBezierWire(Graphics2D g2, Point start, Point end) {
-        int ctrlOffset = Math.abs(end.x - start.x) / 2;
-        Point ctrl1 = new Point(start.x + ctrlOffset, start.y);
-        Point ctrl2 = new Point(end.x - ctrlOffset, end.y);
-
-        CubicCurve2D curve = new CubicCurve2D.Float(
-                start.x, start.y,
-                ctrl1.x, ctrl1.y,
-                ctrl2.x, ctrl2.y,
-                end.x, end.y
-        );
-
-        g2.draw(curve);
-    }
-
     private boolean isPointNearLine(Point p, Point a, Point b, int tolerance) {
         double dist = ptLineDist(a.x, a.y, b.x, b.y, p.x, p.y);
         return dist < tolerance;
@@ -173,9 +161,4 @@ public class WireManager {
 
         return Math.sqrt(dx * dx + dy * dy);
     }
-
-
-
-
-
 }
