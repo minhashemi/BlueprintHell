@@ -71,25 +71,51 @@ public class Window extends JFrame {
     private JPanel createSettingsMenu() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
+        // Music toggle
         JCheckBox musicToggle = new JCheckBox("Theme Song", Config.isMusicOn);
         musicToggle.addActionListener(e -> {
             Config.isMusicOn = musicToggle.isSelected();
-            if (Config.isMusicOn) playMusic("theme");
-            else stopMusic();
+            if (Config.isMusicOn) player.playMusic("theme");
+            else player.stopMusic();
         });
 
-        JCheckBox recordToggle = new JCheckBox("Record time?", Config.recordTime);
-        recordToggle.addActionListener(e -> Config.recordTime = recordToggle.isSelected());
+        // Record time toggle
+//        JCheckBox recordToggle = new JCheckBox("Record time?", Config.recordTime);
+//        recordToggle.addActionListener(e -> Config.recordTime = recordToggle.isSelected());
 
+        // Volume slider
+
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        JLabel volumeLabel = new JLabel("Music Volume:");
+        volumeLabel.setBounds(screenSize.width / 2 - 150, screenSize.height / 2 - 100, 200, 30);
+        volumeLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        volumeLabel.setForeground(Color.WHITE);
+
+        JSlider volumeSlider = new JSlider(0, 100, 50); // default 50%
+        volumeSlider.setBounds(screenSize.width / 2 - 150, screenSize.height / 2 - 60, 300, 40);
+        volumeSlider.addChangeListener(e -> {
+            float volume = volumeSlider.getValue() / 100f;
+            player.setVolume(volume);
+        });
+
+        // Back button
         JButton backButton = new JButton("Return");
         backButton.addActionListener(e -> showCard("MainMenu"));
 
+        // Add components to panel
         panel.add(musicToggle);
-        panel.add(recordToggle);
+//        panel.add(recordToggle);
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(volumeLabel);
+        panel.add(volumeSlider);
+        panel.add(Box.createVerticalStrut(10));
         panel.add(backButton);
+
         return panel;
     }
+
 
     private JPanel createStageMenu() {
         JPanel panel = new JPanel();

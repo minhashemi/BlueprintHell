@@ -1,14 +1,13 @@
 package me.minhashemi.controller.audio;
 
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
+import javax.sound.sampled.*;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 public class player {
     private static Clip backgroundClip;
+    private static FloatControl volumeControl;
 
     public static void playMusic(String fname) {
         if (backgroundClip != null && backgroundClip.isRunning()) return;
@@ -21,6 +20,12 @@ public class player {
             AudioInputStream audioStream = AudioSystem.getAudioInputStream(bufferedIn);
             backgroundClip = AudioSystem.getClip();
             backgroundClip.open(audioStream);
+
+            if (backgroundClip.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
+                volumeControl = (FloatControl) backgroundClip.getControl(FloatControl.Type.MASTER_GAIN);
+                setVolume(0.8f); // default volume
+            }
+
             backgroundClip.loop(Clip.LOOP_CONTINUOUSLY);
             backgroundClip.start();
         } catch (Exception e) {
@@ -32,6 +37,15 @@ public class player {
         if (backgroundClip != null) {
             backgroundClip.stop();
             backgroundClip.close();
+        }
+    }
+
+    public static void setVolume(float level) {
+        if (volumeControl != null) {
+            float min = volumeControl.getMinimum();
+            float max = volumeControl.getMaximum();
+            float volume = min + (max - min) * level;
+            volumeControl.setValue(volume);
         }
     }
 
