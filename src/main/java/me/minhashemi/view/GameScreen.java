@@ -9,6 +9,8 @@ import me.minhashemi.model.level.LevelData;
 import me.minhashemi.model.level.LevelLoader;
 import me.minhashemi.model.shop.ShopPanel;
 import me.minhashemi.controller.audio.player;
+import me.minhashemi.view.wire.Wire;
+import me.minhashemi.view.wire.WireManager;
 
 import javax.swing.*;
 import javax.swing.Timer;

@@ -6,8 +6,8 @@ import me.minhashemi.model.block.NetSysPort;
 import me.minhashemi.model.level.LevelData;
 import me.minhashemi.view.GameScreen;
 import me.minhashemi.view.HUD;
-import me.minhashemi.view.Wire;
-import me.minhashemi.view.WireManager;
+import me.minhashemi.view.wire.Wire;
+import me.minhashemi.view.wire.WireManager;
 
 import javax.swing.*;
 import java.awt.*;

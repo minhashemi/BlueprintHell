@@ -3,8 +3,7 @@ package me.minhashemi.model;
 import me.minhashemi.model.block.NetSys;
 import me.minhashemi.model.block.NetSysPort;
 import me.minhashemi.model.block.PortType;
-import me.minhashemi.view.Wire;
-import me.minhashemi.view.WireManager;
+import me.minhashemi.view.wire.Wire;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -14,7 +13,7 @@ public class MovingPacket {
     private final NetSys destinationNetSys;
     private final PortType shape;
 
-    private float t; // Bezier interpolation value [0..1]
+    private float t; // Interpolation value [0..1]
     private float speed; // How fast to move along the wire
     private float noise;
     private boolean lost;
@@ -31,7 +30,7 @@ public class MovingPacket {
         this.speed = 0.01f;
         this.noise = 0;
         this.lost = false;
-        this.position = evaluateBezier(wire.getStart(), wire.getEnd(), t);
+        this.position = evaluateLinear(wire.getStart(), wire.getEnd(), t);
 
         NetSysPort endPort = wire.getToPort();
         this.destinationNetSys = endPort != null ? endPort.getParent() : null;
@@ -54,7 +53,7 @@ public class MovingPacket {
         t += speed;
         if (t > 1f) t = 1f;
 
-        position = evaluateBezier(wire.getStart(), wire.getEnd(), t);
+        position = evaluateLinear(wire.getStart(), wire.getEnd(), t);
 
         if (t >= 1f && !lost && !delivered && destinationNetSys != null) {
             delivered = true;
@@ -111,21 +110,9 @@ public class MovingPacket {
         return position;
     }
 
-    private Point2D.Float evaluateBezier(Point start, Point end, float t) {
-        int ctrlOffset = Math.abs(end.x - start.x) / 2;
-        Point ctrl1 = new Point(start.x + ctrlOffset, start.y);
-        Point ctrl2 = new Point(end.x - ctrlOffset, end.y);
-
-        float x = (float) (Math.pow(1 - t, 3) * start.x +
-                3 * Math.pow(1 - t, 2) * t * ctrl1.x +
-                3 * (1 - t) * t * t * ctrl2.x +
-                t * t * t * end.x);
-
-        float y = (float) (Math.pow(1 - t, 3) * start.y +
-                3 * Math.pow(1 - t, 2) * t * ctrl1.y +
-                3 * (1 - t) * t * t * ctrl2.y +
-                t * t * t * end.y);
-
+    private Point2D.Float evaluateLinear(Point start, Point end, float t) {
+        float x = (1 - t) * start.x + t * end.x;
+        float y = (1 - t) * start.y + t * end.y;
         return new Point2D.Float(x, y);
     }
 
