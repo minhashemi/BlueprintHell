@@ -1,6 +1,7 @@
 package me.minhashemi.view;
 
 import me.minhashemi.controller.InputController;
+import me.minhashemi.controller.audio.player;
 import me.minhashemi.model.*;
 import me.minhashemi.model.block.NetSys;
 import me.minhashemi.model.block.NetSysPort;
@@ -9,15 +10,14 @@ import me.minhashemi.model.level.LevelData;
 import me.minhashemi.model.level.LevelLoader;
 import me.minhashemi.model.shop.ShopItem;
 import me.minhashemi.model.shop.ShopPanel;
-import me.minhashemi.controller.audio.player;
 import me.minhashemi.view.wire.WireManager;
 
 import javax.swing.*;
 import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 public class GameScreen extends JPanel {
     private final LevelData levelData;
@@ -27,6 +27,11 @@ public class GameScreen extends JPanel {
     private final List<MovingPacket> movingPackets = new ArrayList<>();
     private boolean victoryShown = false;
     private JPanel shopOverlay;
+    private Timer gameTimer;
+
+    public List<MovingPacket> getMovingPackets() {
+        return movingPackets;
+    }
 
     public GameScreen(LevelData levelData) {
         this.levelData = levelData;
@@ -48,8 +53,8 @@ public class GameScreen extends JPanel {
         add(createControlsPanel(), BorderLayout.SOUTH);
         setupKeyBinding(canvasPanel);
 
-        Timer timer = new Timer(16, e -> canvasPanel.repaint());
-        timer.start();
+        gameTimer = new Timer(16, e -> canvasPanel.repaint());
+        gameTimer.start();
     }
 
     private JPanel createCanvasPanel() {
@@ -80,28 +85,19 @@ public class GameScreen extends JPanel {
 
     private GameControlsPanel createControlsPanel() {
         return new GameControlsPanel(new GameControlsPanel.GameControlListener() {
-            @Override
-            public void onShop() {
-                openShop();
-            }
-
-            @Override
-            public void onTimeForward() {
+            @Override public void onShop() { openShop(); }
+            @Override public void onTimeForward() {
                 hud.updateHUD(hud.getTemporalProgress() + 1, hud.getPacketLoss(), hud.getCoins());
                 repaint();
             }
-
-            @Override
-            public void onTimeBackward() {
+            @Override public void onTimeBackward() {
                 hud.updateHUD(Math.max(0, hud.getTemporalProgress() - 1), hud.getPacketLoss(), hud.getCoins());
                 repaint();
             }
-
-            @Override
-            public void onQuitToMenu() {
+            @Override public void onQuitToMenu() {
                 JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(GameScreen.this);
-                if (topFrame instanceof Window) {
-                    ((Window) topFrame).quitToMenuFromGame();
+                if (topFrame instanceof Window window) {
+                    window.quitToMenuFromGame();
                 }
             }
         });
@@ -293,8 +289,10 @@ public class GameScreen extends JPanel {
     }
 
     private void pauseGame() {
+        if (gameTimer != null) gameTimer.stop();
     }
 
     private void resumeGame() {
+        if (gameTimer != null) gameTimer.start();
     }
 }

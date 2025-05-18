@@ -123,4 +123,8 @@ public class MovingPacket {
     public PortType getType() {
         return shape;
     }
+
+    public void setNoise(int n){
+        this.noise = n;
+    }
 }
