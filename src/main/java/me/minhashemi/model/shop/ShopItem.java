@@ -2,7 +2,7 @@ package me.minhashemi.model.shop;
 
 public class ShopItem {
     private String name;
-    private static int price;
+    private int price;
     private String description;
     private String effectType;
 
@@ -14,8 +14,9 @@ public class ShopItem {
     }
 
     public String getName() { return name; }
-    public static int getPrice() { return price; }
+    public int getPrice() { return price; }
     public String getDescription() { return description; }
+    public String getEffectType() { return effectType; }
 
     @Override
     public String toString() {
