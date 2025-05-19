@@ -12,13 +12,25 @@ public class HUD {
     private int totalPackets; // Total packets for the level
     private String calloutMessage = null;
     private long calloutTimestamp = 0;
+    
+    // Active effects tracking
+    private boolean impactWavesDisabled = false;
+    private boolean collisionsDisabled = false;
+    private long effectEndTime = 0;
 
     public HUD(int totalPackets) {
         this.totalPackets = totalPackets;
+        this.coins = 10; // Start with 10 coins for testing
         // Initialize timer for callout messages
         Timer calloutTimer = new Timer(100, e -> {
             if (calloutMessage != null && System.currentTimeMillis() - calloutTimestamp > Config.CALLOUT_DURATION) {
                 calloutMessage = null;
+            }
+            
+            // Check if effects have expired
+            if (System.currentTimeMillis() > effectEndTime) {
+                impactWavesDisabled = false;
+                collisionsDisabled = false;
             }
         });
         calloutTimer.start();
@@ -35,6 +47,20 @@ public class HUD {
         this.coins = coins;
     }
 
+    public void setImpactWavesDisabled(boolean disabled, int durationSeconds) {
+        this.impactWavesDisabled = disabled;
+        if (disabled) {
+            this.effectEndTime = System.currentTimeMillis() + (durationSeconds * 1000);
+        }
+    }
+
+    public void setCollisionsDisabled(boolean disabled, int durationSeconds) {
+        this.collisionsDisabled = disabled;
+        if (disabled) {
+            this.effectEndTime = System.currentTimeMillis() + (durationSeconds * 1000);
+        }
+    }
+
     public void render(Graphics g, int panelWidth) {
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -47,6 +73,20 @@ public class HUD {
         g.drawString("Temporal Progress: " + temporalProgress, 250, hudY);
         g.drawString("Packet Loss: " + packetLoss + "/" + totalPackets, 450, hudY);
         g.drawString("Coins: " + coins, 600, hudY);
+
+        // Active effects indicator
+        if (impactWavesDisabled || collisionsDisabled) {
+            g.setColor(Color.YELLOW);
+            g.setFont(new Font("SansSerif", Font.BOLD, 12));
+            int effectY = hudY + 20;
+            if (impactWavesDisabled) {
+                g.drawString("O' Atar Active - Impact Waves Disabled", 10, effectY);
+                effectY += 15;
+            }
+            if (collisionsDisabled) {
+                g.drawString("O' Airyaman Active - Collisions Disabled", 10, effectY);
+            }
+        }
 
         if (calloutMessage != null && System.currentTimeMillis() - calloutTimestamp < Config.CALLOUT_DURATION) {
             int boxWidth = g.getFontMetrics().stringWidth(calloutMessage) + 20;
