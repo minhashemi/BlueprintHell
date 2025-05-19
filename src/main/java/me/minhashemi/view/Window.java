@@ -138,6 +138,9 @@ public class Window extends JFrame {
         // Remove previous content
         getContentPane().removeAll();
 
+        // Minimize other applications BEFORE going fullscreen
+        minimizeOtherApplications();
+        
         // Set to full screen
         dispose(); // Remove decorations before going fullscreen
         setUndecorated(true);
@@ -225,6 +228,29 @@ public class Window extends JFrame {
         // Resume music if enabled
         if (Config.isMusicOn) {
             player.playMusic("theme");
+        }
+    }
+
+    private void minimizeOtherApplications() {
+        try {
+            // Get all open windows and minimize them except our own
+            java.awt.Window[] allWindows = java.awt.Window.getWindows();
+            for (java.awt.Window window : allWindows) {
+                if (window != this && window instanceof JFrame) {
+                    JFrame frame = (JFrame) window;
+                    // Minimize the window
+                    frame.setState(JFrame.ICONIFIED);
+                    // Also try to hide it for better effect on Mac
+                    frame.setVisible(false);
+                    // Bring it back to minimized state
+                    frame.setVisible(true);
+                    frame.setState(JFrame.ICONIFIED);
+                }
+            }
+            System.out.println("Minimized " + (allWindows.length - 1) + " other applications");
+        } catch (Exception e) {
+            // If minimization fails, continue anyway - don't break the game
+            System.out.println("Could not minimize other applications: " + e.getMessage());
         }
     }
 }
