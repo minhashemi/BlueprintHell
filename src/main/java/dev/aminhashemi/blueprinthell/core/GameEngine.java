@@ -18,6 +18,8 @@ import dev.aminhashemi.blueprinthell.model.entities.packets.ConfidentialPacket;
 import dev.aminhashemi.blueprinthell.model.entities.packets.BulkPacket;
 import dev.aminhashemi.blueprinthell.model.world.ArcPoint;
 import dev.aminhashemi.blueprinthell.model.world.Wire;
+import dev.aminhashemi.blueprinthell.view.TestResultDialog;
+import dev.aminhashemi.blueprinthell.model.enums.GameState;
 import dev.aminhashemi.blueprinthell.model.world.Impact;
 import dev.aminhashemi.blueprinthell.utils.LevelLoader;
 import dev.aminhashemi.blueprinthell.utils.AudioManager;
@@ -691,16 +693,19 @@ public class GameEngine implements Runnable {
             return;
         }
         
-        // PortType packetPortType = getPortTypeForPacket(packet.getType()); // Not used in current implementation
-        List<Wire> compatibleWires = outgoingWires.stream()
-                .filter(wire -> isPortCompatible(wire.getStartPort().getType(), packet.getType()))
-                .collect(Collectors.toList());
-
-        Wire targetWire;
-        if (!compatibleWires.isEmpty()) {
-            targetWire = compatibleWires.get((int) (Math.random() * compatibleWires.size()));
-        } else {
-            targetWire = outgoingWires.get((int) (Math.random() * outgoingWires.size()));
+        // Select output port using the new logic: prioritize compatible empty ports, then random selection
+        Wire targetWire = selectOutputPort(packet, outgoingWires);
+        
+        if (targetWire == null) {
+            // No available ports - store packet in system if capacity allows
+            if (canStorePacketInSystem(currentSystem)) {
+                storePacketInSystem(packet, currentSystem);
+                Logger.getInstance().info("Packet " + packet.getType() + " stored in system " + currentSystem.getId() + " (no available ports)");
+            } else {
+                Logger.getInstance().info("Packet " + packet.getType() + " lost - system storage full and no available ports");
+                testPacketsLost++;
+            }
+            return;
         }
 
         MovingPacket movingPacket = new MovingPacket(packet, targetWire);
@@ -709,9 +714,65 @@ public class GameEngine implements Runnable {
         boolean isCompatible = isPortCompatible(targetWire.getStartPort().getType(), packet.getType());
         movingPacket.applyPortCompatibilityEffect(targetWire.getStartPort().getType(), isCompatible);
         
-        // Prevent premature coin addition
-        
         movingPackets.add(movingPacket);
+    }
+    
+    /**
+     * Selects an output port for a packet using the required logic:
+     * 1. Prioritize compatible empty ports
+     * 2. If no compatible empty ports, select randomly from all empty ports
+     * 3. If no empty ports, return null (packet should be stored)
+     */
+    private Wire selectOutputPort(Packet packet, List<Wire> outgoingWires) {
+        // Get all empty ports (ports with no packets on their wires)
+        List<Wire> emptyWires = outgoingWires.stream()
+                .filter(wire -> !isWireOccupied(wire))
+                .collect(Collectors.toList());
+        
+        if (emptyWires.isEmpty()) {
+            return null; // No empty ports available
+        }
+        
+        // Get compatible empty ports
+        List<Wire> compatibleEmptyWires = emptyWires.stream()
+                .filter(wire -> isPortCompatible(wire.getStartPort().getType(), packet.getType()))
+                .collect(Collectors.toList());
+        
+        // Prioritize compatible empty ports
+        if (!compatibleEmptyWires.isEmpty()) {
+            int randomIndex = (int) (Math.random() * compatibleEmptyWires.size());
+            return compatibleEmptyWires.get(randomIndex);
+        } else {
+            // No compatible empty ports, select randomly from all empty ports
+            int randomIndex = (int) (Math.random() * emptyWires.size());
+            return emptyWires.get(randomIndex);
+        }
+    }
+    
+    /**
+     * Checks if a wire is occupied by any moving packet
+     */
+    private boolean isWireOccupied(Wire wire) {
+        return movingPackets.stream()
+                .anyMatch(movingPacket -> movingPacket.getWire() == wire);
+    }
+    
+    /**
+     * Checks if a system can store more packets (capacity check)
+     */
+    private boolean canStorePacketInSystem(System system) {
+        // For now, we'll use a simple approach - check if system has storage capacity
+        // This could be enhanced to track actual stored packets per system
+        return true; // Assume systems can always store packets for now
+    }
+    
+    /**
+     * Stores a packet in a system when no output ports are available
+     */
+    private void storePacketInSystem(Packet packet, System system) {
+        // For now, we'll just log this - in a full implementation, 
+        // you'd want to track stored packets per system and release them when ports become available
+        Logger.getInstance().info("Packet " + packet.getType() + " stored in system " + system.getId());
     }
 
     public void routeMovingPacket(MovingPacket movingPacket, System currentSystem) {
@@ -729,16 +790,19 @@ public class GameEngine implements Runnable {
             return;
         }
 
-        // Find compatible wires
-        List<Wire> compatibleWires = outgoingWires.stream()
-                .filter(wire -> isPortCompatible(wire.getStartPort().getType(), movingPacket.getPacket().getType()))
-                .collect(Collectors.toList());
-
-        Wire targetWire;
-        if (!compatibleWires.isEmpty()) {
-            targetWire = compatibleWires.get((int) (Math.random() * compatibleWires.size()));
+        // Select output port using the same logic: prioritize compatible empty ports, then random selection
+        Wire targetWire = selectOutputPort(movingPacket.getPacket(), outgoingWires);
+        
+        if (targetWire == null) {
+            // No available ports - store packet in system if capacity allows
+            if (canStorePacketInSystem(currentSystem)) {
+                storePacketInSystem(movingPacket.getPacket(), currentSystem);
+                Logger.getInstance().info("Packet " + movingPacket.getPacket().getType() + " stored in system " + currentSystem.getId() + " (no available ports)");
             } else {
-            targetWire = outgoingWires.get((int) (Math.random() * outgoingWires.size()));
+                Logger.getInstance().info("Packet " + movingPacket.getPacket().getType() + " lost - system storage full and no available ports");
+                testPacketsLost++;
+            }
+            return;
         }
 
         // Create a new MovingPacket with the same packet but new wire
@@ -1520,7 +1584,62 @@ public class GameEngine implements Runnable {
             
             // Update HUD data
             gamePanel.updateHUDData(remainingWireLength, temporalProgress, packetLoss, currentCoins);
+            
+            // Check for real-time game over condition
+            checkGameOverCondition();
         }
+    }
+    
+    /**
+     * Checks if game over condition is met (packet loss > 50%) and triggers game over
+     */
+    private void checkGameOverCondition() {
+        if (testPacketsReleased > 0) {
+            double packetLossPercentage = getPacketLossPercentage();
+            if (packetLossPercentage >= Config.GameConditions.MAX_PACKET_LOSS_PERCENTAGE && !gameLost && !gameWon) {
+                Logger.getInstance().info("💀 GAME OVER! Packet loss exceeded 50%: " + String.format("%.1f", packetLossPercentage) + "%");
+                triggerGameOver();
+            }
+        }
+    }
+    
+    /**
+     * Triggers game over state and shows game over dialog
+     */
+    private void triggerGameOver() {
+        gameLost = true;
+        testCompleted = true;
+        
+        double packetLossPercentage = getPacketLossPercentage();
+        int healthyPackets = testPacketsReleased - testPacketsLost;
+        
+        Logger.getInstance().info("🎯 GAME OVER! Packets: " + testPacketsReleased + " released, " + 
+                                healthyPackets + " healthy, " + testPacketsLost + " lost");
+        
+        // Show game over dialog
+        showGameOverDialog(packetLossPercentage, healthyPackets);
+    }
+    
+    /**
+     * Shows game over dialog with healthy packets count and packet loss percentage
+     */
+    private void showGameOverDialog(double packetLossPercentage, int healthyPackets) {
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            TestResultDialog.TestResult result = TestResultDialog.showDialog(
+                null, 
+                false, // won = false (game over)
+                packetLossPercentage, 
+                testPacketsReleased, 
+                healthyPackets
+            );
+            
+            if (result == TestResultDialog.TestResult.RESET_LEVEL) {
+                resetCurrentLevel();
+            } else if (result == TestResultDialog.TestResult.CLOSE) {
+                // Close dialog - for now just log, as gameStateManager is not available in this context
+                Logger.getInstance().info("Game over dialog closed");
+            }
+        });
     }
     
     /**

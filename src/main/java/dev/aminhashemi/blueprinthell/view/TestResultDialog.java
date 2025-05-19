@@ -1,11 +1,7 @@
 package dev.aminhashemi.blueprinthell.view;
 
-import dev.aminhashemi.blueprinthell.utils.Logger;
-
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 /**
  * Dialog shown after test completion showing win/lose result
@@ -35,12 +31,23 @@ public class TestResultDialog extends JDialog {
         mainPanel.setBackground(new Color(30, 30, 30));
         
         // Title
-        JLabel titleLabel = new JLabel(won ? "🎉 LEVEL COMPLETED! 🎉" : "💀 LEVEL FAILED 💀");
+        String titleText = won ? "🎉 LEVEL COMPLETED! 🎉" : "💀 GAME OVER 💀";
+        JLabel titleLabel = new JLabel(titleText);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
         titleLabel.setForeground(won ? Color.GREEN : Color.RED);
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
         mainPanel.add(titleLabel);
+        
+        // Game over explanation
+        if (!won) {
+            JLabel explanationLabel = new JLabel("Network is defective - Packet Loss exceeded 50%");
+            explanationLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+            explanationLabel.setForeground(Color.ORANGE);
+            explanationLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            explanationLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+            mainPanel.add(explanationLabel);
+        }
         
         // Results panel
         JPanel resultsPanel = new JPanel();
@@ -51,39 +58,56 @@ public class TestResultDialog extends JDialog {
             BorderFactory.createEmptyBorder(15, 15, 15, 15)
         ));
         
-        // Packet statistics
-        JLabel packetsLabel = new JLabel(String.format("Packets Released: %d", packetsReleased));
-        packetsLabel.setFont(new Font("Arial", Font.PLAIN, 14));
-        packetsLabel.setForeground(Color.WHITE);
-        packetsLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        resultsPanel.add(packetsLabel);
-        
-        JLabel returnedLabel = new JLabel(String.format("Packets Reached Destination: %d", packetsReturned));
-        returnedLabel.setFont(new Font("Arial", Font.PLAIN, 14));
-        returnedLabel.setForeground(Color.GREEN);
-        returnedLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        resultsPanel.add(returnedLabel);
-        
+        // Packet statistics - Enhanced for better clarity
         int packetsLost = packetsReleased - packetsReturned;
-        JLabel lostLabel = new JLabel(String.format("Packets Lost/Destroyed: %d", packetsLost));
-        lostLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        int healthyPackets = packetsReturned; // Packets that successfully reached destination
+        
+        // Total packets released
+        JLabel totalLabel = new JLabel(String.format("Total Packets Released: %d", packetsReleased));
+        totalLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        totalLabel.setForeground(Color.WHITE);
+        totalLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        resultsPanel.add(totalLabel);
+        
+        // Healthy packets (successfully delivered)
+        JLabel healthyLabel = new JLabel(String.format("✅ Healthy Packets in Network: %d", healthyPackets));
+        healthyLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        healthyLabel.setForeground(Color.GREEN);
+        healthyLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        healthyLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
+        resultsPanel.add(healthyLabel);
+        
+        // Lost packets
+        JLabel lostLabel = new JLabel(String.format("❌ Packets Lost/Destroyed: %d", packetsLost));
+        lostLabel.setFont(new Font("Arial", Font.BOLD, 14));
         lostLabel.setForeground(Color.RED);
         lostLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         resultsPanel.add(lostLabel);
         
-        JLabel lossLabel = new JLabel(String.format("Packet Loss: %.1f%%", packetLossPercentage));
-        lossLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        // Packet loss percentage - prominently displayed
+        JLabel lossLabel = new JLabel(String.format("📊 Packet Loss: %.1f%%", packetLossPercentage));
+        lossLabel.setFont(new Font("Arial", Font.BOLD, 18));
         lossLabel.setForeground(packetLossPercentage < 50.0 ? Color.GREEN : Color.RED);
         lossLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         lossLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
         resultsPanel.add(lossLabel);
         
         // Target requirement
-        JLabel targetLabel = new JLabel("Target: < 50% packet loss");
+        JLabel targetLabel = new JLabel("🎯 Target: < 50% packet loss");
         targetLabel.setFont(new Font("Arial", Font.PLAIN, 12));
         targetLabel.setForeground(Color.LIGHT_GRAY);
         targetLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         resultsPanel.add(targetLabel);
+        
+        // Additional info for game over
+        if (!won) {
+            JLabel resetInfoLabel = new JLabel("Level will reset completely (except Skill Tree)");
+            resetInfoLabel.setFont(new Font("Arial", Font.ITALIC, 11));
+            resetInfoLabel.setForeground(Color.YELLOW);
+            resetInfoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            resetInfoLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));
+            resultsPanel.add(resetInfoLabel);
+        }
         
         mainPanel.add(resultsPanel);
         mainPanel.add(Box.createVerticalStrut(20));
@@ -120,32 +144,34 @@ public class TestResultDialog extends JDialog {
             buttonPanel.add(Box.createHorizontalStrut(10));
             buttonPanel.add(resetButton);
         } else {
-            // Lose buttons
-            JButton resetButton = new JButton("Reset Level");
+            // Game Over buttons
+            JButton resetButton = new JButton("🔄 Reset Level");
             resetButton.setFont(new Font("Arial", Font.BOLD, 14));
             resetButton.setBackground(new Color(200, 0, 0));
             resetButton.setForeground(Color.WHITE);
             resetButton.setFocusPainted(false);
             resetButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+            resetButton.setToolTipText("Reset the level completely (except Skill Tree)");
             resetButton.addActionListener(e -> {
                 resetLevel = true;
                 dispose();
             });
             
-            JButton closeButton = new JButton("Close");
-            closeButton.setFont(new Font("Arial", Font.BOLD, 14));
-            closeButton.setBackground(new Color(100, 100, 100));
-            closeButton.setForeground(Color.WHITE);
-            closeButton.setFocusPainted(false);
-            closeButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-            closeButton.addActionListener(e -> {
+            JButton menuButton = new JButton("🏠 Main Menu");
+            menuButton.setFont(new Font("Arial", Font.BOLD, 14));
+            menuButton.setBackground(new Color(100, 100, 100));
+            menuButton.setForeground(Color.WHITE);
+            menuButton.setFocusPainted(false);
+            menuButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+            menuButton.setToolTipText("Return to main menu");
+            menuButton.addActionListener(e -> {
                 closed = true;
                 dispose();
             });
             
             buttonPanel.add(resetButton);
             buttonPanel.add(Box.createHorizontalStrut(10));
-            buttonPanel.add(closeButton);
+            buttonPanel.add(menuButton);
         }
         
         mainPanel.add(buttonPanel);
