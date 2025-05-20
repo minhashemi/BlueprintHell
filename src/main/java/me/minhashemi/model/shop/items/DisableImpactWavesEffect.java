@@ -1,11 +1,19 @@
 package me.minhashemi.model.shop.items;
 
 import me.minhashemi.model.shop.ShopEffect;
+import me.minhashemi.view.GameScreen;
 
 public class DisableImpactWavesEffect implements ShopEffect {
+    private final GameScreen gameScreen;
+
+    public DisableImpactWavesEffect(GameScreen gameScreen) {
+        this.gameScreen = gameScreen;
+    }
+
     @Override
     public void applyEffect() {
-        System.out.println("Impact waves disabled for 10 seconds.");
-        // TODO: Implement actual effect
+        if (gameScreen != null) {
+            gameScreen.getPacketManager().disableWaveForSeconds(10);
+        }
     }
 }
