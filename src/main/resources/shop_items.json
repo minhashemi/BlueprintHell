@@ -1,0 +1,20 @@
+[
+  {
+    "name": "O' Atar",
+    "price": 3,
+    "description": "Disables Impact waves effect for 10 seconds when purchased.",
+    "effectType": "DISABLE_IMPACT_WAVES"
+  },
+  {
+    "name": "O’ Airyaman",
+    "price": 4,
+    "description": "Disables packet collisions in the network for 5 seconds.",
+    "effectType": "DISABLE_COLLISIONS"
+  },
+  {
+    "name": "O' Anahita",
+    "price": 5,
+    "description": "Resets noise on all packets currently in the network.",
+    "effectType": "RESET_NOISE"
+  }
+]

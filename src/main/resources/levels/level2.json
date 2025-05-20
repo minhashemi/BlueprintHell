@@ -1,0 +1,38 @@
+{
+  "level_id": 1,
+  "level_name": "Blueprint Hell",
+  "packets": [
+    {
+      "packet_id": 0,
+      "position": { "x": 100, "y": 600 },
+      "inputs": [],
+      "outputs": ["SQUARE"]
+    },
+    {
+      "packet_id": 1,
+      "position": { "x": 400, "y": 500 },
+      "inputs": ["SQUARE", "SQUARE"],
+      "outputs": ["SQUARE"]
+    },
+    {
+      "packet_id": 2,
+      "position": { "x": 500, "y": 300 },
+      "inputs": ["SQUARE"],
+      "outputs": ["TRIANGLE", "SQUARE"]
+    },
+    {
+      "packet_id": -1,
+      "position": { "x": 800 ,"y": 700 },
+      "inputs": ["TRIANGLE", "SQUARE"],
+      "outputs": []
+    }
+  ],
+  "connections": [
+    {
+      "fromPacketId": 1,
+      "fromPortIndex": 0,
+      "toPacketId": 2,
+      "toPortIndex": 1
+    }
+  ]
+}
