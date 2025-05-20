@@ -13,13 +13,11 @@ public class Config {
     public static final int PORT_MARGIN = 5; // Margin from the edge of the packet to the first port
     public static final int PORT_SPACING = 20; // Spacing between ports (vertically)
     public static double remainingWireLength = 1000.0;
-    public static double lastTotalWireLength = 0.0;
 
     // packet
     public static final int PORT_SIZE = 10;
     public static final int STANDARD_HEIGHT = 30;
     public static final int NETSYS_WIDTH = 60;
     public static final int MAX_BUFFER_SIZE = 5;
-    public static int volume = 70;
-    public static final int PACKET_SIZE = 20;
+    public static final int PACKET_SIZE = 15;
 }
