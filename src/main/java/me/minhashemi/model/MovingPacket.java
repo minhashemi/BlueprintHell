@@ -92,22 +92,21 @@ public class MovingPacket {
         g.setColor(Color.CYAN.darker());
         int x = (int) position.x;
         int y = (int) position.y;
-        int size = 10;
 
         switch (shape) {
             case SQUARE:
-                g.fillRect(x - size / 2, y - size / 2, size, size);
+                g.fillRect(x - Config.PACKET_SIZE / 2, y - Config.PACKET_SIZE / 2, Config.PACKET_SIZE, Config.PACKET_SIZE);
                 break;
             case TRIANGLE:
                 Polygon triangle = new Polygon();
-                triangle.addPoint(x, y - size / 2); // top
-                triangle.addPoint(x - size / 2, y + size / 2); // bottom left
-                triangle.addPoint(x + size / 2, y + size / 2); // bottom right
+                triangle.addPoint(x, y - Config.PACKET_SIZE / 2); // top
+                triangle.addPoint(x - Config.PACKET_SIZE / 2, y + Config.PACKET_SIZE / 2); // bottom left
+                triangle.addPoint(x + Config.PACKET_SIZE / 2, y + Config.PACKET_SIZE / 2); // bottom right
                 g.fillPolygon(triangle);
                 break;
             default:
                 // Fallback to circle
-                g.fillOval(x - size / 2, y - size / 2, size, size);
+                g.fillOval(x - Config.PACKET_SIZE / 2, y - Config.PACKET_SIZE / 2, Config.PACKET_SIZE, Config.PACKET_SIZE);
                 break;
         }
     }
