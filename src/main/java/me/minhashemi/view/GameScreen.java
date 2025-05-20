@@ -7,9 +7,9 @@ import me.minhashemi.model.block.NetSys;
 import me.minhashemi.model.block.NetSysPort;
 import me.minhashemi.model.block.PortType;
 import me.minhashemi.model.level.LevelData;
-import me.minhashemi.model.level.LevelLoader;
 import me.minhashemi.model.shop.ShopItem;
 import me.minhashemi.model.shop.ShopPanel;
+import me.minhashemi.view.overlay.VictoryOverlay;
 import me.minhashemi.view.wire.WireManager;
 
 import javax.swing.*;
@@ -184,60 +184,7 @@ public class GameScreen extends JPanel {
     }
 
     public void showVictoryMessage(String msg) {
-        JPanel overlay = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                g.setColor(new Color(0, 0, 0, 180));
-                g.fillRect(0, 0, getWidth(), getHeight());
-            }
-        };
-        overlay.setLayout(new GridBagLayout());
-        overlay.setOpaque(false);
-        overlay.setBounds(0, 0, getWidth(), getHeight());
-
-        JPanel victoryPanel = new JPanel();
-        victoryPanel.setLayout(new BoxLayout(victoryPanel, BoxLayout.Y_AXIS));
-        victoryPanel.setBackground(Color.DARK_GRAY);
-        victoryPanel.setBorder(BorderFactory.createLineBorder(Color.WHITE, 2));
-
-        JLabel messageLabel = new JLabel(msg, SwingConstants.CENTER);
-        messageLabel.setForeground(Color.WHITE);
-        messageLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        messageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JButton nextLevelButton = new JButton("Next Level");
-        nextLevelButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        nextLevelButton.addActionListener(e -> {
-            Container topFrame = SwingUtilities.getWindowAncestor(this);
-            if (topFrame instanceof JFrame frame) {
-                frame.getContentPane().removeAll();
-                Config.lastPlayedStage++;
-                LevelData nextLevel = LevelLoader.loadLevel(Config.lastPlayedStage);
-                frame.setContentPane(new GameScreen(nextLevel));
-                frame.revalidate();
-                frame.repaint();
-            }
-        });
-
-        JButton closeButton = new JButton("Close");
-        closeButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        closeButton.addActionListener(e -> {
-            GameScreen.this.remove(overlay);
-            GameScreen.this.revalidate();
-            GameScreen.this.repaint();
-        });
-
-        victoryPanel.add(Box.createVerticalGlue());
-        victoryPanel.add(messageLabel);
-        victoryPanel.add(Box.createRigidArea(new Dimension(0, 20)));
-        victoryPanel.add(nextLevelButton);
-        victoryPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        victoryPanel.add(closeButton);
-        victoryPanel.add(Box.createVerticalGlue());
-
-        overlay.add(victoryPanel, new GridBagConstraints());
-
+        VictoryOverlay overlay = new VictoryOverlay(this, msg);
         setLayout(null);
         overlay.setSize(getSize());
         add(overlay);
