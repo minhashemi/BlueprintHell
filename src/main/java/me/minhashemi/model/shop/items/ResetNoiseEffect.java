@@ -10,7 +10,7 @@ public class ResetNoiseEffect implements ShopEffect {
     private GameScreen gameScreen = null;
     private HUD hud;
 
-    public ResetNoiseEffect() {
+    public ResetNoiseEffect(GameScreen gameScreen) {
         this.gameScreen = gameScreen;
     }
 
