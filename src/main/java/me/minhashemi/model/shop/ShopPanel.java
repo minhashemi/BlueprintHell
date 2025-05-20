@@ -20,7 +20,7 @@ public class ShopPanel extends JPanel {
         List<ShopItem> items = ShopLoader.loadItems();
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setBackground(new Color(30, 30, 30, 230));
+        setBackground(Color.GRAY);
         setBorder(BorderFactory.createLineBorder(Color.WHITE));
 
         // Panel for item buttons

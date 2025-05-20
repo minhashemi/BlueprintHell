@@ -1,14 +1,10 @@
 package me.minhashemi.model;
 
 public class Config {
-    // level
-    public static int LEVEL_NUM = 1;
     // screen
     public static final int WIDTH = 800;
     public static final int HEIGHT = 600;
-    public static final int FPS = 60;
     public static boolean isMusicOn = true;
-    public static boolean recordTime = false;
     public static int lastPlayedStage = 1;
     public static final int CALLOUT_DURATION = 3000; // ms
 

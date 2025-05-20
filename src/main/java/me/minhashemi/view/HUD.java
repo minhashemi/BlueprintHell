@@ -8,7 +8,7 @@ import java.awt.*;
 public class HUD {
     private int temporalProgress = 0;
     private int packetLoss = 0;
-    private int coins = 0;
+    private static int coins = 0;
     private String calloutMessage = null;
     private long calloutTimestamp = 0;
 
@@ -68,7 +68,7 @@ public class HUD {
         return packetLoss;
     }
 
-    public int getCoins() {
+    public static int getCoins() {
         return coins;
     }
 }
