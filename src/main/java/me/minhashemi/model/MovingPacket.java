@@ -89,7 +89,7 @@ public class MovingPacket {
     public void draw(Graphics2D g) {
         if (lost) return;
 
-        g.setColor(Color.CYAN);
+        g.setColor(Color.CYAN.darker());
         int x = (int) position.x;
         int y = (int) position.y;
         int size = 10;
@@ -148,18 +148,18 @@ public class MovingPacket {
     }
 
     public Shape getPath() {
-        int size = 10;
+
         switch (shape) {
             case SQUARE:
-                return new Rectangle((int) position.x - size / 2, (int) position.y - size / 2, size, size);
+                return new Rectangle((int) position.x - Config.PACKET_SIZE / 2, (int) position.y - Config.PACKET_SIZE / 2, Config.PACKET_SIZE, Config.PACKET_SIZE);
             case TRIANGLE:
                 Polygon triangle = new Polygon();
-                triangle.addPoint((int) position.x, (int) position.y - size / 2); // top
-                triangle.addPoint((int) position.x - size / 2, (int) position.y + size / 2); // bottom left
-                triangle.addPoint((int) position.x + size / 2, (int) position.y + size / 2); // bottom right
+                triangle.addPoint((int) position.x, (int) position.y - Config.PACKET_SIZE / 2); // top
+                triangle.addPoint((int) position.x - Config.PACKET_SIZE / 2, (int) position.y + Config.PACKET_SIZE / 2); // bottom left
+                triangle.addPoint((int) position.x + Config.PACKET_SIZE / 2, (int) position.y + Config.PACKET_SIZE / 2); // bottom right
                 return triangle;
             default:
-                return new Rectangle((int) position.x - size / 2, (int) position.y - size / 2, size, size);
+                return new Rectangle((int) position.x - Config.PACKET_SIZE / 2, (int) position.y - Config.PACKET_SIZE / 2, Config.PACKET_SIZE, Config.PACKET_SIZE);
         }
     }
 
