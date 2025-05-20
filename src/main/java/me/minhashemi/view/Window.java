@@ -81,12 +81,7 @@ public class Window extends JFrame {
             else player.stopMusic();
         });
 
-        // Record time toggle
-//        JCheckBox recordToggle = new JCheckBox("Record time?", Config.recordTime);
-//        recordToggle.addActionListener(e -> Config.recordTime = recordToggle.isSelected());
-
         // Volume slider
-
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         JLabel volumeLabel = new JLabel("Music Volume:");
         volumeLabel.setBounds(screenSize.width / 2 - 150, screenSize.height / 2 - 100, 200, 30);
@@ -106,7 +101,6 @@ public class Window extends JFrame {
 
         // Add components to panel
         panel.add(musicToggle);
-//        panel.add(recordToggle);
         panel.add(Box.createVerticalStrut(10));
         panel.add(volumeLabel);
         panel.add(volumeSlider);
@@ -115,7 +109,6 @@ public class Window extends JFrame {
 
         return panel;
     }
-
 
     private JPanel createStageMenu() {
         JPanel panel = new JPanel();
@@ -136,11 +129,6 @@ public class Window extends JFrame {
     }
 
     private void handleContinue() {
-//        String playerName = JOptionPane.showInputDialog(this, "Enter Your name: ");
-//        if (playerName != null && !playerName.trim().isEmpty()) {
-//            int lastStage = Config.lastPlayedStage;
-//            startStage(lastStage);
-//        }
         startStage(Config.lastPlayedStage);
     }
 
@@ -174,14 +162,10 @@ public class Window extends JFrame {
         repaint();
     }
 
-
-
     private void showCard(String name) {
         CardLayout cl = (CardLayout) mainPanel.getLayout();
         cl.show(mainPanel, name);
     }
-
-
 
     public void quitToMenuFromGame() {
         // Exit full-screen if active
@@ -208,4 +192,39 @@ public class Window extends JFrame {
         showCard("MainMenu");
     }
 
+    public void restartGame() {
+        // Reload the current level using the last played stage
+        LevelData levelData = LevelLoader.loadLevel(1);
+
+        // Remove current game content
+        getContentPane().removeAll();
+
+        // Set to full screen (same as startStage)
+        dispose(); // Remove decorations before going fullscreen
+        setUndecorated(true);
+        setResizable(false);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+
+        GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+        if (gd.isFullScreenSupported()) {
+            gd.setFullScreenWindow(this);
+        } else {
+            // Fallback if fullscreen is not supported
+            setSize(Config.WIDTH, Config.HEIGHT);
+            setLocationRelativeTo(null);
+            setVisible(true);
+        }
+
+        // Create and set new GameScreen
+        GameScreen gameScreen = new GameScreen(levelData);
+        setContentPane(gameScreen);
+
+        revalidate();
+        repaint();
+
+        // Resume music if enabled
+        if (Config.isMusicOn) {
+            player.playMusic("theme");
+        }
+    }
 }

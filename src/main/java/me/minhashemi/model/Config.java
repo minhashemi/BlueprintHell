@@ -21,4 +21,5 @@ public class Config {
     public static final int NETSYS_WIDTH = 60;
     public static final int MAX_BUFFER_SIZE = 5;
     public static int volume = 70;
+    public static final int PACKET_SIZE = 20;
 }
