@@ -30,7 +30,6 @@ target/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
-/src/main/resources/**/*.wav
 ### VS Code ###
 .vscode/
 
