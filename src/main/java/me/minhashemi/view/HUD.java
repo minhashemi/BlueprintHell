@@ -9,11 +9,12 @@ public class HUD {
     private int temporalProgress = 0;
     private int packetLoss = 0;
     private static int coins = 0;
+    private int totalPackets; // Total packets for the level
     private String calloutMessage = null;
     private long calloutTimestamp = 0;
 
-
-    public HUD() {
+    public HUD(int totalPackets) {
+        this.totalPackets = totalPackets;
         // Initialize timer for callout messages
         Timer calloutTimer = new Timer(100, e -> {
             if (calloutMessage != null && System.currentTimeMillis() - calloutTimestamp > Config.CALLOUT_DURATION) {
@@ -44,7 +45,7 @@ public class HUD {
         int hudY = 20;
         g.drawString("Remaining Wire Length: " + (int) Config.remainingWireLength, 10, hudY);
         g.drawString("Temporal Progress: " + temporalProgress, 250, hudY);
-        g.drawString("Packet Loss: " + packetLoss, 450, hudY);
+        g.drawString("Packet Loss: " + packetLoss + "/" + totalPackets, 450, hudY);
         g.drawString("Coins: " + coins, 600, hudY);
 
         if (calloutMessage != null && System.currentTimeMillis() - calloutTimestamp < Config.CALLOUT_DURATION) {
@@ -70,5 +71,9 @@ public class HUD {
 
     public static int getCoins() {
         return coins;
+    }
+
+    public int getTotalPackets() {
+        return totalPackets;
     }
 }

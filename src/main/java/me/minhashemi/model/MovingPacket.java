@@ -1,5 +1,6 @@
 package me.minhashemi.model;
 
+import me.minhashemi.controller.audio.player;
 import me.minhashemi.model.block.NetSys;
 import me.minhashemi.model.block.NetSysPort;
 import me.minhashemi.model.block.PortType;
@@ -18,6 +19,7 @@ public class MovingPacket {
     private float noise;
     private boolean lost;
     private Point2D.Float position;
+    private Point2D.Float forceVector; // Force from impact wave
     private boolean delivered = false;
 
     public static final float NOISE_THRESHOLD = 100f;
@@ -31,6 +33,7 @@ public class MovingPacket {
         this.noise = 0;
         this.lost = false;
         this.position = evaluateLinear(wire.getStart(), wire.getEnd(), t);
+        this.forceVector = new Point2D.Float(0, 0);
 
         NetSysPort endPort = wire.getToPort();
         this.destinationNetSys = endPort != null ? endPort.getParent() : null;
@@ -53,17 +56,33 @@ public class MovingPacket {
         t += speed;
         if (t > 1f) t = 1f;
 
-        position = evaluateLinear(wire.getStart(), wire.getEnd(), t);
+        // Calculate base position along wire
+        Point2D.Float basePosition = evaluateLinear(wire.getStart(), wire.getEnd(), t);
+
+        // Apply force vector to position (smoothly)
+        float forceDecay = 0.9f; // Decay force over time for smooth effect
+        position.x = basePosition.x + forceVector.x;
+        position.y = basePosition.y + forceVector.y;
+        forceVector.x *= forceDecay;
+        forceVector.y *= forceDecay;
+
+        // Check deviation from wire
+        float distance = (float) pointToLineDistance(position, wire.getStart(), wire.getEnd());
+        if (distance > MAX_DISTANCE_FROM_WIRE && !lost) {
+            lost = true;
+            wire.setHasPacket(false);
+        }
+
+        // Check noise threshold
+        if (noise >= NOISE_THRESHOLD * 0.5f && !lost) {
+            lost = true;
+            wire.setHasPacket(false);
+        }
 
         if (t >= 1f && !lost && !delivered && destinationNetSys != null) {
             delivered = true;
             wire.setHasPacket(false);
             destinationNetSys.markReceived();
-        }
-
-        if (noise >= NOISE_THRESHOLD && !lost) {
-            lost = true;
-            wire.setHasPacket(false);
         }
     }
 
@@ -93,9 +112,27 @@ public class MovingPacket {
         }
     }
 
-    public void applyImpact(Point2D.Float forceVector, float distanceFromImpact) {
-        float attenuation = 1.0f - Math.min(1.0f, distanceFromImpact / 100f);
-        noise += 10f * attenuation;
+    public void applyImpact(Point impactPoint) {
+        // Calculate distance from packet's position to the impact point
+        float distance = (float) position.distance(impactPoint.x, impactPoint.y);
+        // Apply noise based on distance (attenuates with distance)
+        float attenuation = 1.0f - Math.min(1.0f, distance / 100f);
+        increaseNoise(20f * attenuation); // Increased noise for stronger effect
+
+        // Calculate force vector (direction away from impact point)
+        if (distance > 0) {
+            float forceMagnitude = 10f * attenuation; // Stronger force closer to impact
+            float dx = position.x - impactPoint.x;
+            float dy = position.y - impactPoint.y;
+            float length = (float) Math.sqrt(dx * dx + dy * dy);
+            forceVector.x += (dx / length) * forceMagnitude;
+            forceVector.y += (dy / length) * forceMagnitude;
+        }
+    }
+
+    public void increaseNoise(float amount) {
+        this.noise += amount;
+        if (this.noise < 0) this.noise = 0; // Prevent negative noise
     }
 
     public boolean isArrived() {
@@ -110,10 +147,42 @@ public class MovingPacket {
         return position;
     }
 
+    public Shape getPath() {
+        int size = 10;
+        switch (shape) {
+            case SQUARE:
+                return new Rectangle((int) position.x - size / 2, (int) position.y - size / 2, size, size);
+            case TRIANGLE:
+                Polygon triangle = new Polygon();
+                triangle.addPoint((int) position.x, (int) position.y - size / 2); // top
+                triangle.addPoint((int) position.x - size / 2, (int) position.y + size / 2); // bottom left
+                triangle.addPoint((int) position.x + size / 2, (int) position.y + size / 2); // bottom right
+                return triangle;
+            default:
+                return new Rectangle((int) position.x - size / 2, (int) position.y - size / 2, size, size);
+        }
+    }
+
     private Point2D.Float evaluateLinear(Point start, Point end, float t) {
         float x = (1 - t) * start.x + t * end.x;
         float y = (1 - t) * start.y + t * end.y;
         return new Point2D.Float(x, y);
+    }
+
+    private float pointToLineDistance(Point2D.Float p, Point lineStart, Point lineEnd) {
+        float px = p.x - lineStart.x;
+        float py = p.y - lineStart.y;
+        float vx = lineEnd.x - lineStart.x;
+        float vy = lineEnd.y - lineStart.y;
+
+        float lengthSquared = vx * vx + vy * vy;
+        if (lengthSquared == 0) return (float) p.distance(lineStart.x, lineStart.y);
+
+        float t = Math.max(0, Math.min(1, (px * vx + py * vy) / lengthSquared));
+        float projX = lineStart.x + t * vx;
+        float projY = lineStart.y + t * vy;
+
+        return (float) p.distance(projX, projY);
     }
 
     public Wire getWire() {
@@ -124,7 +193,11 @@ public class MovingPacket {
         return shape;
     }
 
-    public void setNoise(int n){
+    public void setNoise(int n) {
         this.noise = n;
+    }
+
+    public float getNoise() {
+        return noise;
     }
 }

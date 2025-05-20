@@ -10,14 +10,17 @@ import me.minhashemi.model.level.LevelData;
 import me.minhashemi.model.shop.ShopItem;
 import me.minhashemi.model.shop.ShopPanel;
 import me.minhashemi.view.overlay.VictoryOverlay;
+import me.minhashemi.view.overlay.GameOverOverlay;
 import me.minhashemi.view.wire.WireManager;
 
 import javax.swing.*;
-import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Area;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-import java.util.*;
 
 public class GameScreen extends JPanel {
     private final LevelData levelData;
@@ -25,19 +28,30 @@ public class GameScreen extends JPanel {
     private final WireManager wireManager;
     private final InputController inputController;
     private final List<MovingPacket> movingPackets = new ArrayList<>();
+    private final List<Impact> impacts = new ArrayList<>();
     private boolean victoryShown = false;
+    private boolean gameOverShown = false;
     private JPanel shopOverlay;
     private Timer gameTimer;
+    private boolean impactIsDisabled = false;
+    private static boolean waveIsDisabled = false;
+    private int lostPackets = 0;
+    private final int totalPackets; // Total packets for the level
 
+
+    public static boolean getWaveisDisabled(){
+        return waveIsDisabled;
+    }
     public List<MovingPacket> getMovingPackets() {
         return movingPackets;
     }
 
     public GameScreen(LevelData levelData) {
         this.levelData = levelData;
+        this.totalPackets = calculateTotalPackets(); // Calculate total packets
         setLayout(new BorderLayout());
 
-        this.hud = new HUD();
+        this.hud = new HUD(totalPackets); // Pass totalPackets to HUD
         this.wireManager = new WireManager(levelData);
         this.inputController = new InputController(this, levelData, wireManager, hud);
 
@@ -55,6 +69,15 @@ public class GameScreen extends JPanel {
 
         gameTimer = new Timer(16, e -> canvasPanel.repaint());
         gameTimer.start();
+    }
+
+    private int calculateTotalPackets() {
+        // TODO: Adjust based on LevelData or NetSys configurations
+        int count = 0;
+        for (NetSys netsys : levelData.packets) {
+            count += 5; // Placeholder: 5 packets per NetSys
+        }
+        return count;
     }
 
     private JPanel createCanvasPanel() {
@@ -78,6 +101,11 @@ public class GameScreen extends JPanel {
                     victoryShown = true;
                     player.playEffect("victory");
                     SwingUtilities.invokeLater(() -> showVictoryMessage("Victory! All packets delivered."));
+                } else if (!gameOverShown && lostPackets >= totalPackets / 2) {
+                    gameOverShown = true;
+                    gameTimer.stop();
+                    player.playEffect("lose");
+                    SwingUtilities.invokeLater(() -> showGameOverMessage("Game Over! Too many packets lost."));
                 }
             }
         };
@@ -87,11 +115,11 @@ public class GameScreen extends JPanel {
         return new GameControlsPanel(new GameControlsPanel.GameControlListener() {
             @Override public void onShop() { openShop(); }
             @Override public void onTimeForward() {
-                hud.updateHUD(hud.getTemporalProgress() + 1, hud.getPacketLoss(), hud.getCoins());
+                hud.updateHUD(hud.getTemporalProgress() + 1, lostPackets, hud.getCoins());
                 repaint();
             }
             @Override public void onTimeBackward() {
-                hud.updateHUD(Math.max(0, hud.getTemporalProgress() - 1), hud.getPacketLoss(), hud.getCoins());
+                hud.updateHUD(Math.max(0, hud.getTemporalProgress() - 1), lostPackets, hud.getCoins());
                 repaint();
             }
             @Override public void onQuitToMenu() {
@@ -110,9 +138,13 @@ public class GameScreen extends JPanel {
         while (iterator.hasNext()) {
             MovingPacket packet = iterator.next();
             packet.update();
+            findImpact(packet);
 
             if (packet.isLost()) {
                 iterator.remove();
+                lostPackets++;
+
+                hud.updateHUD(hud.getTemporalProgress(), lostPackets, hud.getCoins());
             } else if (packet.isArrived()) {
                 iterator.remove();
                 packet.getWire().setHasPacket(false);
@@ -121,12 +153,86 @@ public class GameScreen extends JPanel {
                 NetSys targetSys = toPort.getParent();
                 targetSys.markReceived();
                 targetSys.tryToForwardPacket(wireManager, toAdd, packet.getType());
+
+                // Award coins based on packet type
+                int coinsEarned = packet.getType() == PortType.SQUARE ? 1 : 2;
+                hud.updateHUD(hud.getTemporalProgress(), lostPackets, hud.getCoins() + coinsEarned);
             } else {
                 packet.draw(g2);
             }
         }
 
+        manageImpacts();
         movingPackets.addAll(toAdd);
+    }
+
+    private void findImpact(MovingPacket packet1) {
+        if (impactIsDisabled) return;
+
+        for (MovingPacket packet2 : movingPackets) {
+            if (packet2 == packet1 || packet1.getWire() == null || packet2.getWire() == null) {
+                continue;
+            }
+
+            Area area1 = new Area(packet1.getPath());
+            Area area2 = new Area(packet2.getPath());
+            area1.intersect(area2);
+
+            boolean firstImpact = true;
+            for (Impact i : impacts) {
+                if (i.contains(packet1, packet2)) {
+                    firstImpact = false;
+                    break;
+                }
+            }
+
+            if (!area1.isEmpty() && firstImpact) {
+                Rectangle2D boundsArea1 = area1.getBounds2D();
+                Point point = new Point((int) boundsArea1.getX(), (int) boundsArea1.getY());
+                Impact impact = new Impact(packet1, packet2, point);
+                impacts.add(impact);
+                player.playEffect("collide");
+            }
+        }
+    }
+
+    private void manageImpacts() {
+        for (Impact impact : impacts) {
+            if (impact.isDisabled()) continue;
+
+            for (MovingPacket packet : movingPackets) {
+                if (impact.packet1 == packet || impact.packet2 == packet) {
+                    packet.increaseNoise(30f); // Stronger noise for colliding packets
+                } else if (!waveIsDisabled) {
+                    packet.applyImpact(impact.point);
+                }
+            }
+        }
+        impacts.clear();
+    }
+
+    public void disableImpactForSeconds(int seconds) {
+        impactIsDisabled = true;
+        new Timer(seconds * 1000, e -> impactIsDisabled = false).start();
+    }
+
+    public void disableWaveForSeconds(int seconds) {
+        waveIsDisabled = true;
+        new Timer(seconds * 1000, e -> waveIsDisabled = false).start();
+    }
+
+    public boolean isImpactDisabled() {
+        return impactIsDisabled;
+    }
+
+    public boolean isWaveDisabled() {
+        return waveIsDisabled;
+    }
+
+    public void resetAllNoise() {
+        for (MovingPacket packet : movingPackets) {
+            packet.setNoise(0);
+        }
     }
 
     private void drawNetSys(Graphics g, NetSys packet) {
@@ -194,6 +300,18 @@ public class GameScreen extends JPanel {
         repaint();
     }
 
+    public void showGameOverMessage(String msg) {
+        GameOverOverlay overlay = new GameOverOverlay(this, msg, lostPackets, totalPackets, hud.getTemporalProgress());
+        setLayout(null);
+        overlay.setSize(getSize());
+        add(overlay);
+        setComponentZOrder(overlay, 0);
+        player.playEffect("collide");
+
+        revalidate();
+        repaint();
+    }
+
     private void openShop() {
         if (shopOverlay != null) return;
 
@@ -205,7 +323,7 @@ public class GameScreen extends JPanel {
             @Override
             public void onBuy(ShopItem item) {
                 int newCoins = hud.getCoins() - item.getPrice();
-                hud.updateHUD(hud.getTemporalProgress(), hud.getPacketLoss(), newCoins);
+                hud.updateHUD(hud.getTemporalProgress(), lostPackets, newCoins);
                 closeShop();
             }
 
