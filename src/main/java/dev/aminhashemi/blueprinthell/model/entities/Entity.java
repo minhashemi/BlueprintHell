@@ -1,5 +1,6 @@
 package dev.aminhashemi.blueprinthell.model.entities;
 
+import dev.aminhashemi.blueprinthell.core.GameEngine;
 import java.awt.*;
 
 public abstract class Entity {
@@ -14,7 +15,8 @@ public abstract class Entity {
         this.height = height;
     }
 
-    public abstract void update();
+    // The signature is now consistent for all entities
+    public abstract void update(GameEngine engine);
     public abstract void draw(Graphics2D g);
 
     public boolean contains(Point p) {
@@ -26,18 +28,10 @@ public abstract class Entity {
         this.y = y;
     }
 
-    // --- NEW METHOD ---
-    /**
-     * Returns the rectangular bounds of this entity.
-     * Useful for collision detection.
-     * @return A Rectangle object representing the entity's bounds.
-     */
     public Rectangle getBounds() {
         return new Rectangle(x, y, width, height);
     }
 
-
-    // Getters
     public int getX() {
         return x;
     }

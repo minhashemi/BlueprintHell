@@ -1,14 +1,15 @@
 package dev.aminhashemi.blueprinthell.model.entities.systems;
 
+import dev.aminhashemi.blueprinthell.core.GameEngine;
 import dev.aminhashemi.blueprinthell.model.LevelData;
 import dev.aminhashemi.blueprinthell.model.entities.Entity;
+import dev.aminhashemi.blueprinthell.model.entities.packets.Packet;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public abstract class System extends Entity {
 
-    // --- NEW: Add lists to hold the ports ---
     protected List<Port> inputPorts;
     protected List<Port> outputPorts;
 
@@ -20,7 +21,6 @@ public abstract class System extends Entity {
     }
 
     private void initializePorts(LevelData.SystemData data) {
-        // Create input ports from level data
         if (data.inputPorts != null) {
             for (int i = 0; i < data.inputPorts.size(); i++) {
                 PortType type = PortType.valueOf(data.inputPorts.get(i).type);
@@ -28,7 +28,6 @@ public abstract class System extends Entity {
             }
         }
 
-        // Create output ports from level data
         if (data.outputPorts != null) {
             for (int i = 0; i < data.outputPorts.size(); i++) {
                 PortType type = PortType.valueOf(data.outputPorts.get(i).type);
@@ -37,7 +36,14 @@ public abstract class System extends Entity {
         }
     }
 
-    // Getters for the port lists
+    public void receivePacket(Packet packet, GameEngine engine) {
+        engine.routePacket(packet, this);
+    }
+
+    // This is now an abstract method that all subclasses must implement
+    @Override
+    public abstract void update(GameEngine engine);
+
     public List<Port> getInputPorts() {
         return inputPorts;
     }

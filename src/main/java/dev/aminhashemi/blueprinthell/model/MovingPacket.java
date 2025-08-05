@@ -1,24 +1,23 @@
 package dev.aminhashemi.blueprinthell.model;
 
+import dev.aminhashemi.blueprinthell.core.GameEngine;
 import dev.aminhashemi.blueprinthell.model.entities.packets.Packet;
+import dev.aminhashemi.blueprinthell.model.entities.systems.System;
 import dev.aminhashemi.blueprinthell.model.world.Wire;
 
 import java.awt.*;
 import java.util.List;
 
-/**
- * Represents a packet in transit along a wire.
- * This class handles the logic for moving the packet along the wire's path.
- */
 public class MovingPacket {
 
     private final Packet packet;
     private final Wire wire;
     private final List<Point> path;
     private int currentSegmentIndex;
-    private double progressOnSegment; // A value from 0.0 to 1.0
+    private double progressOnSegment;
+    private boolean hasArrived = false;
 
-    private static final double SPEED = 2.0; // Pixels per update
+    private static final double SPEED = 2.0; // Pixels per update tick
 
     public MovingPacket(Packet packet, Wire wire) {
         this.packet = packet;
@@ -26,33 +25,35 @@ public class MovingPacket {
         this.path = wire.getAllPoints();
         this.currentSegmentIndex = 0;
         this.progressOnSegment = 0.0;
-        // Set the packet's initial position to the start of the wire
-        packet.setPosition(path.get(0).x, path.get(0).y);
+        if (!path.isEmpty()) {
+            packet.setPosition(path.get(0).x, path.get(0).y);
+        }
     }
 
-    public void update() {
-        if (currentSegmentIndex >= path.size() - 1) {
-            // Packet has reached the end of the wire
+    public void update(GameEngine engine) {
+        if (hasArrived || path.size() < 2) {
             return;
         }
 
         Point start = path.get(currentSegmentIndex);
         Point end = path.get(currentSegmentIndex + 1);
         double segmentLength = start.distance(end);
+        if (segmentLength == 0) segmentLength = 1; // Avoid division by zero
 
-        // Calculate how much progress to make this frame
         double progressThisUpdate = SPEED / segmentLength;
         progressOnSegment += progressThisUpdate;
 
         if (progressOnSegment >= 1.0) {
-            // Move to the next segment
             currentSegmentIndex++;
-            progressOnSegment = 0.0; // Reset progress
             if (currentSegmentIndex >= path.size() - 1) {
                 // Arrived at the final destination
+                hasArrived = true;
                 packet.setPosition(end.x - packet.getWidth() / 2, end.y - packet.getHeight() / 2);
+                // Notify the engine of arrival
+                engine.handlePacketArrival(this);
                 return;
             }
+            progressOnSegment = 0.0; // Reset progress for the new segment
         }
 
         // Interpolate the position on the current segment
@@ -66,6 +67,14 @@ public class MovingPacket {
     }
 
     public boolean hasArrived() {
-        return currentSegmentIndex >= path.size() - 1;
+        return hasArrived;
+    }
+
+    public Packet getPacket() {
+        return packet;
+    }
+
+    public System getDestinationSystem() {
+        return wire.getEndPort().getParentSystem();
     }
 }
