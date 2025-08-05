@@ -19,17 +19,11 @@ public class ReferenceSystem extends System {
         super(x, y, 100, 80, data);
     }
 
-    /**
-     * Creates a new packet with a random type corresponding to one of its output ports
-     * and tells the GameEngine to spawn it.
-     * @param engine The GameEngine instance.
-     */
     public void spawnRandomPacket(GameEngine engine) {
         if (outputPorts.isEmpty()) {
-            return; // Can't spawn without output ports
+            return;
         }
 
-        // Create a list of possible packet types based on the system's output ports
         List<PacketType> possibleTypes = new ArrayList<>();
         for (Port port : outputPorts) {
             if (port.getType() == PortType.SQUARE) {
@@ -43,20 +37,16 @@ public class ReferenceSystem extends System {
             return;
         }
 
-        // Pick a random type from the list
         PacketType randomType = possibleTypes.get(random.nextInt(possibleTypes.size()));
         Packet newPacket = new MessengerPacket(this.x, this.y, randomType);
 
-        // Pass the new packet to the engine to be placed on a wire
         engine.spawnPacket(newPacket, this);
     }
-
 
     @Override
     public void draw(Graphics2D g) {
         g.setColor(Color.CYAN);
         g.fillRect(x, y, width, height);
-
         g.setColor(Color.BLACK);
         g.drawRect(x, y, width, height);
         g.drawString("REF", x + 10, y + 20);
@@ -69,8 +59,10 @@ public class ReferenceSystem extends System {
         }
     }
 
+    // This now correctly overrides the abstract method from the System class
     @Override
-    public void update() {
-        // This is now empty as spawning is no longer automatic.
+    public void update(GameEngine engine) {
+        // In the future, automatic spawning logic could go here.
+        // For now, it's empty because spawning is manual.
     }
 }

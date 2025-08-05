@@ -1,5 +1,6 @@
 package dev.aminhashemi.blueprinthell.model.entities.packets;
 
+import dev.aminhashemi.blueprinthell.core.GameEngine;
 import java.awt.*;
 
 public class MessengerPacket extends Packet {
@@ -7,20 +8,19 @@ public class MessengerPacket extends Packet {
     private final PacketType type;
 
     public MessengerPacket(int x, int y, PacketType type) {
-        super(x, y, 12, 12); // Packets are 12x12 pixels
+        super(x, y, 12, 12);
         this.type = type;
     }
 
     @Override
-    public void update() {
-        // Packet movement logic will go here.
+    public void update(GameEngine engine) {
+        // Movement logic is handled by MovingPacket, so this is empty for now.
     }
 
     @Override
     public void draw(Graphics2D g) {
         g.setColor(type.getColor());
 
-        // Draw the correct shape based on the packet's type
         switch (type) {
             case SQUARE_MESSENGER:
                 g.fillRect(x, y, width, height);
@@ -33,5 +33,10 @@ public class MessengerPacket extends Packet {
                 g.fillPolygon(triangle);
                 break;
         }
+    }
+
+    @Override
+    public PacketType getType() {
+        return this.type;
     }
 }

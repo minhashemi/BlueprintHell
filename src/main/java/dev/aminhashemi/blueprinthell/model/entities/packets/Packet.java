@@ -1,16 +1,12 @@
 package dev.aminhashemi.blueprinthell.model.entities.packets;
 
+import dev.aminhashemi.blueprinthell.core.GameEngine;
 import dev.aminhashemi.blueprinthell.model.entities.Entity;
 
-/**
- * An abstract base class for all packet types in the game.
- * It extends Entity and adds properties common to all packets.
- */
 public abstract class Packet extends Entity {
 
     protected double noise;
     protected double speed;
-    // We can use a simple Vector2D or just dx/dy for direction
     protected double dx, dy;
 
     public Packet(int x, int y, int width, int height) {
@@ -20,4 +16,8 @@ public abstract class Packet extends Entity {
         this.dx = 0;
         this.dy = 0;
     }
+
+    @Override
+    public abstract void update(GameEngine engine);
+    public abstract PacketType getType();
 }

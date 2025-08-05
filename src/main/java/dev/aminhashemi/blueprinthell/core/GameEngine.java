@@ -3,7 +3,9 @@ package dev.aminhashemi.blueprinthell.core;
 import dev.aminhashemi.blueprinthell.model.LevelData;
 import dev.aminhashemi.blueprinthell.model.MovingPacket;
 import dev.aminhashemi.blueprinthell.model.entities.packets.Packet;
+import dev.aminhashemi.blueprinthell.model.entities.packets.PacketType;
 import dev.aminhashemi.blueprinthell.model.entities.systems.Port;
+import dev.aminhashemi.blueprinthell.model.entities.systems.PortType;
 import dev.aminhashemi.blueprinthell.model.entities.systems.ReferenceSystem;
 import dev.aminhashemi.blueprinthell.model.entities.systems.System;
 import dev.aminhashemi.blueprinthell.model.world.ArcPoint;
@@ -20,11 +22,9 @@ import java.util.stream.Collectors;
 
 public class GameEngine implements Runnable {
 
-    // --- All necessary fields are now declared here ---
     private final GamePanel gamePanel;
     private Thread gameThread;
     private volatile boolean running = false;
-
     private final int FPS_SET = 120;
     private final int UPS_SET = 200;
 
@@ -32,7 +32,6 @@ public class GameEngine implements Runnable {
     private List<Wire> wires;
     private List<MovingPacket> movingPackets;
 
-    // Fields for input handling
     private System draggedSystem = null;
     private ArcPoint draggedArcPoint = null;
     private Point dragOffset = null;
@@ -109,16 +108,18 @@ public class GameEngine implements Runnable {
     }
 
     private void update() {
-        // Automatic spawning is removed. Systems now have a simple update.
         for (System system : systems) {
-            system.update();
+            // This check allows ReferenceSystem to have a unique update method for spawning
+            if (system instanceof ReferenceSystem) {
+                ((ReferenceSystem) system).update(this);
+            } else {
+                system.update(this);
+            }
         }
 
+        // Iterate over a copy to safely remove items
         for (MovingPacket movingPacket : new ArrayList<>(movingPackets)) {
-            movingPacket.update();
-            if (movingPacket.hasArrived()) {
-                movingPackets.remove(movingPacket);
-            }
+            movingPacket.update(this);
         }
     }
 
@@ -148,11 +149,10 @@ public class GameEngine implements Runnable {
         }
     }
 
-    // --- METHOD RE-ADDED ---
     private void drawPreviewWire(Graphics2D g) {
         List<Point> points = new ArrayList<>();
         points.add(previewWire.getStartPort().getCenter());
-        points.addAll(previewWire.getArcPoints().stream().map(ArcPoint::getPosition).collect(Collectors.toList()));
+        previewWire.getArcPoints().forEach(arcPoint -> points.add(arcPoint.getPosition()));
         points.add(currentMousePos);
 
         boolean isValid = true;
@@ -175,6 +175,48 @@ public class GameEngine implements Runnable {
         }
     }
 
+    public void handlePacketArrival(MovingPacket arrivedPacket) {
+        movingPackets.remove(arrivedPacket);
+        System destinationSystem = arrivedPacket.getDestinationSystem();
+        destinationSystem.receivePacket(arrivedPacket.getPacket(), this);
+    }
+
+    public void routePacket(Packet packet, System currentSystem) {
+        if (currentSystem instanceof ReferenceSystem) {
+            java.lang.System.out.println("Packet " + packet.getType() + " returned home.");
+            return;
+        }
+
+        List<Wire> outgoingWires = wires.stream()
+                .filter(wire -> wire.getStartPort().getParentSystem() == currentSystem)
+                .collect(Collectors.toList());
+
+        if (outgoingWires.isEmpty()) {
+            java.lang.System.out.println("Packet " + packet.getType() + " is stuck. No outgoing wires.");
+            return;
+        }
+
+        PortType packetPortType = getPortTypeForPacket(packet.getType());
+        List<Wire> compatibleWires = outgoingWires.stream()
+                .filter(wire -> wire.getStartPort().getType() == packetPortType)
+                .collect(Collectors.toList());
+
+        Wire targetWire;
+        if (!compatibleWires.isEmpty()) {
+            targetWire = compatibleWires.get((int) (Math.random() * compatibleWires.size()));
+        } else {
+            targetWire = outgoingWires.get((int) (Math.random() * outgoingWires.size()));
+        }
+
+        movingPackets.add(new MovingPacket(packet, targetWire));
+    }
+
+    private PortType getPortTypeForPacket(PacketType packetType) {
+        if (packetType == PacketType.SQUARE_MESSENGER) return PortType.SQUARE;
+        if (packetType == PacketType.TRIANGLE_MESSENGER) return PortType.TRIANGLE;
+        return null;
+    }
+
     public void spawnPacket(Packet packet, ReferenceSystem spawner) {
         List<Wire> availableWires = wires.stream()
                 .filter(wire -> wire.getStartPort().getParentSystem() == spawner)
@@ -186,10 +228,6 @@ public class GameEngine implements Runnable {
         }
     }
 
-    /**
-     * Called by the InputHandler when the spacebar is pressed.
-     * It tells all Reference Systems to spawn a packet.
-     */
     public void handleManualPacketSpawn() {
         for (System system : systems) {
             if (system instanceof ReferenceSystem) {
@@ -238,7 +276,6 @@ public class GameEngine implements Runnable {
             if (clickedPort != null && clickedPort.isInput() && clickedPort.getParentSystem() != previewWire.getStartPort().getParentSystem()) {
                 previewWire.setEndPort(clickedPort);
                 wires.add(previewWire);
-                java.lang.System.out.println("Wire created with length: " + previewWire.calculateLength());
             }
             previewWire = null;
         } else if (draggedSystem != null) {
