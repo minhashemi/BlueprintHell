@@ -4,10 +4,12 @@ import java.awt.*;
 
 public class ArcPoint {
     private Point position;
-    public static final int SIZE = 8; // The visual size of the arc point
+    private final Wire parentWire; // NEW: Reference to the parent wire
+    public static final int SIZE = 8;
 
-    public ArcPoint(Point position) {
+    public ArcPoint(Point position, Wire parentWire) {
         this.position = position;
+        this.parentWire = parentWire;
     }
 
     public void draw(Graphics2D g) {
@@ -21,10 +23,11 @@ public class ArcPoint {
 
     public void setPosition(Point position) {
         this.position = position;
+        // NEW: Tell the parent wire to update its path when this point moves
+        parentWire.regeneratePath();
     }
 
     public boolean contains(Point p) {
-        // Check if the point p is within the arc point's circular area
         return position.distance(p) <= SIZE / 2.0;
     }
 }
