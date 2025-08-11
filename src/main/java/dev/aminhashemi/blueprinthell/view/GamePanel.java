@@ -1,38 +1,46 @@
 package dev.aminhashemi.blueprinthell.view;
 
+import dev.aminhashemi.blueprinthell.core.GameEngine;
+
 import javax.swing.*;
 import java.awt.*;
 
 /**
  * The panel where the main game is rendered and played.
- * This will eventually contain the game loop and drawing logic.
+ * This class now acts as a canvas, delegating all drawing logic to the GameEngine.
  */
 public class GamePanel extends JPanel {
 
+    private GameEngine gameEngine;
+
     public GamePanel() {
         initPanel();
+        // The GameEngine will be set from the GameFrame
+    }
+
+    // A new method to link the engine to the panel
+    public void setGameEngine(GameEngine gameEngine) {
+        this.gameEngine = gameEngine;
     }
 
     private void initPanel() {
-        // Set the name for CardLayout
         setName(GameFrame.GAME_PANEL);
-
         setPreferredSize(new Dimension(1280, 720));
         setBackground(Color.BLACK);
-        setFocusable(true); // This is crucial for the panel to receive keyboard input
+        setFocusable(true);
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        // In the future, all game entities will be drawn here.
-        // For now, let's just draw a placeholder message.
 
-        Graphics2D g2d = (Graphics2D) g;
-        g2d.setColor(Color.WHITE);
-        g2d.setFont(new Font("Arial", Font.BOLD, 32));
-        String message = "Game Screen - Entities will be drawn here!";
-        int stringWidth = g2d.getFontMetrics().stringWidth(message);
-        g2d.drawString(message, (getWidth() - stringWidth) / 2, getHeight() / 2);
+        // If the engine exists, tell it to render everything.
+        if (gameEngine != null) {
+            gameEngine.render((Graphics2D) g);
+        } else {
+            // Placeholder if the engine hasn't been set yet
+            g.setColor(Color.RED);
+            g.drawString("Game Engine not loaded!", 20, 20);
+        }
     }
 }
