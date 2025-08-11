@@ -1,38 +1,37 @@
 {
-  "level_id": 1,
-  "level_name": "Blueprint Hell",
-  "packets": [
+  "levelNumber": 1,
+  "levelName": "The First Connection",
+  "playerStart": {
+    "initialCoins": 10,
+    "initialWireLength": 5000
+  },
+  "systems": [
     {
-      "packet_id": 0,
-      "position": { "x": 100, "y": 600 },
-      "inputs": [],
-      "outputs": ["SQUARE"]
+      "id": "ref_sys_A",
+      "type": "REFERENCE",
+      "position": { "x": 100, "y": 200 },
+      "inputPorts": [
+      ],
+      "outputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" }
+      ],
+      "packetGeneration": {
+        "packetType": "SQUARE_MESSENGER",
+        "count": 10,
+        "frequency": 2.5
+      }
     },
     {
-      "packet_id": 1,
-      "position": { "x": 300, "y": 600 },
-      "inputs": ["SQUARE"],
-      "outputs": ["SQUARE"]
-    },
-    {
-      "packet_id": 2,
-      "position": { "x": 850, "y": 300 },
-      "inputs": ["SQUARE"],
-      "outputs": ["TRIANGLE", "SQUARE"]
-    },
-    {
-      "packet_id": -1,
-      "position": { "x": 800 ,"y": 700 },
-      "inputs": ["TRIANGLE", "SQUARE"],
-      "outputs": []
-    }
-  ],
-  "connections": [
-    {
-      "fromPacketId": 1,
-      "fromPortIndex": 0,
-      "toPacketId": 2,
-      "toPortIndex": 1
+      "id": "ref_sys_B",
+      "type": "REFERENCE",
+      "position": { "x": 950, "y": 450 },
+      "inputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" }
+      ],
+      "outputPorts": [
+      ]
     }
   ]
 }

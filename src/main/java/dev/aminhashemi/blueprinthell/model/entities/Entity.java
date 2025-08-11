@@ -2,10 +2,6 @@ package dev.aminhashemi.blueprinthell.model.entities;
 
 import java.awt.*;
 
-/**
- * The abstract base class for any object that exists within the game world.
- * It provides fundamental properties like position (x, y) and dimensions (width, height).
- */
 public abstract class Entity {
 
     protected int x, y;
@@ -18,9 +14,28 @@ public abstract class Entity {
         this.height = height;
     }
 
-    // Abstract methods to be implemented by all concrete entities
     public abstract void update();
     public abstract void draw(Graphics2D g);
+
+    public boolean contains(Point p) {
+        return new Rectangle(x, y, width, height).contains(p);
+    }
+
+    public void setPosition(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    // --- NEW METHOD ---
+    /**
+     * Returns the rectangular bounds of this entity.
+     * Useful for collision detection.
+     * @return A Rectangle object representing the entity's bounds.
+     */
+    public Rectangle getBounds() {
+        return new Rectangle(x, y, width, height);
+    }
+
 
     // Getters
     public int getX() {
