@@ -1,6 +1,8 @@
 package dev.aminhashemi.blueprinthell.core;
 
 import dev.aminhashemi.blueprinthell.model.LevelData;
+import dev.aminhashemi.blueprinthell.model.MovingPacket;
+import dev.aminhashemi.blueprinthell.model.entities.packets.Packet;
 import dev.aminhashemi.blueprinthell.model.entities.systems.Port;
 import dev.aminhashemi.blueprinthell.model.entities.systems.ReferenceSystem;
 import dev.aminhashemi.blueprinthell.model.entities.systems.System;
@@ -14,9 +16,11 @@ import java.awt.geom.Line2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class GameEngine implements Runnable {
 
+    // --- All necessary fields are now declared here ---
     private final GamePanel gamePanel;
     private Thread gameThread;
     private volatile boolean running = false;
@@ -26,11 +30,12 @@ public class GameEngine implements Runnable {
 
     private List<System> systems;
     private List<Wire> wires;
+    private List<MovingPacket> movingPackets;
 
+    // Fields for input handling
     private System draggedSystem = null;
     private ArcPoint draggedArcPoint = null;
     private Point dragOffset = null;
-
     private boolean inWiringMode = false;
     private Wire previewWire = null;
     private Point currentMousePos = new Point();
@@ -39,6 +44,7 @@ public class GameEngine implements Runnable {
         this.gamePanel = gamePanel;
         systems = new ArrayList<>();
         wires = new ArrayList<>();
+        movingPackets = new ArrayList<>();
         init();
     }
 
@@ -103,8 +109,16 @@ public class GameEngine implements Runnable {
     }
 
     private void update() {
+        // Automatic spawning is removed. Systems now have a simple update.
         for (System system : systems) {
             system.update();
+        }
+
+        for (MovingPacket movingPacket : new ArrayList<>(movingPackets)) {
+            movingPacket.update();
+            if (movingPacket.hasArrived()) {
+                movingPackets.remove(movingPacket);
+            }
         }
     }
 
@@ -115,12 +129,16 @@ public class GameEngine implements Runnable {
             wire.draw(g);
         }
 
-        if (previewWire != null) {
-            drawPreviewWire(g);
+        for (MovingPacket movingPacket : new ArrayList<>(movingPackets)) {
+            movingPacket.draw(g);
         }
 
         for (System system : new ArrayList<>(systems)) {
             system.draw(g);
+        }
+
+        if (previewWire != null) {
+            drawPreviewWire(g);
         }
 
         if (inWiringMode) {
@@ -130,10 +148,11 @@ public class GameEngine implements Runnable {
         }
     }
 
+    // --- METHOD RE-ADDED ---
     private void drawPreviewWire(Graphics2D g) {
         List<Point> points = new ArrayList<>();
         points.add(previewWire.getStartPort().getCenter());
-        previewWire.getArcPoints().forEach(arcPoint -> points.add(arcPoint.getPosition()));
+        points.addAll(previewWire.getArcPoints().stream().map(ArcPoint::getPosition).collect(Collectors.toList()));
         points.add(currentMousePos);
 
         boolean isValid = true;
@@ -153,6 +172,29 @@ public class GameEngine implements Runnable {
 
         for (int i = 0; i < points.size() - 1; i++) {
             g.drawLine(points.get(i).x, points.get(i).y, points.get(i + 1).x, points.get(i + 1).y);
+        }
+    }
+
+    public void spawnPacket(Packet packet, ReferenceSystem spawner) {
+        List<Wire> availableWires = wires.stream()
+                .filter(wire -> wire.getStartPort().getParentSystem() == spawner)
+                .collect(Collectors.toList());
+
+        if (!availableWires.isEmpty()) {
+            Wire targetWire = availableWires.get((int) (Math.random() * availableWires.size()));
+            movingPackets.add(new MovingPacket(packet, targetWire));
+        }
+    }
+
+    /**
+     * Called by the InputHandler when the spacebar is pressed.
+     * It tells all Reference Systems to spawn a packet.
+     */
+    public void handleManualPacketSpawn() {
+        for (System system : systems) {
+            if (system instanceof ReferenceSystem) {
+                ((ReferenceSystem) system).spawnRandomPacket(this);
+            }
         }
     }
 
@@ -199,19 +241,18 @@ public class GameEngine implements Runnable {
                 java.lang.System.out.println("Wire created with length: " + previewWire.calculateLength());
             }
             previewWire = null;
+        } else if (draggedSystem != null) {
+            draggedSystem = null;
+            dragOffset = null;
+        } else if (draggedArcPoint != null) {
+            draggedArcPoint = null;
         }
-
-        draggedSystem = null;
-        draggedArcPoint = null;
-        dragOffset = null;
     }
 
     public void handleRightMousePress(Point point) {
         if (previewWire != null) {
-            // If we are drawing a new wire, add an arc point to it
             previewWire.addArcPoint(point);
         } else if (!inWiringMode) {
-            // NEW: If not drawing a wire, try to add an arc point to an existing wire
             Wire clickedWire = findWireAt(point);
             if (clickedWire != null) {
                 clickedWire.addArcPoint(point);
@@ -254,9 +295,7 @@ public class GameEngine implements Runnable {
         return null;
     }
 
-    // NEW: Helper method to find if a click is on an existing wire
     private Wire findWireAt(Point point) {
-        // Find the closest wire to the click point. A simple threshold is used.
         final double CLICK_THRESHOLD = 5.0;
         Wire closestWire = null;
         double minDistance = Double.MAX_VALUE;
