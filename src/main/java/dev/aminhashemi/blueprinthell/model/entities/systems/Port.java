@@ -82,4 +82,8 @@ public class Port {
     public System getParentSystem() {
         return parentSystem;
     }
+
+    public PortType getType() {
+        return type;
+    }
 }
