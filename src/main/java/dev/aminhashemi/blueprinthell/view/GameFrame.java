@@ -1,5 +1,6 @@
 package dev.aminhashemi.blueprinthell.view;
 
+import dev.aminhashemi.blueprinthell.core.GameEngine; // Import GameEngine
 import dev.aminhashemi.blueprinthell.view.ui.MainMenuPanel;
 import dev.aminhashemi.blueprinthell.view.ui.SettingsPanel;
 
@@ -10,6 +11,7 @@ public class GameFrame extends JFrame {
 
     private final CardLayout cardLayout;
     private final JPanel mainPanel;
+    private GameEngine gameEngine; // Add a reference to the engine
 
     public static final String MAIN_MENU_PANEL = "MainMenuPanel";
     public static final String GAME_PANEL = "GamePanel";
@@ -27,6 +29,10 @@ public class GameFrame extends JFrame {
         GamePanel gamePanel = new GamePanel();
         SettingsPanel settingsPanel = new SettingsPanel(this);
 
+        // --- NEW: Create the GameEngine and link it to the GamePanel ---
+        gameEngine = new GameEngine(gamePanel);
+        gamePanel.setGameEngine(gameEngine);
+
         mainPanel.add(mainMenuPanel, MAIN_MENU_PANEL);
         mainPanel.add(gamePanel, GAME_PANEL);
         mainPanel.add(settingsPanel, SETTINGS_PANEL);
@@ -41,11 +47,13 @@ public class GameFrame extends JFrame {
 
     public void switchToPanel(String panelName) {
         cardLayout.show(mainPanel, panelName);
-
-        // Force the main panel to re-calculate its layout and repaint.
-        // This ensures the new panel is correctly displayed.
         mainPanel.revalidate();
         mainPanel.repaint();
+
+        // --- NEW: Start the game loop when switching to the game panel ---
+        if (panelName.equals(GAME_PANEL)) {
+            gameEngine.startGameLoop();
+        }
 
         Component componentToFocus = findComponentByName(mainPanel, panelName);
         if (componentToFocus != null) {
