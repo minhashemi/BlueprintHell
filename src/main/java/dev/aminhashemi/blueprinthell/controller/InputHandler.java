@@ -23,7 +23,6 @@ public class InputHandler extends MouseAdapter {
 
     @Override
     public void mousePressed(MouseEvent e) {
-        // We now handle the logic inside the GameEngine to check for wiring mode
         if (SwingUtilities.isLeftMouseButton(e)) {
             gameEngine.handleLeftMousePress(e.getPoint());
         } else if (SwingUtilities.isRightMouseButton(e)) {
@@ -58,8 +57,14 @@ public class InputHandler extends MouseAdapter {
 
         @Override
         public void keyPressed(KeyEvent e) {
-            if (e.getKeyCode() == KeyEvent.VK_W) {
-                gameEngine.toggleWiringMode(true);
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_W:
+                    gameEngine.toggleWiringMode(true);
+                    break;
+                case KeyEvent.VK_SPACE:
+                    // NEW: Tell the engine to spawn packets
+                    gameEngine.handleManualPacketSpawn();
+                    break;
             }
         }
 
