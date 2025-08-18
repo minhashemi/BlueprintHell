@@ -251,6 +251,7 @@ public class GameEngine implements Runnable {
         currentMousePos.setLocation(point);
         if (draggedSystem != null) {
             draggedSystem.setPosition(point.x - dragOffset.x, point.y - dragOffset.y);
+            regenerateWirePaths(); // Regenerate wire paths when system moves
         } else if (draggedArcPoint != null) {
             draggedArcPoint.setPosition(point);
         }
@@ -353,5 +354,12 @@ public class GameEngine implements Runnable {
             return closestWire;
         }
         return null;
+    }
+
+    private void regenerateWirePaths() {
+        // Regenerate all wire paths to reflect new system positions
+        for (Wire wire : wires) {
+            wire.regeneratePath();
+        }
     }
 }
