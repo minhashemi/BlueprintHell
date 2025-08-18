@@ -16,6 +16,10 @@ public class MovingPacket {
     private int currentSegmentIndex;
     private double progressOnSegment;
     private boolean hasArrived = false;
+    
+    // Impact system properties
+    private float noiseLevel = 0.0f;
+    private boolean isLost = false;
 
     private static final double SPEED = 2.0; // Pixels per update tick
 
@@ -76,5 +80,47 @@ public class MovingPacket {
 
     public System getDestinationSystem() {
         return wire.getEndPort().getParentSystem();
+    }
+    
+    // Impact system methods
+    
+    public Wire getWire() {
+        return wire;
+    }
+    
+    public void increaseNoise(float amount) {
+        this.noiseLevel += amount;
+        // If noise gets too high, packet is lost
+        if (noiseLevel > 100.0f) {
+            isLost = true;
+        }
+    }
+    
+    public void applyImpactEffect(Point impactPoint, float intensity) {
+        // Calculate distance from impact
+        Point packetPos = packet.getPosition();
+        double distance = packetPos.distance(impactPoint);
+        
+        // Apply inverse square law for wave effects
+        if (distance > 0) {
+            float waveIntensity = intensity / (float)(distance * distance);
+            increaseNoise(waveIntensity);
+        }
+    }
+    
+    public float getNoiseLevel() {
+        return noiseLevel;
+    }
+    
+    public void setNoiseLevel(float noiseLevel) {
+        this.noiseLevel = noiseLevel;
+    }
+    
+    public boolean isLost() {
+        return isLost;
+    }
+    
+    public void setLost(boolean lost) {
+        this.isLost = lost;
     }
 }
