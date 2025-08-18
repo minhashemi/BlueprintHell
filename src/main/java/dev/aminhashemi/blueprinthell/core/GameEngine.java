@@ -10,7 +10,9 @@ import dev.aminhashemi.blueprinthell.model.entities.systems.ReferenceSystem;
 import dev.aminhashemi.blueprinthell.model.entities.systems.System;
 import dev.aminhashemi.blueprinthell.model.world.ArcPoint;
 import dev.aminhashemi.blueprinthell.model.world.Wire;
+import dev.aminhashemi.blueprinthell.model.world.Impact;
 import dev.aminhashemi.blueprinthell.utils.LevelLoader;
+import dev.aminhashemi.blueprinthell.utils.AudioManager;
 import dev.aminhashemi.blueprinthell.view.GamePanel;
 
 import java.awt.*;
@@ -19,6 +21,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Iterator;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class GameEngine implements Runnable {
 
@@ -31,6 +36,7 @@ public class GameEngine implements Runnable {
     private List<System> systems;
     private List<Wire> wires;
     private List<MovingPacket> movingPackets;
+    private ImpactManager impactManager;
 
     private System draggedSystem = null;
     private ArcPoint draggedArcPoint = null;
@@ -44,6 +50,7 @@ public class GameEngine implements Runnable {
         systems = new ArrayList<>();
         wires = new ArrayList<>();
         movingPackets = new ArrayList<>();
+        impactManager = new ImpactManager();
         init();
     }
 
@@ -119,7 +126,40 @@ public class GameEngine implements Runnable {
 
         // Iterate over a copy to safely remove items
         for (MovingPacket movingPacket : new ArrayList<>(movingPackets)) {
+            // Check if packet is lost before updating
+            if (movingPacket.isLost()) {
+                continue; // Skip updating lost packets
+            }
             movingPacket.update(this);
+        }
+        
+        // NEW: Impact detection and processing
+        impactManager.detectCollisions(movingPackets);
+        List<MovingPacket> destroyedPackets = impactManager.processImpacts(movingPackets);
+        
+        // Immediately remove destroyed packets
+        movingPackets.removeAll(destroyedPackets);
+        
+        // Clean up any remaining lost packets
+        cleanupLostPackets();
+    }
+
+    /**
+     * Cleans up packets that are lost due to high noise levels.
+     */
+    private void cleanupLostPackets() {
+        Iterator<MovingPacket> iterator = movingPackets.iterator();
+        
+        while (iterator.hasNext()) {
+            MovingPacket packet = iterator.next();
+            
+            if (packet.isLost()) {
+                iterator.remove();
+                // Play lose sound for destroyed packet
+                AudioManager.getInstance().playSound("lose");
+                // TODO: Update HUD or game state to reflect lost packet
+                java.lang.System.out.println("Packet lost due to high noise level!");
+            }
         }
     }
 
@@ -146,6 +186,40 @@ public class GameEngine implements Runnable {
             g.setColor(Color.YELLOW);
             g.setFont(new Font("Arial", Font.BOLD, 14));
             g.drawString("WIRING MODE ACTIVE", 10, 20);
+        }
+        
+        // NEW: Display impact system information
+        g.setColor(Color.RED);
+        g.setFont(new Font("Arial", Font.BOLD, 12));
+        g.drawString("Active Impacts: " + getActiveImpactCount(), 10, 40);
+        
+        // Draw active impacts on screen
+        for (Impact impact : impactManager.getActiveImpacts()) {
+            Point collisionPoint = impact.getCollisionPoint();
+            g.setColor(Color.RED);
+            g.fillOval(collisionPoint.x - 5, collisionPoint.y - 5, 10, 10);
+            g.setColor(Color.WHITE);
+            g.drawString("IMPACT", collisionPoint.x + 10, collisionPoint.y + 5);
+        }
+        
+        // Display packet noise levels and status
+        g.setColor(Color.ORANGE);
+        int yOffset = 60;
+        for (MovingPacket packet : movingPackets) {
+            Point pos = packet.getPacket().getPosition();
+            
+            if (packet.isLost()) {
+                // Show destroyed packets in red with "DESTROYED" text
+                g.setColor(Color.RED);
+                g.setFont(new Font("Arial", Font.BOLD, 10));
+                g.drawString("DESTROYED", pos.x + 20, pos.y - 10);
+            } else if (packet.getNoiseLevel() > 0) {
+                // Show noise level for active packets
+                g.setColor(Color.ORANGE);
+                g.setFont(new Font("Arial", Font.PLAIN, 10));
+                String noiseText = String.format("Noise: %.1f", packet.getNoiseLevel());
+                g.drawString(noiseText, pos.x + 20, pos.y - 10);
+            }
         }
     }
 
@@ -354,6 +428,55 @@ public class GameEngine implements Runnable {
             return closestWire;
         }
         return null;
+    }
+
+    /**
+     * Clears all active impacts.
+     */
+    public void clearImpacts() {
+        impactManager.clearImpacts();
+    }
+
+    /**
+     * Disables impact detection for a specified number of seconds.
+     */
+    public void disableImpactForSeconds(int seconds) {
+        impactManager.setImpactDetectionEnabled(false);
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                impactManager.setImpactDetectionEnabled(true);
+            }
+        }, seconds * 1000);
+    }
+
+    /**
+     * Disables wave effects for a specified number of seconds.
+     */
+    public void disableWaveForSeconds(int seconds) {
+        impactManager.setWaveEffectsEnabled(false);
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                impactManager.setWaveEffectsEnabled(true);
+            }
+        }, seconds * 1000);
+    }
+
+    /**
+     * Gets the number of active impacts.
+     */
+    public int getActiveImpactCount() {
+        return impactManager.getActiveImpactCount();
+    }
+    
+    /**
+     * Resets noise levels for all packets.
+     */
+    public void resetAllNoise() {
+        for (MovingPacket packet : movingPackets) {
+            packet.setNoiseLevel(0.0f);
+        }
     }
 
     private void regenerateWirePaths() {

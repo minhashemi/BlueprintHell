@@ -69,4 +69,60 @@ public class AudioManager {
             gainControl.setValue(dB);
         }
     }
+    
+    /**
+     * Plays a sound effect once.
+     * @param soundFileName The name of the sound file in the resources/sounds folder.
+     */
+    public void playSound(String soundFileName) {
+        try {
+            // Try multiple resource loading approaches for Maven exec compatibility
+            URL soundURL = null;
+            
+            // First try the class loader approach (works better with Maven exec)
+            soundURL = AudioManager.class.getClassLoader().getResource("sounds/" + soundFileName);
+            
+            if (soundURL == null) {
+                // Try the class resource approach
+                soundURL = AudioManager.class.getResource("/sounds/" + soundFileName);
+            }
+            
+            if (soundURL == null) {
+                // Try the instance resource approach
+                soundURL = getClass().getResource("/sounds/" + soundFileName);
+            }
+            
+            if (soundURL == null) {
+                // Try file-based loading from target/classes (Maven exec fallback)
+                try {
+                    // Get the absolute path to the target/classes directory
+                    String currentDir = System.getProperty("user.dir");
+                    java.io.File soundFile = new java.io.File(currentDir + "/target/classes/sounds/" + soundFileName);
+                    if (soundFile.exists()) {
+                        soundURL = soundFile.toURI().toURL();
+                        System.out.println("Loaded sound from file: " + soundFile.getAbsolutePath());
+                    } else {
+                        System.err.println("Sound file not found at: " + soundFile.getAbsolutePath());
+                    }
+                } catch (Exception e) {
+                    System.err.println("File loading failed: " + e.getMessage());
+                }
+            }
+            
+            if (soundURL == null) {
+                System.err.println("All resource loading attempts failed for: " + soundFileName);
+                return;
+            }
+
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(soundURL);
+            Clip soundClip = AudioSystem.getClip();
+            soundClip.open(audioStream);
+            soundClip.start();
+            System.out.println("Playing sound: " + soundFileName);
+
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            System.err.println("Error playing sound: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }

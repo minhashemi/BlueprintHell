@@ -47,4 +47,8 @@ public abstract class Entity {
     public int getHeight() {
         return height;
     }
+    
+    public Point getPosition() {
+        return new Point(x, y);
+    }
 }
