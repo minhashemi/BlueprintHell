@@ -2,7 +2,7 @@ package dev.aminhashemi.blueprinthell.model;
 
 import java.util.List;
 
-// This is the top-level class that represents the entire level JSON file.
+// Top-level class for level JSON data
 public class LevelData {
     public int levelNumber;
     public String levelName;
@@ -20,7 +20,7 @@ public class LevelData {
         public Position position;
         public List<PortData> inputPorts;
         public List<PortData> outputPorts;
-        public PacketGeneration packetGeneration; // Can be null if not a reference system
+        public PacketGeneration packetGeneration; // Null for non-reference systems
     }
 
     public static class Position {
