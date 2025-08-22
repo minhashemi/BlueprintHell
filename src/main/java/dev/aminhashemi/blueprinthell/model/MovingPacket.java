@@ -32,6 +32,8 @@ public class MovingPacket {
     private boolean isReturningToSource;
     private Point sourcePosition;
     private int collisionCount;
+    private boolean spawnProtection = false; // Spawn protection to prevent immediate destruction
+    private long spawnTime; // Time when packet was spawned
     
     public MovingPacket(Packet packet, Wire wire) {
         this.packet = packet;
@@ -46,6 +48,7 @@ public class MovingPacket {
         this.isReturningToSource = false;
         this.sourcePosition = new Point(packet.getX(), packet.getY());
         this.collisionCount = 0;
+        this.spawnTime = java.lang.System.currentTimeMillis(); // Record spawn time
         
         if (!path.isEmpty()) {
             packet.setPosition(path.get(0).x, path.get(0).y);
@@ -98,6 +101,38 @@ public class MovingPacket {
 
     public System getDestinationSystem() {
         return wire.getEndPort().getParentSystem();
+    }
+    
+    /**
+     * Gets the source system where this packet originated
+     */
+    public System getSourceSystem() {
+        return wire.getStartPort().getParentSystem();
+    }
+    
+    /**
+     * Sets spawn protection to prevent immediate destruction
+     */
+    public void setSpawnProtection(boolean protection) {
+        this.spawnProtection = protection;
+        if (protection) {
+            this.spawnTime = java.lang.System.currentTimeMillis();
+        }
+    }
+    
+    /**
+     * Checks if spawn protection is active
+     */
+    public boolean hasSpawnProtection() {
+        if (!spawnProtection) return false;
+        
+        // Spawn protection lasts for 2 seconds
+        long currentTime = java.lang.System.currentTimeMillis();
+        if (currentTime - spawnTime > 2000) {
+            spawnProtection = false; // Expire spawn protection
+            return false;
+        }
+        return true;
     }
     
     // Impact system methods
