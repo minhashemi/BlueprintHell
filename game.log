@@ -1,0 +1,298 @@
+[2025-08-22 09:23:01.936] [INFO] FPS: 119 | UPS: 199
+[2025-08-22 09:23:02.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:03.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:04.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:05.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:06.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:07.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:08.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:09.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:10.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:11.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:12.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:13.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:14.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:15.614] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:23:15.624] [INFO] Successfully playing sound: lose.wav
+[2025-08-22 09:23:15.626] [INFO] Successfully playing sound: lose.wav
+[2025-08-22 09:23:15.759] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:23:15.776] [INFO] Successfully playing sound: lose.wav
+[2025-08-22 09:23:15.779] [INFO] Successfully playing sound: lose.wav
+[2025-08-22 09:23:15.846] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:23:15.848] [INFO] Successfully playing sound: lose.wav
+[2025-08-22 09:23:15.931] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:23:15.933] [INFO] Successfully playing sound: lose.wav
+[2025-08-22 09:23:15.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:16.095] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:23:16.098] [INFO] Successfully playing sound: lose.wav
+[2025-08-22 09:23:16.274] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:23:16.289] [INFO] Successfully playing sound: lose.wav
+[2025-08-22 09:23:16.292] [INFO] Successfully playing sound: lose.wav
+[2025-08-22 09:23:16.431] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:23:16.433] [INFO] Successfully playing sound: lose.wav
+[2025-08-22 09:23:16.515] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:23:16.518] [INFO] Successfully playing sound: lose.wav
+[2025-08-22 09:23:16.595] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:23:16.598] [INFO] Successfully playing sound: lose.wav
+[2025-08-22 09:23:16.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:17.016] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:23:17.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:18.010] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:23:18.345] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:23:18.680] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:23:18.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:19.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:20.460] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:23:20.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:21.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:22.045] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:23:22.245] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:23:22.630] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:23:22.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:23.070] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:23:23.270] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:23:23.545] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:23:23.825] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:23:23.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:23.980] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:23:24.125] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:23:24.140] [INFO] Successfully playing sound: lose.wav
+[2025-08-22 09:23:24.142] [INFO] Successfully playing sound: lose.wav
+[2025-08-22 09:23:24.145] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:23:24.295] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:23:24.460] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:23:24.605] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:23:24.800] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:23:24.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:23:25.315] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:23:25.475] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:23:25.640] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:23:25.795] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:23:25.935] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:10.697] [INFO] FPS: 119 | UPS: 199
+[2025-08-22 09:34:11.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:12.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:13.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:14.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:15.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:16.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:17.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:18.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:19.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:20.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:21.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:22.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:23.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:24.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:25.285] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:34:25.289] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:34:25.300] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:34:25.334] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:34:25.347] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:34:25.635] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:34:25.649] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:34:25.652] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:34:25.655] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:34:25.658] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:34:25.661] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:34:25.667] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:34:25.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:25.739] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:34:25.742] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:34:25.824] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:34:25.830] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:34:25.834] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:34:25.842] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:34:25.846] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:34:26.136] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:34:26.154] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:34:26.156] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:34:26.299] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:34:26.303] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:34:26.379] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:34:26.382] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:34:26.530] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:34:26.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:27.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:27.946] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:34:27.957] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:34:27.959] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:34:28.144] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:34:28.282] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:34:28.298] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:34:28.300] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:34:28.394] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:34:28.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:29.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:30.029] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:34:30.214] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:34:30.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:31.499] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:34:31.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:31.894] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:34:32.494] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:34:32.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:32.844] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:34:33.129] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:34:33.251] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:34:33.265] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:34:33.266] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:34:33.419] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:34:33.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:33.734] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:34:34.024] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:34:34.344] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:34:34.514] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:34:34.694] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:34:34.859] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:35:30.523] [INFO] FPS: 119 | UPS: 199
+[2025-08-22 09:35:31.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:32.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:33.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:34.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:35.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:36.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:37.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:38.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:39.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:40.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:41.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:42.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:43.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:44.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:45.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:45.620] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:35:45.622] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:45.627] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:45.758] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:35:45.762] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:45.832] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:35:45.835] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:46.018] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:35:46.030] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:46.033] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:46.430] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:35:46.446] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:46.450] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:46.500] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:35:46.510] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:46.515] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:46.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:46.604] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:35:46.615] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:46.619] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:46.850] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:35:46.861] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:46.863] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:46.943] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:35:47.009] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:35:47.044] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:47.172] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:35:47.178] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:47.355] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:35:47.370] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:47.371] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:47.427] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:35:47.519] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:35:47.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:47.530] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:47.532] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:47.677] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:35:47.680] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:35:47.696] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:47.700] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:48.255] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:35:48.256] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:48.265] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:48.267] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:35:48.420] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:35:48.427] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:48.433] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:48.435] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:35:48.450] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:48.452] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:48.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:48.600] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:35:48.615] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:48.617] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:48.672] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:35:48.677] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:48.682] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:35:48.689] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:35:48.701] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:48.703] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:48.752] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:35:48.754] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:48.837] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:35:48.841] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:48.922] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:35:48.928] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:48.932] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:35:49.097] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:35:49.100] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:35:49.130] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:49.132] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:49.172] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:35:49.179] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:49.252] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:35:49.254] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:49.422] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:35:49.429] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:49.502] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:35:49.505] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:49.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:49.680] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:35:49.696] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:49.698] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:49.742] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:35:50.101] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:35:50.113] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:50.114] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:50.169] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:35:50.180] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:50.185] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:50.252] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:35:50.254] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:50.422] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:35:50.428] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:50.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:50.587] [INFO] Packet lost due to high noise level!
+[2025-08-22 09:35:50.590] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:51.327] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:35:51.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:51.932] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:35:52.182] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:35:52.347] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:35:52.512] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:35:52.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:53.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:53.752] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:35:53.927] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:35:54.082] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:35:54.242] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:35:54.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:54.562] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:35:54.722] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:35:54.917] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:35:55.062] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:35:55.237] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:35:55.402] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:35:55.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:55.577] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:35:55.722] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:35:55.872] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:35:56.047] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:35:56.111] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:35:56.126] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:56.128] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:56.207] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:35:56.392] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:35:56.522] [INFO] FPS: 120 | UPS: 200
+[2025-08-22 09:35:56.522] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:35:56.604] [INFO] Successfully playing sound: collide.wav
+[2025-08-22 09:35:56.615] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:56.619] [INFO] Successfully playing sound: boom.wav
+[2025-08-22 09:35:56.692] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:35:57.172] [INFO] Packet TRIANGLE_MESSENGER returned home.
+[2025-08-22 09:35:57.512] [INFO] Packet SQUARE_MESSENGER returned home.
+[2025-08-22 09:35:57.522] [INFO] FPS: 120 | UPS: 200

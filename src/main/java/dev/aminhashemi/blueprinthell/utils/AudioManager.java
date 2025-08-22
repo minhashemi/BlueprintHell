@@ -2,7 +2,8 @@ package dev.aminhashemi.blueprinthell.utils;
 
 import javax.sound.sampled.*;
 import java.io.IOException;
-import java.net.URL;
+import java.io.InputStream;
+import java.io.BufferedInputStream;
 
 /**
  * Manages all audio playback for the game using a Singleton pattern.
@@ -35,21 +36,42 @@ public class AudioManager {
                 backgroundMusic.close();
             }
 
-            URL soundURL = getClass().getResource("/sounds/" + soundFileName);
-            if (soundURL == null) {
-                System.err.println("Sound file not found: " + soundFileName);
-                return;
+            // Strategy 1: Try resource loading (works in IDE and JAR)
+            InputStream audioSrc = AudioManager.class.getClassLoader().getResourceAsStream("sounds/" + soundFileName);
+            if (audioSrc == null) {
+                // Strategy 2: Try multiple absolute path fallbacks for Maven exec
+                String[] possiblePaths = {
+                    System.getProperty("user.dir") + "/target/classes/sounds/" + soundFileName,
+                    System.getProperty("user.dir") + "/src/main/resources/sounds/" + soundFileName,
+                    "target/classes/sounds/" + soundFileName,
+                    "src/main/resources/sounds/" + soundFileName
+                };
+                
+                audioSrc = null;
+                for (String path : possiblePaths) {
+                    java.io.File soundFile = new java.io.File(path);
+                    if (soundFile.exists()) {
+                        audioSrc = new java.io.FileInputStream(soundFile);
+                        Logger.getInstance().info("Using file fallback for background music: " + soundFileName + " from: " + path);
+                        break;
+                    }
+                }
+                
+                if (audioSrc == null) {
+                    Logger.getInstance().error("Resource not found: sounds/" + soundFileName + " (tried resource and multiple file paths)");
+                    return;
+                }
             }
 
-            AudioInputStream audioStream = AudioSystem.getAudioInputStream(soundURL);
+            InputStream bufferedIn = new BufferedInputStream(audioSrc);
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(bufferedIn);
             backgroundMusic = AudioSystem.getClip();
             backgroundMusic.open(audioStream);
             backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY); // Loop the music indefinitely
             backgroundMusic.start();
 
         } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
-            System.err.println("Error playing background music: " + e.getMessage());
-            e.printStackTrace();
+            Logger.getInstance().error("Error playing background music", e);
         }
     }
 
@@ -75,54 +97,49 @@ public class AudioManager {
      * @param soundFileName The name of the sound file in the resources/sounds folder.
      */
     public void playSound(String soundFileName) {
-        try {
-            // Try multiple resource loading approaches for Maven exec compatibility
-            URL soundURL = null;
-            
-            // First try the class loader approach (works better with Maven exec)
-            soundURL = AudioManager.class.getClassLoader().getResource("sounds/" + soundFileName);
-            
-            if (soundURL == null) {
-                // Try the class resource approach
-                soundURL = AudioManager.class.getResource("/sounds/" + soundFileName);
-            }
-            
-            if (soundURL == null) {
-                // Try the instance resource approach
-                soundURL = getClass().getResource("/sounds/" + soundFileName);
-            }
-            
-            if (soundURL == null) {
-                // Try file-based loading from target/classes (Maven exec fallback)
-                try {
-                    // Get the absolute path to the target/classes directory
-                    String currentDir = System.getProperty("user.dir");
-                    java.io.File soundFile = new java.io.File(currentDir + "/target/classes/sounds/" + soundFileName);
-                    if (soundFile.exists()) {
-                        soundURL = soundFile.toURI().toURL();
-                        System.out.println("Loaded sound from file: " + soundFile.getAbsolutePath());
-                    } else {
-                        System.err.println("Sound file not found at: " + soundFile.getAbsolutePath());
+        new Thread(() -> {
+            try {
+                // Strategy 1: Try resource loading (works in IDE and JAR)
+                InputStream audioSrc = AudioManager.class.getClassLoader().getResourceAsStream("sounds/" + soundFileName);
+                if (audioSrc == null) {
+                    // Strategy 2: Try multiple absolute path fallbacks for Maven exec
+                    String[] possiblePaths = {
+                        System.getProperty("user.dir") + "/target/classes/sounds/" + soundFileName,
+                        System.getProperty("user.dir") + "/src/main/resources/sounds/" + soundFileName,
+                        "target/classes/sounds/" + soundFileName,
+                        "src/main/resources/sounds/" + soundFileName
+                    };
+                    
+                    Logger.getInstance().debug("Current directory: " + System.getProperty("user.dir"));
+                    audioSrc = null;
+                    for (String path : possiblePaths) {
+                        java.io.File soundFile = new java.io.File(path);
+                        boolean exists = soundFile.exists();
+                        Logger.getInstance().debug("Checking path: " + path + " (exists: " + exists + ")");
+                        if (exists) {
+                            audioSrc = new java.io.FileInputStream(soundFile);
+                            Logger.getInstance().info("Using file fallback for: " + soundFileName + " from: " + path);
+                            break;
+                        }
                     }
-                } catch (Exception e) {
-                    System.err.println("File loading failed: " + e.getMessage());
+                    
+                    if (audioSrc == null) {
+                        Logger.getInstance().error("Resource not found: sounds/" + soundFileName + " (tried resource and multiple file paths)");
+                        return;
+                    }
                 }
-            }
-            
-            if (soundURL == null) {
-                System.err.println("All resource loading attempts failed for: " + soundFileName);
-                return;
-            }
 
-            AudioInputStream audioStream = AudioSystem.getAudioInputStream(soundURL);
-            Clip soundClip = AudioSystem.getClip();
-            soundClip.open(audioStream);
-            soundClip.start();
-            System.out.println("Playing sound: " + soundFileName);
-
-        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
-            System.err.println("Error playing sound: " + e.getMessage());
-            e.printStackTrace();
-        }
+                InputStream bufferedIn = new BufferedInputStream(audioSrc);
+                AudioInputStream audioStream = AudioSystem.getAudioInputStream(bufferedIn);
+                Clip effectClip = AudioSystem.getClip();
+                effectClip.open(audioStream);
+                effectClip.start();
+                
+                Logger.getInstance().info("Successfully playing sound: " + soundFileName);
+                
+            } catch (Exception e) {
+                Logger.getInstance().error("Failed to play sound effect", e);
+            }
+        }).start();
     }
 }

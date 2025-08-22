@@ -2,7 +2,6 @@ package dev.aminhashemi.blueprinthell.utils;
 
 import com.google.gson.Gson;
 import dev.aminhashemi.blueprinthell.model.LevelData;
-
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -15,15 +14,14 @@ public class LevelLoader {
 
         try (InputStream stream = LevelLoader.class.getResourceAsStream(fileName)) {
             if (stream == null) {
-                System.err.println("Cannot find level file: " + fileName);
+                Logger.getInstance().error("Cannot find level file: " + fileName);
                 return null;
             }
             Reader reader = new InputStreamReader(stream);
             return gson.fromJson(reader, LevelData.class);
 
         } catch (Exception e) {
-            System.err.println("Error loading level file: " + fileName);
-            e.printStackTrace();
+            Logger.getInstance().error("Error loading level file: " + fileName, e);
             return null;
         }
     }

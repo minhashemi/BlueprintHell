@@ -86,7 +86,7 @@ public class ImpactManager {
                     // Check if packet should be removed
                     if (packet.isLost()) {
                         packetsToRemove.add(packet);
-                        audioManager.playSound("lose");
+                        audioManager.playSound("boom.wav");
                     }
                 } else if (waveEffectsEnabled) {
                     // Apply wave effects to non-colliding packets
@@ -119,7 +119,7 @@ public class ImpactManager {
         activeImpacts.add(impact);
 
         // Play collision sound
-        audioManager.playSound("collide");
+        audioManager.playSound("collide.wav");
     }
 
     /**
