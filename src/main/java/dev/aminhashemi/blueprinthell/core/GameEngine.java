@@ -143,8 +143,8 @@ public class GameEngine implements Runnable {
     }
 
     private void update() {
+        // Update all systems (ReferenceSystem has special spawning logic)
         for (System system : systems) {
-            // This check allows ReferenceSystem to have a unique update method for spawning
             if (system instanceof ReferenceSystem) {
                 ((ReferenceSystem) system).update(this);
             } else {
@@ -152,41 +152,29 @@ public class GameEngine implements Runnable {
             }
         }
 
-        // Iterate over a copy to safely remove items
+        // Update active packets
         for (MovingPacket movingPacket : new ArrayList<>(movingPackets)) {
-            // Check if packet is lost before updating
             if (movingPacket.isLost()) {
-                continue; // Skip updating lost packets
+                continue;
             }
             movingPacket.update(this);
         }
         
-        // NEW: Impact detection and processing
+        // Handle packet collisions and cleanup
         impactManager.detectCollisions(movingPackets);
         List<MovingPacket> destroyedPackets = impactManager.processImpacts(movingPackets);
-        
-        // Immediately remove destroyed packets
         movingPackets.removeAll(destroyedPackets);
-        
-        // Clean up any remaining lost packets
         cleanupLostPackets();
-        
-        // Update HUD with current game data
         updateHUD();
     }
 
-    /**
-     * Cleans up packets that are lost due to high noise levels.
-     */
+    /** Removes packets lost due to high noise levels */
     private void cleanupLostPackets() {
-        // Create a copy to avoid ConcurrentModificationException
         List<MovingPacket> packetsToRemove = new ArrayList<>();
         
         for (MovingPacket packet : movingPackets) {
-            // Check spawn protection before destroying packets
             if (packet.hasSpawnProtection()) {
-                Logger.getInstance().info("Packet " + packet.getPacket().getType() + " has spawn protection - skipping cleanup");
-                continue;
+                continue; // Skip protected packets
             }
             
             if (packet.isLost()) {
@@ -194,12 +182,10 @@ public class GameEngine implements Runnable {
             }
         }
         
-        // Remove all lost packets at once
+        // Remove lost packets and play sound effect
         for (MovingPacket packet : packetsToRemove) {
             movingPackets.remove(packet);
-            // Play lose sound for destroyed packet
             AudioManager.getInstance().playSound("boom.wav");
-            Logger.getInstance().info("Packet lost due to high noise level!");
         }
     }
 
@@ -228,12 +214,12 @@ public class GameEngine implements Runnable {
             g.drawString("WIRING MODE ACTIVE", 10, 20);
         }
         
-        // NEW: Display impact system information
+        // Display impact system info
         g.setColor(Color.RED);
         g.setFont(new Font("Arial", Font.BOLD, 12));
         g.drawString("Active Impacts: " + getActiveImpactCount(), 10, 40);
         
-        // Draw active impacts on screen
+        // Draw impact effects
         for (Impact impact : impactManager.getActiveImpacts()) {
             Point collisionPoint = impact.getCollisionPoint();
             g.setColor(Color.RED);
@@ -242,8 +228,7 @@ public class GameEngine implements Runnable {
             g.drawString("IMPACT", collisionPoint.x + 10, collisionPoint.y + 5);
         }
         
-        // Display packet noise levels and status
-        // Create a copy to avoid ConcurrentModificationException
+        // Display packet status
         List<MovingPacket> packetsCopy = new ArrayList<>(movingPackets);
         for (MovingPacket packet : packetsCopy) {
             Point pos = packet.getPacket().getPosition();
@@ -299,7 +284,7 @@ public class GameEngine implements Runnable {
         
         // Only add coins when packet reaches the END reference system (the one with only inputs)
         if (isReferenceSystem(destinationSystem) && destinationSystem.getOutputPorts().isEmpty()) {
-            // This is an end reference system (only inputs, no outputs) - add coins
+            // End reference system - add coins
             addCoinsForPacketEntry(arrivedPacket.getPacket());
             Logger.getInstance().info("Packet " + arrivedPacket.getPacket().getType() + " reached END reference system! Coins added.");
         } else {
@@ -393,8 +378,7 @@ public class GameEngine implements Runnable {
         boolean isCompatible = isPortCompatible(targetWire.getStartPort().getType(), packet.getType());
         movingPacket.applyPortCompatibilityEffect(targetWire.getStartPort().getType(), isCompatible);
         
-        // REMOVED: Coins should only be added when packets actually enter systems, not when they start moving
-        // This prevents coins from being added prematurely
+        // Prevent premature coin addition
         
         movingPackets.add(movingPacket);
     }
@@ -587,13 +571,13 @@ public class GameEngine implements Runnable {
             draggedSystem.setPosition(point.x - dragOffset.x, point.y - dragOffset.y);
             regenerateWirePaths(); // Regenerate wire paths when system moves
             
-            // IMPORTANT: Recalculate wire lengths when systems move
+            // Recalculate wire lengths when systems move
             Logger.getInstance().info("System moved - recalculating all wire lengths...");
             recalculateAllWireLengths();
         } else if (draggedArcPoint != null) {
             draggedArcPoint.setPosition(point);
             
-            // IMPORTANT: Recalculate wire lengths when arc points move
+            // Recalculate wire lengths when arc points move
             // Find the wire containing this arc point and update its length
             for (Wire wire : wires) {
                 if (wire.getArcPoints().contains(draggedArcPoint)) {
@@ -653,7 +637,7 @@ public class GameEngine implements Runnable {
             if (wire.getArcPoints().size() < 3) {
                 wire.addArcPoint(point);
                 
-                // IMPORTANT: Update wire length when arc points are added
+                // Update wire length when arc points are added
                 Logger.getInstance().info("Arc point added to wire - updating length...");
                 updateWireLengthForWire(wire);
             } else {

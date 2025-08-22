@@ -54,7 +54,6 @@ public class MainMenuPanel extends JPanel {
                 JOptionPane.showMessageDialog(this, "Game Stages not implemented yet.");
                 break;
             case "Game Settings":
-                // This now switches to the settings panel
                 gameFrame.switchToPanel(GameFrame.SETTINGS_PANEL);
                 break;
             case "Exit Game":

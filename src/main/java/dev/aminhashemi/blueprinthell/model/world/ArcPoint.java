@@ -4,7 +4,7 @@ import java.awt.*;
 
 public class ArcPoint {
     private Point position;
-    private final Wire parentWire; // NEW: Reference to the parent wire
+    private final Wire parentWire; // Parent wire for path updates
     public static final int SIZE = 8;
 
     public ArcPoint(Point position, Wire parentWire) {
@@ -23,7 +23,7 @@ public class ArcPoint {
 
     public void setPosition(Point position) {
         this.position = position;
-        // NEW: Tell the parent wire to update its path when this point moves
+        // Update parent wire path when point moves
         parentWire.regeneratePath();
     }
 

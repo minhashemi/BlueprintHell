@@ -22,7 +22,7 @@ public class Wire {
     private List<Point> cachedPath;
     private WireStyle style = WireStyle.CURVED;
     
-    // Callback for wire length updates
+    // Callback for path updates
     private Runnable onPathChangedCallback;
 
     public Wire(Port startPort) {
@@ -120,7 +120,7 @@ public class Wire {
         regeneratePath();
     }
 
-    // This is the method that was missing from the context of the error
+    // Calculate wire length
     public Port getEndPort() {
         return endPort;
     }

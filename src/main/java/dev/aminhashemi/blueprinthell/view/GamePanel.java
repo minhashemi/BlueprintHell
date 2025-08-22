@@ -11,15 +11,15 @@ import java.awt.event.KeyAdapter;
 public class GamePanel extends JPanel {
 
     private GameEngine gameEngine;
-    private boolean showHUD = true; // HUD visibility state
-    private long hudToggleTime = 0; // Time when HUD was last toggled
-    private static final long HUD_DISPLAY_DURATION = 3000; // 3 seconds in milliseconds
+    private boolean showHUD = true;
+    private long hudToggleTime = 0;
+    private static final long HUD_DISPLAY_DURATION = 3000; // 3 seconds
     
-    // Game state variables for HUD
-    private int remainingWireLength = 8000; // Default from level
-    private int temporalProgress = 0; // Progress percentage
-    private int packetLoss = 0; // Number of lost packets
-    private int coins = 20; // Current coins
+    // HUD state variables
+    private int remainingWireLength = 8000;
+    private int temporalProgress = 0;
+    private int packetLoss = 0;
+    private int coins = 20;
 
     public GamePanel() {
         initPanel();
@@ -28,12 +28,11 @@ public class GamePanel extends JPanel {
     public void setGameEngine(GameEngine gameEngine) {
         this.gameEngine = gameEngine;
 
-        // Create and add the mouse listener
+        // Set up input handlers
         InputHandler mouseHandler = new InputHandler(gameEngine);
         this.addMouseListener(mouseHandler);
         this.addMouseMotionListener(mouseHandler);
 
-        // Create and add the keyboard listener
         InputHandler.KeyInput keyHandler = new InputHandler.KeyInput(gameEngine);
         this.addKeyListener(keyHandler);
         this.addKeyListener(new KeyAdapter() {
@@ -68,8 +67,8 @@ public class GamePanel extends JPanel {
     private void initPanel() {
         setName(GameFrame.GAME_PANEL);
         setPreferredSize(new Dimension(1280, 720));
-        setBackground(new Color(20, 25, 40)); // Dark blue-gray instead of pure black for better contrast
-        setFocusable(true); // Crucial for receiving key events
+        setBackground(new Color(20, 25, 40)); // Dark blue-gray background
+        setFocusable(true); // Required for key events
     }
 
     @Override
@@ -77,24 +76,21 @@ public class GamePanel extends JPanel {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
         
-        // Draw game elements
+        // Render game and HUD
         if (gameEngine != null) {
             gameEngine.render(g2d);
         }
         
-        // Draw HUD on top
         drawHUD(g2d);
         
-        // Check if HUD should auto-hide
+        // Auto-hide HUD after timeout
         if (System.currentTimeMillis() - hudToggleTime > HUD_DISPLAY_DURATION && hudToggleTime > 0) {
             showHUD = false;
             hudToggleTime = 0;
         }
     }
 
-    /**
-     * Draws the game HUD with all required information
-     */
+    /** Draws the game HUD */
     private void drawHUD(Graphics2D g) {
         if (!showHUD) return;
         
