@@ -65,11 +65,11 @@ public class ReferenceSystem extends System {
 
     @Override
     public void draw(Graphics2D g) {
-        g.setColor(Color.decode("#00D2FF")); // Bright cyan for high visibility
+        g.setColor(Color.decode("#00D2FF")); // Bright cyan
         g.fillRect(x, y, width, height);
-        g.setColor(Color.WHITE); // White border for contrast
+        g.setColor(Color.WHITE); // White border
         g.drawRect(x, y, width, height);
-        g.setColor(Color.BLACK); // Black text for readability
+        g.setColor(Color.BLACK); // Black text
         g.drawString("REF", x + 10, y + 20);
 
         for (Port port : inputPorts) {
@@ -80,10 +80,8 @@ public class ReferenceSystem extends System {
         }
     }
 
-    // This now correctly overrides the abstract method from the System class
     @Override
     public void update(GameEngine engine) {
-        // In the future, automatic spawning logic could go here.
-        // For now, it's empty because spawning is manual.
+        // Manual spawning only for now
     }
 }

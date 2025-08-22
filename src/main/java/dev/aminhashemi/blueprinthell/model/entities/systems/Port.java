@@ -22,7 +22,7 @@ public class Port {
         g.setColor(type.getColor());
         Point pos = getPosition();
 
-        // Draw the correct shape based on the port's type
+        // Draw shape based on port type
         switch (type) {
             case SQUARE:
                 g.fillRect(pos.x, pos.y, PORT_SIZE, PORT_SIZE);
@@ -43,7 +43,7 @@ public class Port {
                 g.fillPolygon(triangle);
                 break;
             case DIAMOND:
-                // Draw diamond shape
+                // Draw diamond
                 Polygon diamond = new Polygon();
                 int centerX = pos.x + PORT_SIZE / 2;
                 int centerY = pos.y + PORT_SIZE / 2;
@@ -54,24 +54,24 @@ public class Port {
                 g.fillPolygon(diamond);
                 break;
             case INFINITY:
-                // Draw infinity symbol (simplified as two circles)
+                // Draw infinity symbol
                 g.fillOval(pos.x, pos.y, PORT_SIZE / 2, PORT_SIZE);
                 g.fillOval(pos.x + PORT_SIZE / 2, pos.y, PORT_SIZE / 2, PORT_SIZE);
                 break;
             case PADLOCK:
-                // Draw padlock shape
+                // Draw padlock
                 g.fillRect(pos.x + 2, pos.y + 4, PORT_SIZE - 4, PORT_SIZE - 4);
                 g.fillRect(pos.x + 3, pos.y + 2, PORT_SIZE - 6, 3);
                 break;
             case CAMOUFLAGE:
-                // Draw camouflage pattern (simplified as irregular shapes)
+                // Draw camouflage pattern
                 g.fillOval(pos.x + 1, pos.y + 1, PORT_SIZE - 2, PORT_SIZE - 2);
                 g.setColor(Color.WHITE);
                 g.fillOval(pos.x + 3, pos.y + 3, 4, 4);
                 g.setColor(type.getColor());
                 break;
             case VPN:
-                // Draw VPN symbol (simplified as a shield)
+                // Draw VPN symbol
                 Polygon shield = new Polygon();
                 shield.addPoint(pos.x + PORT_SIZE / 2, pos.y);
                 shield.addPoint(pos.x + PORT_SIZE, pos.y + PORT_SIZE / 3);
@@ -81,7 +81,7 @@ public class Port {
                 g.fillPolygon(shield);
                 break;
             case MALICIOUS:
-                // Draw malicious symbol (simplified as a warning triangle)
+                // Draw malicious symbol
                 Polygon warning = new Polygon();
                 warning.addPoint(pos.x + PORT_SIZE / 2, pos.y);
                 warning.addPoint(pos.x + PORT_SIZE, pos.y + PORT_SIZE);
@@ -89,7 +89,7 @@ public class Port {
                 g.fillPolygon(warning);
                 break;
             case SPY:
-                // Draw spy symbol (simplified as an eye)
+                // Draw spy symbol
                 g.fillOval(pos.x, pos.y, PORT_SIZE, PORT_SIZE);
                 g.setColor(Color.WHITE);
                 g.fillOval(pos.x + 2, pos.y + 2, PORT_SIZE - 4, PORT_SIZE - 4);

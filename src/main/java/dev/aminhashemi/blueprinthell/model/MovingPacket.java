@@ -26,14 +26,14 @@ public class MovingPacket {
 
     private static final double SPEED = 2.0; // Pixels per update tick
 
-    // Phase 2: Enhanced movement behavior properties
+    // Enhanced movement behavior
     private float currentSpeed;
     private float acceleration;
     private boolean isReturningToSource;
     private Point sourcePosition;
     private int collisionCount;
-    private boolean spawnProtection = false; // Spawn protection to prevent immediate destruction
-    private long spawnTime; // Time when packet was spawned
+    private boolean spawnProtection = false; // Prevents immediate destruction
+    private long spawnTime; // Spawn timestamp
     
     public MovingPacket(Packet packet, Wire wire) {
         this.packet = packet;
@@ -42,13 +42,13 @@ public class MovingPacket {
         this.currentSegmentIndex = 0;
         this.progressOnSegment = 0.0;
         
-        // Initialize Phase 2 properties
+        // Initialize movement properties
         this.currentSpeed = calculateBaseSpeed();
         this.acceleration = 0.0f;
         this.isReturningToSource = false;
         this.sourcePosition = new Point(packet.getX(), packet.getY());
         this.collisionCount = 0;
-        this.spawnTime = java.lang.System.currentTimeMillis(); // Record spawn time
+        this.spawnTime = java.lang.System.currentTimeMillis();
         
         if (!path.isEmpty()) {
             packet.setPosition(path.get(0).x, path.get(0).y);
@@ -71,14 +71,13 @@ public class MovingPacket {
         if (progressOnSegment >= 1.0) {
             currentSegmentIndex++;
             if (currentSegmentIndex >= path.size() - 1) {
-                // Arrived at the final destination
+                // Packet arrived at destination
                 hasArrived = true;
                 packet.setPosition(end.x - packet.getWidth() / 2, end.y - packet.getHeight() / 2);
-                // Notify the engine of arrival
                 engine.handlePacketArrival(this);
                 return;
             }
-            progressOnSegment = 0.0; // Reset progress for the new segment
+            progressOnSegment = 0.0; // Reset for next segment
         }
 
         // Interpolate the position on the current segment
@@ -246,7 +245,7 @@ public class MovingPacket {
      */
     private void reversePath() {
         // Implementation for path reversal
-        // This would require more complex path management
+        // Requires complex path management
         Logger.getInstance().info("INFINITY_SYMBOL packet returning to source after collision");
     }
     

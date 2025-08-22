@@ -7,10 +7,7 @@ import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-/**
- * Centralized logging system for the game.
- * Replaces all System.out.println and System.err.println calls.
- */
+/** Centralized logging system for the game */
 public class Logger {
     private static Logger instance;
     private static final String LOG_FILE = "game.log";
@@ -35,7 +32,7 @@ public class Logger {
             File logFile = new File(LOG_FILE);
             logWriter = new PrintWriter(new FileWriter(logFile, true), true);
             initialized = true;
-            // Don't call log() during initialization to avoid circular dependency
+            // Avoid circular dependency during initialization
         } catch (IOException e) {
             // Fallback to console if file logging fails
             System.err.println("Failed to initialize file logger: " + e.getMessage());
@@ -55,7 +52,7 @@ public class Logger {
             logWriter.println(logEntry);
         }
         
-        // No console output - only log to file
+        // Log to file only
     }
     
     public void debug(String message) {

@@ -13,11 +13,11 @@ public class VPNSystem extends System {
 
     @Override
     public void draw(Graphics2D g) {
-        g.setColor(Color.decode("#A55EEA")); // Bright purple for VPN
+        g.setColor(Color.decode("#A55EEA")); // Bright purple
         g.fillRect(x, y, width, height);
-        g.setColor(Color.WHITE); // White border for contrast
+        g.setColor(Color.WHITE); // White border
         g.drawRect(x, y, width, height);
-        g.setColor(Color.WHITE); // White text for readability
+        g.setColor(Color.WHITE); // White text
         g.drawString("VPN", x + 10, y + 20);
 
         for (Port port : inputPorts) {
@@ -30,7 +30,6 @@ public class VPNSystem extends System {
 
     @Override
     public void update(GameEngine engine) {
-        // VPN systems can enhance packets passing through them
-        // This will be implemented in the packet routing logic
+        // Packet enhancement logic to be implemented
     }
 }

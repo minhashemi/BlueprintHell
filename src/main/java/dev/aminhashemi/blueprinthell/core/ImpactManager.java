@@ -11,10 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import dev.aminhashemi.blueprinthell.utils.Logger;
 
-/**
- * Manages packet collisions and impact effects.
- * Handles collision detection, impact creation, and wave effects.
- */
+/** Manages packet collisions and impact effects */
 public class ImpactManager {
     private final List<Impact> activeImpacts;
     private final AudioManager audioManager;
@@ -39,9 +36,7 @@ public class ImpactManager {
         this.waveEffectsEnabled = true;
     }
 
-    /**
-     * Detects collisions between all moving packets.
-     */
+    /** Detects collisions between moving packets */
     public void detectCollisions(List<MovingPacket> packets) {
         if (!impactDetectionEnabled || packets.size() < 2) {
             return;
@@ -64,15 +59,12 @@ public class ImpactManager {
         }
     }
 
-    /**
-     * Processes active impacts and applies effects to packets.
-     * Returns a list of packets that should be removed due to high noise.
-     */
+    /** Processes impacts and returns packets to remove */
     public List<MovingPacket> processImpacts(List<MovingPacket> packets) {
         List<MovingPacket> packetsToRemove = new ArrayList<>();
         Iterator<Impact> iterator = activeImpacts.iterator();
         
-        // Create a copy of packets to avoid concurrent modification
+        // Copy packets to avoid concurrent modification
         List<MovingPacket> packetsCopy = new ArrayList<>(packets);
         
         // Track new impacts for chain reactions
@@ -114,7 +106,7 @@ public class ImpactManager {
             }
 
             // Keep impacts active for a few frames instead of immediately removing them
-            // This allows them to be displayed and counted properly
+            // Display and count impacts
             long currentTime = System.currentTimeMillis();
             if (currentTime - impact.getCreationTime() > 2000) { // Keep for 2 seconds
                 iterator.remove();

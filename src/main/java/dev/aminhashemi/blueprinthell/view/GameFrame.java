@@ -1,6 +1,6 @@
 package dev.aminhashemi.blueprinthell.view;
 
-import dev.aminhashemi.blueprinthell.core.GameEngine; // Import GameEngine
+import dev.aminhashemi.blueprinthell.core.GameEngine;
 import dev.aminhashemi.blueprinthell.view.ui.MainMenuPanel;
 import dev.aminhashemi.blueprinthell.view.ui.SettingsPanel;
 
@@ -11,7 +11,7 @@ public class GameFrame extends JFrame {
 
     private final CardLayout cardLayout;
     private final JPanel mainPanel;
-    private GameEngine gameEngine; // Add a reference to the engine
+    private GameEngine gameEngine;
 
     public static final String MAIN_MENU_PANEL = "MainMenuPanel";
     public static final String GAME_PANEL = "GamePanel";
@@ -29,7 +29,7 @@ public class GameFrame extends JFrame {
         GamePanel gamePanel = new GamePanel();
         SettingsPanel settingsPanel = new SettingsPanel(this);
 
-        // --- NEW: Create the GameEngine and link it to the GamePanel ---
+        // Create and link game engine
         gameEngine = new GameEngine(gamePanel);
         gamePanel.setGameEngine(gameEngine);
 
@@ -50,7 +50,7 @@ public class GameFrame extends JFrame {
         mainPanel.revalidate();
         mainPanel.repaint();
 
-        // --- NEW: Start the game loop when switching to the game panel ---
+        // Start game loop when entering game panel
         if (panelName.equals(GAME_PANEL)) {
             gameEngine.startGameLoop();
         }

@@ -3,10 +3,7 @@ package dev.aminhashemi.blueprinthell.model.world;
 import dev.aminhashemi.blueprinthell.model.MovingPacket;
 import java.awt.Point;
 
-/**
- * Represents a collision between two MovingPackets.
- * Tracks the collision point and manages the impact state.
- */
+/** Represents a collision between two MovingPackets */
 public class Impact {
     private final MovingPacket packet1;
     private final MovingPacket packet2;
@@ -22,9 +19,7 @@ public class Impact {
         this.creationTime = System.currentTimeMillis();
     }
 
-    /**
-     * Checks if this impact involves the specified packets.
-     */
+    /** Checks if this impact involves the specified packets */
     public boolean contains(MovingPacket p1, MovingPacket p2) {
         return ((packet1 == p1 && packet2 == p2) || (packet1 == p2 && packet2 == p1));
     }

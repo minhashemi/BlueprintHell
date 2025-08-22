@@ -13,11 +13,11 @@ public class MaliciousSystem extends System {
 
     @Override
     public void draw(Graphics2D g) {
-        g.setColor(Color.decode("#FF3838")); // Bright crimson for malicious
+        g.setColor(Color.decode("#FF3838")); // Bright crimson
         g.fillRect(x, y, width, height);
-        g.setColor(Color.WHITE); // White border for contrast
+        g.setColor(Color.WHITE); // White border
         g.drawRect(x, y, width, height);
-        g.setColor(Color.WHITE); // White text for readability
+        g.setColor(Color.WHITE); // White text
         g.drawString("MAL", x + 10, y + 20);
 
         for (Port port : inputPorts) {
@@ -30,7 +30,6 @@ public class MaliciousSystem extends System {
 
     @Override
     public void update(GameEngine engine) {
-        // Malicious systems can interfere with packets passing through them
-        // This will be implemented in the packet routing logic
+        // Packet interference logic to be implemented
     }
 }

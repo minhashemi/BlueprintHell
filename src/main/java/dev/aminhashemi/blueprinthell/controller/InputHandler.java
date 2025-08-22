@@ -19,7 +19,7 @@ public class InputHandler extends MouseAdapter {
         this.gameEngine = gameEngine;
     }
 
-    // --- MOUSE EVENTS ---
+    // Mouse Events
 
     @Override
     public void mousePressed(MouseEvent e) {
@@ -47,7 +47,7 @@ public class InputHandler extends MouseAdapter {
         gameEngine.handleMouseMove(e.getPoint());
     }
 
-    // --- KEYBOARD EVENTS ---
+    // Keyboard Events
     public static class KeyInput extends KeyAdapter {
         private final GameEngine gameEngine;
 
@@ -62,8 +62,7 @@ public class InputHandler extends MouseAdapter {
                     gameEngine.toggleWiringMode(true);
                     break;
                 case KeyEvent.VK_SPACE:
-                    // NEW: Tell the engine to spawn packets
-                    gameEngine.handleManualPacketSpawn();
+                    gameEngine.handleManualPacketSpawn(); // Spawn packets manually
                     break;
             }
         }

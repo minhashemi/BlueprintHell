@@ -40,7 +40,7 @@ public abstract class System extends Entity {
         engine.routePacket(packet, this);
     }
 
-    // This is now an abstract method that all subclasses must implement
+    // Abstract method for system-specific update logic
     @Override
     public abstract void update(GameEngine engine);
 
