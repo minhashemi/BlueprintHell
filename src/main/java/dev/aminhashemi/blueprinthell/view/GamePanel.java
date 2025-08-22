@@ -5,10 +5,21 @@ import dev.aminhashemi.blueprinthell.core.GameEngine;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyAdapter;
 
 public class GamePanel extends JPanel {
 
     private GameEngine gameEngine;
+    private boolean showHUD = true; // HUD visibility state
+    private long hudToggleTime = 0; // Time when HUD was last toggled
+    private static final long HUD_DISPLAY_DURATION = 3000; // 3 seconds in milliseconds
+    
+    // Game state variables for HUD
+    private int remainingWireLength = 8000; // Default from level
+    private int temporalProgress = 0; // Progress percentage
+    private int packetLoss = 0; // Number of lost packets
+    private int coins = 20; // Current coins
 
     public GamePanel() {
         initPanel();
@@ -25,6 +36,33 @@ public class GamePanel extends JPanel {
         // Create and add the keyboard listener
         InputHandler.KeyInput keyHandler = new InputHandler.KeyInput(gameEngine);
         this.addKeyListener(keyHandler);
+        this.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                switch (e.getKeyCode()) {
+                    case KeyEvent.VK_SPACE:
+                        if (gameEngine != null) {
+                            gameEngine.handleManualPacketSpawn();
+                        }
+                        break;
+                    case KeyEvent.VK_W:
+                        if (gameEngine != null) {
+                            gameEngine.toggleWiringMode(true);
+                        }
+                        break;
+                    case KeyEvent.VK_H:
+                        // Toggle HUD visibility
+                        showHUD = !showHUD;
+                        if (showHUD) {
+                            hudToggleTime = System.currentTimeMillis();
+                        } else {
+                            hudToggleTime = 0;
+                        }
+                        repaint();
+                        break;
+                }
+            }
+        });
     }
 
     private void initPanel() {
@@ -37,12 +75,99 @@ public class GamePanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-
+        Graphics2D g2d = (Graphics2D) g;
+        
+        // Draw game elements
         if (gameEngine != null) {
-            gameEngine.render((Graphics2D) g);
-        } else {
-            g.setColor(Color.RED);
-            g.drawString("Game Engine not loaded!", 20, 20);
+            gameEngine.render(g2d);
         }
+        
+        // Draw HUD on top
+        drawHUD(g2d);
+        
+        // Check if HUD should auto-hide
+        if (System.currentTimeMillis() - hudToggleTime > HUD_DISPLAY_DURATION && hudToggleTime > 0) {
+            showHUD = false;
+            hudToggleTime = 0;
+        }
+    }
+
+    /**
+     * Draws the game HUD with all required information
+     */
+    private void drawHUD(Graphics2D g) {
+        if (!showHUD) return;
+        
+        // Set up HUD styling
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        
+        // HUD background (semi-transparent dark panel)
+        int hudWidth = 250;
+        int hudHeight = 120;
+        int hudX = getWidth() - hudWidth - 20;
+        int hudY = 20;
+        
+        // Semi-transparent background
+        g.setColor(new Color(0, 0, 0, 180));
+        g.fillRoundRect(hudX, hudY, hudWidth, hudHeight, 15, 15);
+        
+        // HUD border
+        g.setColor(new Color(255, 255, 255, 100));
+        g.setStroke(new BasicStroke(2));
+        g.drawRoundRect(hudX, hudY, hudWidth, hudHeight, 15, 15);
+        
+        // HUD title
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 16));
+        g.drawString("Game Status", hudX + 15, hudY + 25);
+        
+        // HUD content
+        g.setFont(new Font("Arial", Font.PLAIN, 14));
+        int textY = hudY + 45;
+        int lineHeight = 20;
+        
+        // Remaining Wire Length
+        g.setColor(Color.CYAN);
+        g.drawString("Wire Length: " + remainingWireLength + "m", hudX + 15, textY);
+        textY += lineHeight;
+        
+        // Temporal Progress
+        g.setColor(Color.YELLOW);
+        g.drawString("Progress: " + temporalProgress + "%", hudX + 15, textY);
+        textY += lineHeight;
+        
+        // Packet Loss
+        g.setColor(Color.RED);
+        g.drawString("Packet Loss: " + packetLoss, hudX + 15, textY);
+        textY += lineHeight;
+        
+        // Coins
+        g.setColor(Color.decode("#FFD700")); // Gold color
+        g.drawString("Coins: " + coins, hudX + 15, textY);
+        
+        // HUD toggle indicator
+        g.setColor(new Color(255, 255, 255, 150));
+        g.setFont(new Font("Arial", Font.ITALIC, 10));
+        g.drawString("Press 'H' to toggle HUD", hudX + 15, hudY + hudHeight - 5);
+    }
+
+    /**
+     * Updates HUD data from the game engine
+     */
+    public void updateHUDData(int wireLength, int progress, int lostPackets, int currentCoins) {
+        this.remainingWireLength = wireLength;
+        this.temporalProgress = progress;
+        this.packetLoss = lostPackets;
+        this.coins = currentCoins;
+        repaint();
+    }
+    
+    /**
+     * Shows HUD temporarily (3 seconds)
+     */
+    public void showHUDTemporarily() {
+        showHUD = true;
+        hudToggleTime = System.currentTimeMillis();
+        repaint();
     }
 }
