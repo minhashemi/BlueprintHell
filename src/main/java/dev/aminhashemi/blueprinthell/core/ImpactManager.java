@@ -25,6 +25,11 @@ public class ImpactManager {
     private static final float NOISE_INCREASE_AMOUNT = 30.0f; // Noise increase on direct collision
     private static final float WAVE_INTENSITY = 50.0f; // Base intensity for wave effects
     private static final long IMPACT_COOLDOWN_MS = 1000; // 1 second cooldown between impacts
+    
+    // Chain reaction constants
+    private static final double CHAIN_REACTION_RADIUS = 80.0; // Radius for secondary impacts
+    private static final float CHAIN_REACTION_INTENSITY = 20.0f; // Intensity for chain reactions
+    private static final int MAX_CHAIN_REACTIONS = 3; // Maximum chain reaction depth
 
     public ImpactManager() {
         this.activeImpacts = new ArrayList<>();
@@ -69,6 +74,9 @@ public class ImpactManager {
         // Create a copy of packets to avoid concurrent modification
         List<MovingPacket> packetsCopy = new ArrayList<>(packets);
         
+        // Track new impacts for chain reactions
+        List<Point> newImpactPoints = new ArrayList<>();
+        
         while (iterator.hasNext()) {
             Impact impact = iterator.next();
             
@@ -97,9 +105,19 @@ public class ImpactManager {
             // Keep impacts active for a few frames instead of immediately removing them
             // This allows them to be displayed and counted properly
             long currentTime = System.currentTimeMillis();
-            if (currentTime - impact.getCreationTime() > 500) { // Keep for 500ms
+            if (currentTime - impact.getCreationTime() > 2000) { // Keep for 2 seconds
                 iterator.remove();
+            } else {
+                // Track new impacts for chain reactions
+                if (currentTime - impact.getCreationTime() < 100) { // Only new impacts
+                    newImpactPoints.add(impact.getCollisionPoint());
+                }
             }
+        }
+        
+        // Trigger chain reactions for new impacts
+        for (Point impactPoint : newImpactPoints) {
+            createChainReactions(impactPoint, 1, packetsCopy);
         }
         
         return packetsToRemove;
@@ -120,6 +138,66 @@ public class ImpactManager {
 
         // Play collision sound
         audioManager.playSound("collide.wav");
+        
+        // Create chain reactions (we'll call this from processImpacts with the full packet list)
+    }
+    
+    /**
+     * Creates chain reactions from an impact point.
+     * @param impactPoint The center point of the chain reaction
+     * @param depth Current depth of the chain reaction (1 = first level)
+     * @param allPackets List of all moving packets for chain reaction detection
+     */
+    private void createChainReactions(Point impactPoint, int depth, List<MovingPacket> allPackets) {
+        if (depth > MAX_CHAIN_REACTIONS) {
+            return; // Stop chain reactions at maximum depth
+        }
+        
+        // Find all packets within the chain reaction radius
+        List<MovingPacket> affectedPackets = new ArrayList<>();
+        
+        for (MovingPacket packet : allPackets) {
+            if (packet.isLost()) continue; // Skip lost packets
+            
+            Point packetPos = packet.getPacket().getPosition();
+            double distance = packetPos.distance(impactPoint);
+            
+            if (distance <= CHAIN_REACTION_RADIUS && distance > 0) {
+                affectedPackets.add(packet);
+            }
+        }
+        
+        // Create secondary impacts for affected packets
+        for (int i = 0; i < affectedPackets.size(); i++) {
+            for (int j = i + 1; j < affectedPackets.size(); j++) {
+                MovingPacket p1 = affectedPackets.get(i);
+                MovingPacket p2 = affectedPackets.get(j);
+                
+                // Check if they're close enough for a chain reaction
+                Point pos1 = p1.getPacket().getPosition();
+                Point pos2 = p2.getPacket().getPosition();
+                double packetDistance = pos1.distance(pos2);
+                
+                if (packetDistance <= COLLISION_THRESHOLD * 1.5) { // Slightly larger threshold for chain reactions
+                    // Create secondary impact
+                    Point secondaryPoint = new Point(
+                        (pos1.x + pos2.x) / 2,
+                        (pos1.y + pos2.y) / 2
+                    );
+                    
+                    // Apply chain reaction effects
+                    p1.increaseNoise(CHAIN_REACTION_INTENSITY / depth);
+                    p2.increaseNoise(CHAIN_REACTION_INTENSITY / depth);
+                    
+                    // Create visual impact for chain reaction
+                    Impact chainImpact = new Impact(p1, p2, secondaryPoint);
+                    activeImpacts.add(chainImpact);
+                    
+                    // Recursively create more chain reactions
+                    createChainReactions(secondaryPoint, depth + 1, allPackets);
+                }
+            }
+        }
     }
 
     /**
