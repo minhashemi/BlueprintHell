@@ -9,6 +9,7 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import dev.aminhashemi.blueprinthell.utils.Logger;
 
 /**
  * Manages packet collisions and impact effects.
@@ -90,6 +91,12 @@ public class ImpactManager {
                 if (impact.contains(packet, impact.getPacket1()) || 
                     impact.contains(packet, impact.getPacket2())) {
                     
+                    // Check spawn protection before applying collision effects
+                    if (packet.hasSpawnProtection()) {
+                        Logger.getInstance().info("Packet " + packet.getPacket().getType() + " has spawn protection - skipping collision effects");
+                        continue;
+                    }
+                    
                     // Use packet-specific collision behavior instead of uniform noise increase
                     packet.handleCollision();
                     
@@ -99,8 +106,10 @@ public class ImpactManager {
                         audioManager.playSound("boom.wav");
                     }
                 } else if (waveEffectsEnabled) {
-                    // Apply wave effects to non-colliding packets
-                    packet.applyImpactEffect(impact.getCollisionPoint(), WAVE_INTENSITY);
+                    // Apply wave effects to non-colliding packets (but respect spawn protection)
+                    if (!packet.hasSpawnProtection()) {
+                        packet.applyImpactEffect(impact.getCollisionPoint(), WAVE_INTENSITY);
+                    }
                 }
             }
 

@@ -55,6 +55,9 @@ public class GameEngine implements Runnable {
     private int totalWireLength = 8000; // Total available wire length
     private int usedWireLength = 0; // Wire length already used
     private Map<Wire, Integer> wireLengths = new HashMap<>(); // Track individual wire lengths
+    private int coins = 0; // Current coins - start at 0
+    private long lastSpawnTime = 0; // Prevent multiple spawns
+    private static final long SPAWN_COOLDOWN = 500; // 500ms between spawns
     
     public GameEngine(GamePanel gamePanel) {
         this.gamePanel = gamePanel;
@@ -180,6 +183,12 @@ public class GameEngine implements Runnable {
         List<MovingPacket> packetsToRemove = new ArrayList<>();
         
         for (MovingPacket packet : movingPackets) {
+            // Check spawn protection before destroying packets
+            if (packet.hasSpawnProtection()) {
+                Logger.getInstance().info("Packet " + packet.getPacket().getType() + " has spawn protection - skipping cleanup");
+                continue;
+            }
+            
             if (packet.isLost()) {
                 packetsToRemove.add(packet);
             }
@@ -287,6 +296,68 @@ public class GameEngine implements Runnable {
         movingPackets.remove(arrivedPacket);
         System destinationSystem = arrivedPacket.getDestinationSystem();
         destinationSystem.receivePacket(arrivedPacket.getPacket(), this);
+        
+        // Only add coins when packet reaches the END reference system (the one with only inputs)
+        if (isReferenceSystem(destinationSystem) && destinationSystem.getOutputPorts().isEmpty()) {
+            // This is an end reference system (only inputs, no outputs) - add coins
+            addCoinsForPacketEntry(arrivedPacket.getPacket());
+            Logger.getInstance().info("Packet " + arrivedPacket.getPacket().getType() + " reached END reference system! Coins added.");
+        } else {
+            Logger.getInstance().info("Packet " + arrivedPacket.getPacket().getType() + " reached intermediate system - no coins added.");
+        }
+        
+        // Check if this packet traveled from a reference system to a reference system
+        System sourceSystem = arrivedPacket.getSourceSystem();
+        if (isReferenceSystem(sourceSystem) && isReferenceSystem(destinationSystem)) {
+            // Reward coins for successful packet delivery from reference to reference
+            addCoins(1);
+            Logger.getInstance().info("Packet successfully delivered from reference to reference! +1 coin awarded.");
+        }
+    }
+    
+    /**
+     * Adds coins when a packet enters a system based on packet type and size
+     * This is called when packets enter systems, not when they reach destinations
+     */
+    public void addCoinsForPacketEntry(Packet packet) {
+        PacketType packetType = packet.getType();
+        int coinsToAdd = 0;
+        
+        switch (packetType) {
+            case GREEN_DIAMOND_SMALL:
+                // Size: 2 units - No coins added
+                coinsToAdd = 0;
+                break;
+            case GREEN_DIAMOND_LARGE:
+                // Size: 3 units - Adds 3 coins
+                coinsToAdd = 3;
+                break;
+            case INFINITY_SYMBOL:
+                // Size: 1 unit - Adds 1 coin
+                coinsToAdd = 1;
+                break;
+            case PADLOCK_ICON:
+                // Size: Twice the initial packet - Adds 5 coins
+                coinsToAdd = 5;
+                break;
+            case CAMOUFLAGE_ICON_SMALL:
+                // Size: 4 units - Adds 3 coins
+                coinsToAdd = 3;
+                break;
+            case CAMOUFLAGE_ICON_LARGE:
+                // Size: 6 units - Adds 4 coins
+                coinsToAdd = 4;
+                break;
+            default:
+                // Phase 1 packets - No coins added
+                coinsToAdd = 0;
+                break;
+        }
+        
+        if (coinsToAdd > 0) {
+            addCoins(coinsToAdd);
+            Logger.getInstance().info("Packet " + packetType + " entered system! +" + coinsToAdd + " coins added.");
+        }
     }
 
     public void routePacket(Packet packet, System currentSystem) {
@@ -321,6 +392,9 @@ public class GameEngine implements Runnable {
         // Apply port compatibility effects
         boolean isCompatible = isPortCompatible(targetWire.getStartPort().getType(), packet.getType());
         movingPacket.applyPortCompatibilityEffect(targetWire.getStartPort().getType(), isCompatible);
+        
+        // REMOVED: Coins should only be added when packets actually enter systems, not when they start moving
+        // This prevents coins from being added prematurely
         
         movingPackets.add(movingPacket);
     }
@@ -379,65 +453,120 @@ public class GameEngine implements Runnable {
 
         if (!availableWires.isEmpty()) {
             Wire targetWire = availableWires.get((int) (Math.random() * availableWires.size()));
-            movingPackets.add(new MovingPacket(packet, targetWire));
+            MovingPacket movingPacket = new MovingPacket(packet, targetWire);
+            
+            // Add spawn protection to prevent immediate destruction
+            movingPacket.setSpawnProtection(true);
+            
+            movingPackets.add(movingPacket);
+            Logger.getInstance().info("Packet " + packet.getType() + " spawned with spawn protection. Total packets: " + movingPackets.size());
+        } else {
+            Logger.getInstance().warning("No available wires for packet spawning from " + spawner);
         }
     }
 
     public void handleManualPacketSpawn() {
+        // Check spawn cooldown to prevent multiple spawns
+        long currentTime = java.lang.System.currentTimeMillis();
+        if (currentTime - lastSpawnTime < SPAWN_COOLDOWN) {
+            Logger.getInstance().info("Spawn cooldown active - skipping spawn request");
+            return;
+        }
+        
+        Logger.getInstance().info("=== MANUAL PACKET SPAWN REQUESTED ===");
+        
+        // Find all reference systems that have output ports with connected wires
+        List<ReferenceSystem> availableSpawners = new ArrayList<>();
+        
         for (System system : systems) {
             if (system instanceof ReferenceSystem) {
-                // Spawn only ONE random packet per SPACE press
                 ReferenceSystem refSystem = (ReferenceSystem) system;
                 
-                if (refSystem.getOutputPorts().isEmpty()) {
-                    continue;
-                }
-                
-                // Collect all possible packet types from available ports
-                List<PacketType> possibleTypes = new ArrayList<>();
+                // Check if this reference system has any output ports with connected wires
+                boolean hasConnectedOutputs = false;
                 for (Port port : refSystem.getOutputPorts()) {
-                    switch (port.getType()) {
-                        case SQUARE:
-                            possibleTypes.add(PacketType.SQUARE_MESSENGER);
+                    // Check if this port has any wires starting from it
+                    for (Wire wire : wires) {
+                        if (wire.getStartPort() == port) {
+                            hasConnectedOutputs = true;
                             break;
-                        case TRIANGLE:
-                            possibleTypes.add(PacketType.TRIANGLE_MESSENGER);
-                            break;
-                        case DIAMOND:
-                            // Randomly choose one diamond type, not both
-                            if (Math.random() < 0.5) {
-                                possibleTypes.add(PacketType.GREEN_DIAMOND_SMALL);
-                            } else {
-                                possibleTypes.add(PacketType.GREEN_DIAMOND_LARGE);
-                            }
-                            break;
-                        case INFINITY:
-                            possibleTypes.add(PacketType.INFINITY_SYMBOL);
-                            break;
-                        case PADLOCK:
-                            possibleTypes.add(PacketType.PADLOCK_ICON);
-                            break;
-                        case CAMOUFLAGE:
-                            // Randomly choose one camouflage type, not both
-                            if (Math.random() < 0.5) {
-                                possibleTypes.add(PacketType.CAMOUFLAGE_ICON_SMALL);
-                            } else {
-                                possibleTypes.add(PacketType.CAMOUFLAGE_ICON_LARGE);
-                            }
-                            break;
+                        }
                     }
+                    if (hasConnectedOutputs) break;
                 }
                 
-                if (!possibleTypes.isEmpty()) {
-                    // Spawn only ONE random packet
-                    PacketType randomType = possibleTypes.get((int) (Math.random() * possibleTypes.size()));
-                    Point pos = refSystem.getPosition();
-                    spawnPacket(new MessengerPacket(pos.x, pos.y, randomType), refSystem);
-                    
-                    // Only spawn from the first reference system found
+                if (hasConnectedOutputs) {
+                    availableSpawners.add(refSystem);
+                    Logger.getInstance().info("Found available spawner: " + refSystem + " with connected outputs");
+                }
+            }
+        }
+        
+        if (availableSpawners.isEmpty()) {
+            Logger.getInstance().info("No reference systems with connected output ports found for packet spawning");
+            return;
+        }
+        
+        Logger.getInstance().info("Available spawners: " + availableSpawners.size());
+        
+        // Randomly select one available spawner
+        ReferenceSystem selectedSpawner = availableSpawners.get((int) (Math.random() * availableSpawners.size()));
+        Logger.getInstance().info("Selected spawner: " + selectedSpawner);
+        
+        // Find all output ports of the selected spawner that have wires
+        List<Port> connectedOutputs = new ArrayList<>();
+        for (Port port : selectedSpawner.getOutputPorts()) {
+            for (Wire wire : wires) {
+                if (wire.getStartPort() == port) {
+                    connectedOutputs.add(port);
                     break;
                 }
             }
+        }
+        
+        if (connectedOutputs.isEmpty()) {
+            Logger.getInstance().warning("Selected spawner has no connected output ports");
+            return;
+        }
+        
+        Logger.getInstance().info("Connected outputs: " + connectedOutputs.size());
+        
+        // Randomly select one connected output port
+        Port selectedPort = connectedOutputs.get((int) (Math.random() * connectedOutputs.size()));
+        Logger.getInstance().info("Selected port: " + selectedPort.getType());
+        
+        // Determine packet type based on the selected port
+        PacketType packetType = getPacketTypeForPort(selectedPort.getType());
+        
+        if (packetType != null) {
+            Point pos = selectedSpawner.getPosition();
+            spawnPacket(new MessengerPacket(pos.x, pos.y, packetType), selectedSpawner);
+            lastSpawnTime = currentTime; // Update spawn time
+            Logger.getInstance().info("=== PACKET SPAWNED: " + packetType + " ===");
+        }
+    }
+    
+    /**
+     * Gets the appropriate packet type for a given port type
+     */
+    private PacketType getPacketTypeForPort(PortType portType) {
+        switch (portType) {
+            case SQUARE:
+                return PacketType.SQUARE_MESSENGER;
+            case TRIANGLE:
+                return PacketType.TRIANGLE_MESSENGER;
+            case DIAMOND:
+                // Randomly choose one diamond type
+                return Math.random() < 0.5 ? PacketType.GREEN_DIAMOND_SMALL : PacketType.GREEN_DIAMOND_LARGE;
+            case INFINITY:
+                return PacketType.INFINITY_SYMBOL;
+            case PADLOCK:
+                return PacketType.PADLOCK_ICON;
+            case CAMOUFLAGE:
+                // Randomly choose one camouflage type
+                return Math.random() < 0.5 ? PacketType.CAMOUFLAGE_ICON_SMALL : PacketType.CAMOUFLAGE_ICON_LARGE;
+            default:
+                return null;
         }
     }
 
@@ -798,11 +927,11 @@ public class GameEngine implements Runnable {
             // Get packet loss count
             int packetLoss = getPacketLossCount();
             
-            // Get current coins (simplified - can be enhanced based on game mechanics)
-            int coins = 20; // Default starting coins
+            // Get current coins from game engine
+            int currentCoins = getCoins();
             
             // Update HUD data
-            gamePanel.updateHUDData(remainingWireLength, temporalProgress, packetLoss, coins);
+            gamePanel.updateHUDData(remainingWireLength, temporalProgress, packetLoss, currentCoins);
         }
     }
     
@@ -914,5 +1043,27 @@ public class GameEngine implements Runnable {
             });
         }
         Logger.getInstance().info("Wire callbacks set up for " + wires.size() + " wires");
+    }
+
+    /**
+     * Adds coins to the total
+     */
+    public void addCoins(int amount) {
+        coins += amount;
+        Logger.getInstance().info("Coins added: +" + amount + ". Total coins: " + coins);
+    }
+    
+    /**
+     * Checks if a system is a reference system
+     */
+    private boolean isReferenceSystem(System system) {
+        return system instanceof ReferenceSystem;
+    }
+    
+    /**
+     * Gets the current coin count
+     */
+    public int getCoins() {
+        return coins;
     }
 }
