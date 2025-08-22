@@ -26,10 +26,30 @@ public class ReferenceSystem extends System {
 
         List<PacketType> possibleTypes = new ArrayList<>();
         for (Port port : outputPorts) {
-            if (port.getType() == PortType.SQUARE) {
-                possibleTypes.add(PacketType.SQUARE_MESSENGER);
-            } else if (port.getType() == PortType.TRIANGLE) {
-                possibleTypes.add(PacketType.TRIANGLE_MESSENGER);
+            switch (port.getType()) {
+                case SQUARE:
+                    possibleTypes.add(PacketType.SQUARE_MESSENGER);
+                    break;
+                case TRIANGLE:
+                    possibleTypes.add(PacketType.TRIANGLE_MESSENGER);
+                    break;
+                case DIAMOND:
+                    possibleTypes.add(PacketType.GREEN_DIAMOND_SMALL);
+                    possibleTypes.add(PacketType.GREEN_DIAMOND_LARGE);
+                    break;
+                case INFINITY:
+                    possibleTypes.add(PacketType.INFINITY_SYMBOL);
+                    break;
+                case PADLOCK:
+                    possibleTypes.add(PacketType.PADLOCK_ICON);
+                    break;
+                case CAMOUFLAGE:
+                    possibleTypes.add(PacketType.CAMOUFLAGE_ICON_SMALL);
+                    possibleTypes.add(PacketType.CAMOUFLAGE_ICON_LARGE);
+                    break;
+                case VPN:
+                    possibleTypes.add(PacketType.PADLOCK_ICON);
+                    break;
             }
         }
 
@@ -45,10 +65,11 @@ public class ReferenceSystem extends System {
 
     @Override
     public void draw(Graphics2D g) {
-        g.setColor(Color.CYAN);
+        g.setColor(Color.decode("#00D2FF")); // Bright cyan for high visibility
         g.fillRect(x, y, width, height);
-        g.setColor(Color.BLACK);
+        g.setColor(Color.WHITE); // White border for contrast
         g.drawRect(x, y, width, height);
+        g.setColor(Color.BLACK); // Black text for readability
         g.drawString("REF", x + 10, y + 20);
 
         for (Port port : inputPorts) {
