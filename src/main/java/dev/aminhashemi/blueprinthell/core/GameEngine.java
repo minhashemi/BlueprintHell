@@ -13,6 +13,7 @@ import dev.aminhashemi.blueprinthell.model.world.Wire;
 import dev.aminhashemi.blueprinthell.model.world.Impact;
 import dev.aminhashemi.blueprinthell.utils.LevelLoader;
 import dev.aminhashemi.blueprinthell.utils.AudioManager;
+import dev.aminhashemi.blueprinthell.utils.Logger;
 import dev.aminhashemi.blueprinthell.view.GamePanel;
 
 import java.awt.*;
@@ -57,7 +58,7 @@ public class GameEngine implements Runnable {
     private void init() {
         LevelData levelData = LevelLoader.loadLevel(1);
         if (levelData == null || levelData.systems == null) {
-            java.lang.System.err.println("Failed to load level data. Game cannot start.");
+            Logger.getInstance().error("Failed to load level data. Game cannot start.");
             return;
         }
 
@@ -65,7 +66,7 @@ public class GameEngine implements Runnable {
             if ("REFERENCE".equals(sysData.type)) {
                 systems.add(new ReferenceSystem(sysData.position.x, sysData.position.y, sysData));
             } else {
-                java.lang.System.err.println("Unknown system type in level file: " + sysData.type);
+                Logger.getInstance().error("Unknown system type in level file: " + sysData.type);
             }
         }
     }
@@ -107,7 +108,7 @@ public class GameEngine implements Runnable {
 
             if (java.lang.System.currentTimeMillis() - lastCheck >= 1000) {
                 lastCheck = java.lang.System.currentTimeMillis();
-                java.lang.System.out.println("FPS: " + frames + " | UPS: " + updates);
+                Logger.getInstance().info("FPS: " + frames + " | UPS: " + updates);
                 frames = 0;
                 updates = 0;
             }
@@ -156,9 +157,9 @@ public class GameEngine implements Runnable {
             if (packet.isLost()) {
                 iterator.remove();
                 // Play lose sound for destroyed packet
-                AudioManager.getInstance().playSound("lose");
+                AudioManager.getInstance().playSound("boom.wav");
                 // TODO: Update HUD or game state to reflect lost packet
-                java.lang.System.out.println("Packet lost due to high noise level!");
+                Logger.getInstance().info("Packet lost due to high noise level!");
             }
         }
     }
@@ -205,7 +206,9 @@ public class GameEngine implements Runnable {
         // Display packet noise levels and status
         g.setColor(Color.ORANGE);
         int yOffset = 60;
-        for (MovingPacket packet : movingPackets) {
+        // Create a copy to avoid ConcurrentModificationException
+        List<MovingPacket> packetsCopy = new ArrayList<>(movingPackets);
+        for (MovingPacket packet : packetsCopy) {
             Point pos = packet.getPacket().getPosition();
             
             if (packet.isLost()) {
@@ -257,7 +260,7 @@ public class GameEngine implements Runnable {
 
     public void routePacket(Packet packet, System currentSystem) {
         if (currentSystem instanceof ReferenceSystem) {
-            java.lang.System.out.println("Packet " + packet.getType() + " returned home.");
+            Logger.getInstance().info("Packet " + packet.getType() + " returned home.");
             return;
         }
 
@@ -266,7 +269,7 @@ public class GameEngine implements Runnable {
                 .collect(Collectors.toList());
 
         if (outgoingWires.isEmpty()) {
-            java.lang.System.out.println("Packet " + packet.getType() + " is stuck. No outgoing wires.");
+            Logger.getInstance().info("Packet " + packet.getType() + " is stuck. No outgoing wires.");
             return;
         }
 
