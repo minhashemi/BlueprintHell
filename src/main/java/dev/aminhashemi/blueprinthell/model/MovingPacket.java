@@ -90,8 +90,8 @@ public class MovingPacket {
     
     public void increaseNoise(float amount) {
         this.noiseLevel += amount;
-        // If noise gets too high, packet is lost
-        if (noiseLevel > 100.0f) {
+        // If noise gets too high (50%), packet is lost
+        if (noiseLevel > 50.0f) {
             isLost = true;
         }
     }
