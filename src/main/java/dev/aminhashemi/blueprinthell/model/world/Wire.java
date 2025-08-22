@@ -21,6 +21,9 @@ public class Wire {
     private final List<ArcPoint> arcPoints;
     private List<Point> cachedPath;
     private WireStyle style = WireStyle.CURVED;
+    
+    // Callback for wire length updates
+    private Runnable onPathChangedCallback;
 
     public Wire(Port startPort) {
         this.startPort = startPort;
@@ -69,6 +72,7 @@ public class Wire {
                 pi.next();
             }
         }
+        notifyPathChanged();
     }
 
     private Path2D.Float buildCurvedPath(List<Point> controlPoints) {
@@ -134,5 +138,21 @@ public class Wire {
 
     public Port getStartPort() {
         return startPort;
+    }
+
+    /**
+     * Sets the callback to be called when the wire path changes
+     */
+    public void setOnPathChangedCallback(Runnable callback) {
+        this.onPathChangedCallback = callback;
+    }
+    
+    /**
+     * Calls the path changed callback if it exists
+     */
+    private void notifyPathChanged() {
+        if (onPathChangedCallback != null) {
+            onPathChangedCallback.run();
+        }
     }
 }
