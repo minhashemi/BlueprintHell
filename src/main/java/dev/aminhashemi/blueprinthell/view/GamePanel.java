@@ -30,7 +30,7 @@ public class GamePanel extends JPanel {
     private void initPanel() {
         setName(GameFrame.GAME_PANEL);
         setPreferredSize(new Dimension(1280, 720));
-        setBackground(Color.BLACK);
+        setBackground(new Color(20, 25, 40)); // Dark blue-gray instead of pure black for better contrast
         setFocusable(true); // Crucial for receiving key events
     }
 

@@ -23,7 +23,7 @@ public class ImpactManager {
     // Collision detection constants
     private static final double COLLISION_THRESHOLD = 15.0; // Minimum distance for collision
     private static final float NOISE_INCREASE_AMOUNT = 30.0f; // Noise increase on direct collision
-    private static final float WAVE_INTENSITY = 50.0f; // Base intensity for wave effects
+    private static final float WAVE_INTENSITY = 8.0f; // Reduced from 50.0f to prevent instant destruction
     private static final long IMPACT_COOLDOWN_MS = 1000; // 1 second cooldown between impacts
     
     // Chain reaction constants
@@ -89,7 +89,9 @@ public class ImpactManager {
             for (MovingPacket packet : packetsCopy) {
                 if (impact.contains(packet, impact.getPacket1()) || 
                     impact.contains(packet, impact.getPacket2())) {
-                    packet.increaseNoise(NOISE_INCREASE_AMOUNT);
+                    
+                    // Use packet-specific collision behavior instead of uniform noise increase
+                    packet.handleCollision();
                     
                     // Check if packet should be removed
                     if (packet.isLost()) {

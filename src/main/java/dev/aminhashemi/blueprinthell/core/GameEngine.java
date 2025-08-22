@@ -4,10 +4,13 @@ import dev.aminhashemi.blueprinthell.model.LevelData;
 import dev.aminhashemi.blueprinthell.model.MovingPacket;
 import dev.aminhashemi.blueprinthell.model.entities.packets.Packet;
 import dev.aminhashemi.blueprinthell.model.entities.packets.PacketType;
-import dev.aminhashemi.blueprinthell.model.entities.systems.Port;
 import dev.aminhashemi.blueprinthell.model.entities.systems.PortType;
-import dev.aminhashemi.blueprinthell.model.entities.systems.ReferenceSystem;
 import dev.aminhashemi.blueprinthell.model.entities.systems.System;
+import dev.aminhashemi.blueprinthell.model.entities.systems.ReferenceSystem;
+import dev.aminhashemi.blueprinthell.model.entities.systems.VPNSystem;
+import dev.aminhashemi.blueprinthell.model.entities.systems.MaliciousSystem;
+import dev.aminhashemi.blueprinthell.model.entities.systems.Port;
+import dev.aminhashemi.blueprinthell.model.entities.packets.MessengerPacket;
 import dev.aminhashemi.blueprinthell.model.world.ArcPoint;
 import dev.aminhashemi.blueprinthell.model.world.Wire;
 import dev.aminhashemi.blueprinthell.model.world.Impact;
@@ -63,10 +66,19 @@ public class GameEngine implements Runnable {
         }
 
         for (LevelData.SystemData sysData : levelData.systems) {
-            if ("REFERENCE".equals(sysData.type)) {
-                systems.add(new ReferenceSystem(sysData.position.x, sysData.position.y, sysData));
-            } else {
-                Logger.getInstance().error("Unknown system type in level file: " + sysData.type);
+            switch (sysData.type) {
+                case "REFERENCE":
+                    systems.add(new ReferenceSystem(sysData.position.x, sysData.position.y, sysData));
+                    break;
+                case "VPN":
+                    systems.add(new VPNSystem(sysData.position.x, sysData.position.y, sysData));
+                    break;
+                case "MALICIOUS":
+                    systems.add(new MaliciousSystem(sysData.position.x, sysData.position.y, sysData));
+                    break;
+                default:
+                    Logger.getInstance().error("Unknown system type in level file: " + sysData.type);
+                    break;
             }
         }
     }
@@ -204,25 +216,26 @@ public class GameEngine implements Runnable {
         }
         
         // Display packet noise levels and status
-        g.setColor(Color.ORANGE);
-        int yOffset = 60;
         // Create a copy to avoid ConcurrentModificationException
         List<MovingPacket> packetsCopy = new ArrayList<>(movingPackets);
         for (MovingPacket packet : packetsCopy) {
             Point pos = packet.getPacket().getPosition();
-            
             if (packet.isLost()) {
-                // Show destroyed packets in red with "DESTROYED" text
                 g.setColor(Color.RED);
                 g.setFont(new Font("Arial", Font.BOLD, 10));
                 g.drawString("DESTROYED", pos.x + 20, pos.y - 10);
             } else if (packet.getNoiseLevel() > 0) {
-                // Show noise level for active packets
                 g.setColor(Color.ORANGE);
                 g.setFont(new Font("Arial", Font.PLAIN, 10));
                 String noiseText = String.format("Noise: %.1f", packet.getNoiseLevel());
                 g.drawString(noiseText, pos.x + 20, pos.y - 10);
             }
+            
+            // Phase 2: Display packet type and behavior info
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Arial", Font.PLAIN, 8));
+            String packetInfo = String.format("%s", packet.getPacket().getType());
+            g.drawString(packetInfo, pos.x + 20, pos.y + 20);
         }
     }
 
@@ -275,7 +288,7 @@ public class GameEngine implements Runnable {
 
         PortType packetPortType = getPortTypeForPacket(packet.getType());
         List<Wire> compatibleWires = outgoingWires.stream()
-                .filter(wire -> wire.getStartPort().getType() == packetPortType)
+                .filter(wire -> isPortCompatible(wire.getStartPort().getType(), packet.getType()))
                 .collect(Collectors.toList());
 
         Wire targetWire;
@@ -285,13 +298,60 @@ public class GameEngine implements Runnable {
             targetWire = outgoingWires.get((int) (Math.random() * outgoingWires.size()));
         }
 
-        movingPackets.add(new MovingPacket(packet, targetWire));
+        MovingPacket movingPacket = new MovingPacket(packet, targetWire);
+        
+        // Apply port compatibility effects
+        boolean isCompatible = isPortCompatible(targetWire.getStartPort().getType(), packet.getType());
+        movingPacket.applyPortCompatibilityEffect(targetWire.getStartPort().getType(), isCompatible);
+        
+        movingPackets.add(movingPacket);
     }
 
     private PortType getPortTypeForPacket(PacketType packetType) {
+        // Phase 1 packet types (backward compatibility)
         if (packetType == PacketType.SQUARE_MESSENGER) return PortType.SQUARE;
         if (packetType == PacketType.TRIANGLE_MESSENGER) return PortType.TRIANGLE;
-        return null;
+        
+        // Phase 2 packet types
+        switch (packetType) {
+            case GREEN_DIAMOND_SMALL:
+            case GREEN_DIAMOND_LARGE:
+                return PortType.DIAMOND;
+            case INFINITY_SYMBOL:
+                return PortType.INFINITY;
+            case PADLOCK_ICON:
+                return PortType.PADLOCK;
+            case CAMOUFLAGE_ICON_SMALL:
+            case CAMOUFLAGE_ICON_LARGE:
+                return PortType.CAMOUFLAGE;
+            default:
+                return PortType.SQUARE; // Fallback
+        }
+    }
+    
+    /**
+     * Checks if a port is compatible with a packet type
+     */
+    private boolean isPortCompatible(PortType portType, PacketType packetType) {
+        // Phase 1 compatibility (backward compatibility)
+        if (packetType == PacketType.SQUARE_MESSENGER && portType == PortType.SQUARE) return true;
+        if (packetType == PacketType.TRIANGLE_MESSENGER && portType == PortType.TRIANGLE) return true;
+        
+        // Phase 2 compatibility rules
+        switch (packetType) {
+            case GREEN_DIAMOND_SMALL:
+            case GREEN_DIAMOND_LARGE:
+                return portType == PortType.DIAMOND;
+            case INFINITY_SYMBOL:
+                return portType == PortType.INFINITY;
+            case PADLOCK_ICON:
+                return portType == PortType.PADLOCK || portType == PortType.VPN;
+            case CAMOUFLAGE_ICON_SMALL:
+            case CAMOUFLAGE_ICON_LARGE:
+                return portType == PortType.CAMOUFLAGE;
+            default:
+                return false;
+        }
     }
 
     public void spawnPacket(Packet packet, ReferenceSystem spawner) {
@@ -308,7 +368,57 @@ public class GameEngine implements Runnable {
     public void handleManualPacketSpawn() {
         for (System system : systems) {
             if (system instanceof ReferenceSystem) {
-                ((ReferenceSystem) system).spawnRandomPacket(this);
+                // Spawn only ONE random packet per SPACE press
+                ReferenceSystem refSystem = (ReferenceSystem) system;
+                
+                if (refSystem.getOutputPorts().isEmpty()) {
+                    continue;
+                }
+                
+                // Collect all possible packet types from available ports
+                List<PacketType> possibleTypes = new ArrayList<>();
+                for (Port port : refSystem.getOutputPorts()) {
+                    switch (port.getType()) {
+                        case SQUARE:
+                            possibleTypes.add(PacketType.SQUARE_MESSENGER);
+                            break;
+                        case TRIANGLE:
+                            possibleTypes.add(PacketType.TRIANGLE_MESSENGER);
+                            break;
+                        case DIAMOND:
+                            // Randomly choose one diamond type, not both
+                            if (Math.random() < 0.5) {
+                                possibleTypes.add(PacketType.GREEN_DIAMOND_SMALL);
+                            } else {
+                                possibleTypes.add(PacketType.GREEN_DIAMOND_LARGE);
+                            }
+                            break;
+                        case INFINITY:
+                            possibleTypes.add(PacketType.INFINITY_SYMBOL);
+                            break;
+                        case PADLOCK:
+                            possibleTypes.add(PacketType.PADLOCK_ICON);
+                            break;
+                        case CAMOUFLAGE:
+                            // Randomly choose one camouflage type, not both
+                            if (Math.random() < 0.5) {
+                                possibleTypes.add(PacketType.CAMOUFLAGE_ICON_SMALL);
+                            } else {
+                                possibleTypes.add(PacketType.CAMOUFLAGE_ICON_LARGE);
+                            }
+                            break;
+                    }
+                }
+                
+                if (!possibleTypes.isEmpty()) {
+                    // Spawn only ONE random packet
+                    PacketType randomType = possibleTypes.get((int) (Math.random() * possibleTypes.size()));
+                    Point pos = refSystem.getPosition();
+                    spawnPacket(new MessengerPacket(pos.x, pos.y, randomType), refSystem);
+                    
+                    // Only spawn from the first reference system found
+                    break;
+                }
             }
         }
     }
@@ -480,6 +590,45 @@ public class GameEngine implements Runnable {
         for (MovingPacket packet : movingPackets) {
             packet.setNoiseLevel(0.0f);
         }
+    }
+
+    /**
+     * Demonstrates the new Phase 2 packet behaviors
+     */
+    public void demonstratePacketBehaviors() {
+        Logger.getInstance().info("Demonstrating Phase 2 packet behaviors...");
+        
+        // Find a reference system to spawn from
+        ReferenceSystem refSystem = null;
+        for (System system : systems) {
+            if (system instanceof ReferenceSystem) {
+                refSystem = (ReferenceSystem) system;
+                break;
+            }
+        }
+        
+        if (refSystem == null) {
+            Logger.getInstance().warning("No reference system found for packet behavior demonstration");
+            return;
+        }
+        
+        Point pos = refSystem.getPosition();
+        
+        // Spawn different packet types to demonstrate behaviors
+        spawnPacket(new MessengerPacket(pos.x, pos.y, PacketType.GREEN_DIAMOND_SMALL), refSystem);
+        Logger.getInstance().info("Spawned GREEN_DIAMOND_SMALL - should move at half speed from incompatible ports");
+        
+        spawnPacket(new MessengerPacket(pos.x, pos.y, PacketType.GREEN_DIAMOND_LARGE), refSystem);
+        Logger.getInstance().info("Spawned GREEN_DIAMOND_LARGE - should accelerate through incompatible ports");
+        
+        spawnPacket(new MessengerPacket(pos.x, pos.y, PacketType.INFINITY_SYMBOL), refSystem);
+        Logger.getInstance().info("Spawned INFINITY_SYMBOL - should have constant acceleration/deceleration");
+        
+        spawnPacket(new MessengerPacket(pos.x, pos.y, PacketType.PADLOCK_ICON), refSystem);
+        Logger.getInstance().info("Spawned PADLOCK_ICON - should be more resilient to collisions");
+        
+        spawnPacket(new MessengerPacket(pos.x, pos.y, PacketType.CAMOUFLAGE_ICON_SMALL), refSystem);
+        Logger.getInstance().info("Spawned CAMOUFLAGE_ICON_SMALL - should slow down near malicious systems");
     }
 
     private void regenerateWirePaths() {
