@@ -32,6 +32,40 @@ public class MessengerPacket extends Packet {
                 triangle.addPoint(x + width, y + height);
                 g.fillPolygon(triangle);
                 break;
+            case GREEN_DIAMOND_SMALL:
+            case GREEN_DIAMOND_LARGE:
+                // Draw diamond shape
+                Polygon diamond = new Polygon();
+                int centerX = x + width / 2;
+                int centerY = y + height / 2;
+                diamond.addPoint(centerX, y);
+                diamond.addPoint(x + width, centerY);
+                diamond.addPoint(centerX, y + height);
+                diamond.addPoint(x, centerY);
+                g.fillPolygon(diamond);
+                break;
+            case INFINITY_SYMBOL:
+                // Draw infinity symbol (two connected circles)
+                g.fillOval(x, y, width / 2, height);
+                g.fillOval(x + width / 2, y, width / 2, height);
+                break;
+            case PADLOCK_ICON:
+                // Draw padlock shape
+                g.fillRect(x + 2, y + 4, width - 4, height - 4);
+                g.fillRect(x + 3, y + 2, width - 6, 3);
+                break;
+            case CAMOUFLAGE_ICON_SMALL:
+            case CAMOUFLAGE_ICON_LARGE:
+                // Draw camouflage pattern (circle with inner detail)
+                g.fillOval(x + 1, y + 1, width - 2, height - 2);
+                g.setColor(Color.WHITE);
+                g.fillOval(x + 3, y + 3, 6, 6);
+                g.setColor(type.getColor());
+                break;
+            default:
+                // Fallback: draw as a circle for any other packet types
+                g.fillOval(x, y, width, height);
+                break;
         }
     }
 

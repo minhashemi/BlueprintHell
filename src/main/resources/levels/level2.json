@@ -1,38 +1,69 @@
 {
-  "level_id": 1,
-  "level_name": "Blueprint Hell",
-  "packets": [
+  "levelNumber": 2,
+  "levelName": "Phase 2 Packet Diversity Test",
+  "playerStart": {
+    "initialCoins": 20,
+    "initialWireLength": 8000
+  },
+  "systems": [
     {
-      "packet_id": 0,
-      "position": { "x": 100, "y": 600 },
-      "inputs": [],
-      "outputs": ["SQUARE"]
+      "id": "ref_sys_A",
+      "type": "REFERENCE",
+      "position": { "x": 100, "y": 200 },
+      "inputPorts": [
+      ],
+      "outputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" },
+        { "type": "PADLOCK" },
+        { "type": "CAMOUFLAGE" }
+      ],
+      "packetGeneration": {
+        "packetType": "MIXED",
+        "count": 15,
+        "frequency": 2.0
+      }
     },
     {
-      "packet_id": 1,
-      "position": { "x": 400, "y": 500 },
-      "inputs": ["SQUARE", "SQUARE"],
-      "outputs": ["SQUARE"]
+      "id": "ref_sys_B",
+      "type": "REFERENCE",
+      "position": { "x": 950, "y": 450 },
+      "inputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" },
+        { "type": "PADLOCK" },
+        { "type": "CAMOUFLAGE" }
+      ],
+      "outputPorts": [
+      ]
     },
     {
-      "packet_id": 2,
+      "id": "vpn_sys",
+      "type": "VPN",
       "position": { "x": 500, "y": 300 },
-      "inputs": ["SQUARE"],
-      "outputs": ["TRIANGLE", "SQUARE"]
+      "inputPorts": [
+        { "type": "PADLOCK" },
+        { "type": "CAMOUFLAGE" }
+      ],
+      "outputPorts": [
+        { "type": "PADLOCK" },
+        { "type": "CAMOUFLAGE" }
+      ]
     },
     {
-      "packet_id": -1,
-      "position": { "x": 800 ,"y": 700 },
-      "inputs": ["TRIANGLE", "SQUARE"],
-      "outputs": []
-    }
-  ],
-  "connections": [
-    {
-      "fromPacketId": 1,
-      "fromPortIndex": 0,
-      "toPacketId": 2,
-      "toPortIndex": 1
+      "id": "malicious_sys",
+      "type": "MALICIOUS",
+      "position": { "x": 300, "y": 400 },
+      "inputPorts": [
+        { "type": "CAMOUFLAGE" }
+      ],
+      "outputPorts": [
+        { "type": "CAMOUFLAGE" }
+      ]
     }
   ]
 }

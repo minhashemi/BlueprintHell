@@ -1,9 +1,9 @@
 {
   "levelNumber": 1,
-  "levelName": "The First Connection",
+  "levelName": "Phase 2 Packet Diversity Test",
   "playerStart": {
-    "initialCoins": 10,
-    "initialWireLength": 5000
+    "initialCoins": 20,
+    "initialWireLength": 8000
   },
   "systems": [
     {
@@ -14,12 +14,16 @@
       ],
       "outputPorts": [
         { "type": "SQUARE" },
-        { "type": "TRIANGLE" }
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" },
+        { "type": "PADLOCK" },
+        { "type": "CAMOUFLAGE" }
       ],
       "packetGeneration": {
-        "packetType": "SQUARE_MESSENGER",
-        "count": 10,
-        "frequency": 2.5
+        "packetType": "MIXED",
+        "count": 15,
+        "frequency": 2.0
       }
     },
     {
@@ -28,9 +32,37 @@
       "position": { "x": 950, "y": 450 },
       "inputPorts": [
         { "type": "SQUARE" },
-        { "type": "TRIANGLE" }
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" },
+        { "type": "PADLOCK" },
+        { "type": "CAMOUFLAGE" }
       ],
       "outputPorts": [
+      ]
+    },
+    {
+      "id": "vpn_sys",
+      "type": "VPN",
+      "position": { "x": 500, "y": 300 },
+      "inputPorts": [
+        { "type": "PADLOCK" },
+        { "type": "CAMOUFLAGE" }
+      ],
+      "outputPorts": [
+        { "type": "PADLOCK" },
+        { "type": "CAMOUFLAGE" }
+      ]
+    },
+    {
+      "id": "malicious_sys",
+      "type": "MALICIOUS",
+      "position": { "x": 300, "y": 400 },
+      "inputPorts": [
+        { "type": "CAMOUFLAGE" }
+      ],
+      "outputPorts": [
+        { "type": "CAMOUFLAGE" }
       ]
     }
   ]
