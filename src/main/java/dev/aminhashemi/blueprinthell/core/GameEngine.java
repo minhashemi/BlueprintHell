@@ -28,6 +28,8 @@ import java.util.stream.Collectors;
 import java.util.Iterator;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.Map;
+import java.util.HashMap;
 
 public class GameEngine implements Runnable {
 
@@ -48,13 +50,20 @@ public class GameEngine implements Runnable {
     private boolean inWiringMode = false;
     private Wire previewWire = null;
     private Point currentMousePos = new Point();
-
+    private long lastUpdateTime;
+    private long gameStartTime; // Game start time for HUD progress calculation
+    private int totalWireLength = 8000; // Total available wire length
+    private int usedWireLength = 0; // Wire length already used
+    private Map<Wire, Integer> wireLengths = new HashMap<>(); // Track individual wire lengths
+    
     public GameEngine(GamePanel gamePanel) {
         this.gamePanel = gamePanel;
         systems = new ArrayList<>();
         wires = new ArrayList<>();
         movingPackets = new ArrayList<>();
         impactManager = new ImpactManager();
+        lastUpdateTime = java.lang.System.nanoTime();
+        gameStartTime = java.lang.System.currentTimeMillis(); // Initialize game start time
         init();
     }
 
@@ -81,6 +90,9 @@ public class GameEngine implements Runnable {
                     break;
             }
         }
+        
+        // Set up wire callbacks for dynamic length updates
+        setupWireCallbacks();
     }
 
     public void startGameLoop() {
@@ -155,24 +167,30 @@ public class GameEngine implements Runnable {
         
         // Clean up any remaining lost packets
         cleanupLostPackets();
+        
+        // Update HUD with current game data
+        updateHUD();
     }
 
     /**
      * Cleans up packets that are lost due to high noise levels.
      */
     private void cleanupLostPackets() {
-        Iterator<MovingPacket> iterator = movingPackets.iterator();
+        // Create a copy to avoid ConcurrentModificationException
+        List<MovingPacket> packetsToRemove = new ArrayList<>();
         
-        while (iterator.hasNext()) {
-            MovingPacket packet = iterator.next();
-            
+        for (MovingPacket packet : movingPackets) {
             if (packet.isLost()) {
-                iterator.remove();
-                // Play lose sound for destroyed packet
-                AudioManager.getInstance().playSound("boom.wav");
-                // TODO: Update HUD or game state to reflect lost packet
-                Logger.getInstance().info("Packet lost due to high noise level!");
+                packetsToRemove.add(packet);
             }
+        }
+        
+        // Remove all lost packets at once
+        for (MovingPacket packet : packetsToRemove) {
+            movingPackets.remove(packet);
+            // Play lose sound for destroyed packet
+            AudioManager.getInstance().playSound("boom.wav");
+            Logger.getInstance().info("Packet lost due to high noise level!");
         }
     }
 
@@ -439,8 +457,24 @@ public class GameEngine implements Runnable {
         if (draggedSystem != null) {
             draggedSystem.setPosition(point.x - dragOffset.x, point.y - dragOffset.y);
             regenerateWirePaths(); // Regenerate wire paths when system moves
+            
+            // IMPORTANT: Recalculate wire lengths when systems move
+            Logger.getInstance().info("System moved - recalculating all wire lengths...");
+            recalculateAllWireLengths();
         } else if (draggedArcPoint != null) {
             draggedArcPoint.setPosition(point);
+            
+            // IMPORTANT: Recalculate wire lengths when arc points move
+            // Find the wire containing this arc point and update its length
+            for (Wire wire : wires) {
+                if (wire.getArcPoints().contains(draggedArcPoint)) {
+                    Logger.getInstance().info("Arc point moved - updating wire length...");
+                    // Force a path regeneration and length update
+                    wire.regeneratePath();
+                    updateWireLengthForWire(wire);
+                    break;
+                }
+            }
         }
     }
 
@@ -463,7 +497,15 @@ public class GameEngine implements Runnable {
             Port clickedPort = findPortAt(point);
             if (clickedPort != null && clickedPort.isInput() && clickedPort.getParentSystem() != previewWire.getStartPort().getParentSystem()) {
                 previewWire.setEndPort(clickedPort);
+                
+                // Set up the wire path change callback for dynamic length updates
+                previewWire.setOnPathChangedCallback(() -> {
+                    Logger.getInstance().info("Wire path changed - updating length...");
+                    updateWireLengthForWire(previewWire);
+                });
+                
                 wires.add(previewWire);
+                updateWireLength(previewWire); // Update used wire length when a new wire is created
             }
             previewWire = null;
         } else if (draggedSystem != null) {
@@ -475,12 +517,18 @@ public class GameEngine implements Runnable {
     }
 
     public void handleRightMousePress(Point point) {
-        if (previewWire != null) {
-            previewWire.addArcPoint(point);
-        } else if (!inWiringMode) {
-            Wire clickedWire = findWireAt(point);
-            if (clickedWire != null) {
-                clickedWire.addArcPoint(point);
+        // Allow adding arc points to existing wires regardless of wiring mode
+        Wire wire = findWireAt(point);
+        if (wire != null) {
+            // Check if we can add more arc points (limit is 3)
+            if (wire.getArcPoints().size() < 3) {
+                wire.addArcPoint(point);
+                
+                // IMPORTANT: Update wire length when arc points are added
+                Logger.getInstance().info("Arc point added to wire - updating length...");
+                updateWireLengthForWire(wire);
+            } else {
+                Logger.getInstance().info("Cannot add more arc points - limit reached (3)");
             }
         }
     }
@@ -521,15 +569,21 @@ public class GameEngine implements Runnable {
     }
 
     private Wire findWireAt(Point point) {
-        final double CLICK_THRESHOLD = 5.0;
+        final double CLICK_THRESHOLD = 8.0; // Increased threshold for easier wire detection
         Wire closestWire = null;
         double minDistance = Double.MAX_VALUE;
 
         for (Wire wire : wires) {
             List<Point> points = wire.getAllPoints();
+            if (points.size() < 2) continue;
+            
             for (int i = 0; i < points.size() - 1; i++) {
-                Line2D.Float segment = new Line2D.Float(points.get(i), points.get(i + 1));
-                double distance = segment.ptSegDist(point);
+                Point p1 = points.get(i);
+                Point p2 = points.get(i + 1);
+                
+                // Calculate distance from point to line segment
+                double distance = pointToLineDistance(point, p1, p2);
+                
                 if (distance < minDistance) {
                     minDistance = distance;
                     closestWire = wire;
@@ -538,9 +592,43 @@ public class GameEngine implements Runnable {
         }
 
         if (minDistance < CLICK_THRESHOLD) {
+            Logger.getInstance().info("Wire found at distance: " + minDistance + " pixels");
             return closestWire;
         }
         return null;
+    }
+    
+    /**
+     * Calculates the distance from a point to a line segment
+     */
+    private double pointToLineDistance(Point point, Point lineStart, Point lineEnd) {
+        double A = point.x - lineStart.x;
+        double B = point.y - lineStart.y;
+        double C = lineEnd.x - lineStart.x;
+        double D = lineEnd.y - lineStart.y;
+
+        double dot = A * C + B * D;
+        double lenSq = C * C + D * D;
+        
+        if (lenSq == 0) return point.distance(lineStart);
+        
+        double param = dot / lenSq;
+        
+        double xx, yy;
+        if (param < 0) {
+            xx = lineStart.x;
+            yy = lineStart.y;
+        } else if (param > 1) {
+            xx = lineEnd.x;
+            yy = lineEnd.y;
+        } else {
+            xx = lineStart.x + param * C;
+            yy = lineStart.y + param * D;
+        }
+        
+        double dx = point.x - xx;
+        double dy = point.y - yy;
+        return Math.sqrt(dx * dx + dy * dy);
     }
 
     /**
@@ -636,5 +724,195 @@ public class GameEngine implements Runnable {
         for (Wire wire : wires) {
             wire.regeneratePath();
         }
+    }
+
+    /**
+     * Returns the count of active systems in the network
+     */
+    public int getActiveSystemCount() {
+        int count = 0;
+        for (System system : systems) {
+            if (system != null) {
+                count++;
+            }
+        }
+        return count;
+    }
+    
+    /**
+     * Returns the current network status
+     */
+    public String getNetworkStatus() {
+        if (systems.isEmpty()) {
+            return "No Systems";
+        }
+        
+        int connectedSystems = 0;
+        for (System system : systems) {
+            if (system != null && !system.getInputPorts().isEmpty()) {
+                connectedSystems++;
+            }
+        }
+        
+        if (connectedSystems == 0) {
+            return "Disconnected";
+        } else if (connectedSystems == systems.size()) {
+            return "Fully Connected";
+        } else {
+            return "Partially Connected";
+        }
+    }
+    
+    /**
+     * Returns the count of active ports in the network
+     */
+    public int getActivePortCount() {
+        int count = 0;
+        for (System system : systems) {
+            if (system != null) {
+                count += system.getInputPorts().size();
+                count += system.getOutputPorts().size();
+            }
+        }
+        return count;
+    }
+    
+    /**
+     * Returns the count of wire connections in the network
+     */
+    public int getWireConnectionCount() {
+        return wires.size();
+    }
+
+    /**
+     * Updates the HUD with current game data
+     */
+    private void updateHUD() {
+        if (gamePanel != null) {
+            // Get remaining wire length from game engine
+            int remainingWireLength = getRemainingWireLength();
+            
+            // Calculate temporal progress (simplified - can be enhanced based on level objectives)
+            int temporalProgress = Math.min(100, (int)((java.lang.System.currentTimeMillis() - gameStartTime) / 1000)); // Progress over time
+            
+            // Get packet loss count
+            int packetLoss = getPacketLossCount();
+            
+            // Get current coins (simplified - can be enhanced based on game mechanics)
+            int coins = 20; // Default starting coins
+            
+            // Update HUD data
+            gamePanel.updateHUDData(remainingWireLength, temporalProgress, packetLoss, coins);
+        }
+    }
+    
+    /**
+     * Returns the count of lost packets
+     */
+    private int getPacketLossCount() {
+        int lostCount = 0;
+        for (MovingPacket packet : movingPackets) {
+            if (packet.isLost()) {
+                lostCount++;
+            }
+        }
+        return lostCount;
+    }
+
+    /**
+     * Calculates the length of a wire based on its path
+     */
+    private int calculateWireLength(Wire wire) {
+        if (wire == null) {
+            return 0;
+        }
+        
+        // Use the wire's built-in length calculation method for accuracy
+        double length = wire.calculateLength();
+        
+        // Convert to integer meters (assuming 1 pixel = 1 meter for simplicity)
+        return (int) length;
+    }
+    
+    /**
+     * Updates the used wire length when a new wire is created
+     */
+    private void updateWireLength(Wire wire) {
+        int wireLength = calculateWireLength(wire);
+        usedWireLength += wireLength;
+        wireLengths.put(wire, wireLength); // Store the original length
+        Logger.getInstance().info("Wire created with length: " + wireLength + "m. Total used: " + usedWireLength + "m");
+    }
+
+    /**
+     * Returns the remaining wire length available
+     */
+    public int getRemainingWireLength() {
+        return Math.max(0, totalWireLength - usedWireLength);
+    }
+    
+    /**
+     * Returns the total wire length used so far
+     */
+    public int getUsedWireLength() {
+        return usedWireLength;
+    }
+
+    /**
+     * Recalculates wire length for all wires and updates the used wire length
+     * This should be called whenever wire paths are modified
+     */
+    public void recalculateAllWireLengths() {
+        int totalUsed = 0;
+        
+        for (Wire wire : wires) {
+            int wireLength = calculateWireLength(wire);
+            totalUsed += wireLength;
+            wireLengths.put(wire, wireLength); // Update stored length
+        }
+        
+        usedWireLength = totalUsed;
+        Logger.getInstance().info("Wire lengths recalculated. Total used: " + usedWireLength + "m");
+    }
+    
+    /**
+     * Updates the wire length for a specific wire and recalculates total
+     * Call this when a specific wire's path is modified
+     */
+    public void updateWireLengthForWire(Wire wire) {
+        // Get the original length of the wire
+        Integer originalLength = wireLengths.get(wire);
+        
+        if (originalLength == null) {
+            Logger.getInstance().warning("Original length not found for wire: " + wire);
+            return;
+        }
+
+        // Recalculate the new length
+        int newLength = calculateWireLength(wire);
+        
+        // Calculate the difference
+        int lengthDifference = newLength - originalLength;
+        
+        // Update the total used length
+        usedWireLength = usedWireLength - originalLength + newLength;
+        
+        // Update the stored original length
+        wireLengths.put(wire, newLength);
+        
+        Logger.getInstance().info("Wire length updated dynamically: " + originalLength + "m -> " + newLength + "m. Total used: " + usedWireLength + "m. Remaining: " + getRemainingWireLength() + "m. Difference: " + lengthDifference + "m");
+    }
+
+    /**
+     * Sets up path change callbacks for all existing wires
+     */
+    private void setupWireCallbacks() {
+        for (Wire wire : wires) {
+            wire.setOnPathChangedCallback(() -> {
+                Logger.getInstance().info("Existing wire path changed - updating length...");
+                updateWireLengthForWire(wire);
+            });
+        }
+        Logger.getInstance().info("Wire callbacks set up for " + wires.size() + " wires");
     }
 }

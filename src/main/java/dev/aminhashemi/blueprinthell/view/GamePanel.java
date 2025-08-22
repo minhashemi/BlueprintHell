@@ -101,9 +101,9 @@ public class GamePanel extends JPanel {
         // Set up HUD styling
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         
-        // HUD background (semi-transparent dark panel)
-        int hudWidth = 250;
-        int hudHeight = 120;
+        // HUD background (semi-transparent dark panel) - Fixed size for required content only
+        int hudWidth = 280;
+        int hudHeight = 160;
         int hudX = getWidth() - hudWidth - 20;
         int hudY = 20;
         
@@ -121,29 +121,45 @@ public class GamePanel extends JPanel {
         g.setFont(new Font("Arial", Font.BOLD, 16));
         g.drawString("Game Status", hudX + 15, hudY + 25);
         
-        // HUD content
+        // HUD content - Only required information from documentation
         g.setFont(new Font("Arial", Font.PLAIN, 14));
         int textY = hudY + 45;
         int lineHeight = 20;
         
-        // Remaining Wire Length
-        g.setColor(Color.CYAN);
+        // Required: Wire Length
+        if (remainingWireLength > 2000) {
+            g.setColor(Color.CYAN);
+        } else if (remainingWireLength > 500) {
+            g.setColor(Color.ORANGE);
+        } else {
+            g.setColor(Color.RED);
+        }
         g.drawString("Wire Length: " + remainingWireLength + "m", hudX + 15, textY);
         textY += lineHeight;
         
-        // Temporal Progress
-        g.setColor(Color.YELLOW);
-        g.drawString("Progress: " + temporalProgress + "%", hudX + 15, textY);
-        textY += lineHeight;
-        
-        // Packet Loss
+        // Required: Packet Loss
         g.setColor(Color.RED);
         g.drawString("Packet Loss: " + packetLoss, hudX + 15, textY);
         textY += lineHeight;
         
-        // Coins
+        // Required: Coins
         g.setColor(Color.decode("#FFD700")); // Gold color
         g.drawString("Coins: " + coins, hudX + 15, textY);
+        textY += lineHeight + 5;
+        
+        // Required: Active Network Capabilities
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 12));
+        g.drawString("Network Status:", hudX + 15, textY);
+        textY += 15;
+        
+        g.setFont(new Font("Arial", Font.PLAIN, 12));
+        g.setColor(Color.GREEN);
+        g.drawString("Active Systems: " + getActiveSystemCount(), hudX + 15, textY);
+        textY += lineHeight;
+        
+        g.setColor(Color.BLUE);
+        g.drawString("Wire Connections: " + getWireConnectionCount(), hudX + 15, textY);
         
         // HUD toggle indicator
         g.setColor(new Color(255, 255, 255, 150));
@@ -169,5 +185,47 @@ public class GamePanel extends JPanel {
         showHUD = true;
         hudToggleTime = System.currentTimeMillis();
         repaint();
+    }
+    
+    // Active Network Capabilities Methods (Phase 2 Requirement)
+    
+    /**
+     * Returns the count of active systems in the network
+     */
+    private int getActiveSystemCount() {
+        if (gameEngine != null) {
+            return gameEngine.getActiveSystemCount();
+        }
+        return 0;
+    }
+    
+    /**
+     * Returns the current network status
+     */
+    private String getNetworkStatus() {
+        if (gameEngine != null) {
+            return gameEngine.getNetworkStatus();
+        }
+        return "Unknown";
+    }
+    
+    /**
+     * Returns the count of active ports in the network
+     */
+    private int getActivePortCount() {
+        if (gameEngine != null) {
+            return gameEngine.getActivePortCount();
+        }
+        return 0;
+    }
+    
+    /**
+     * Returns the count of wire connections in the network
+     */
+    private int getWireConnectionCount() {
+        if (gameEngine != null) {
+            return gameEngine.getWireConnectionCount();
+        }
+        return 0;
     }
 }
