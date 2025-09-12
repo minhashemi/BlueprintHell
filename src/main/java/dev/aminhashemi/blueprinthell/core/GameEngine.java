@@ -12,6 +12,9 @@ import dev.aminhashemi.blueprinthell.model.entities.systems.MaliciousSystem;
 import dev.aminhashemi.blueprinthell.model.entities.systems.SpySystem;
 import dev.aminhashemi.blueprinthell.model.entities.systems.Port;
 import dev.aminhashemi.blueprinthell.model.entities.packets.MessengerPacket;
+import dev.aminhashemi.blueprinthell.model.entities.packets.ProtectedPacket;
+import dev.aminhashemi.blueprinthell.model.entities.packets.ConfidentialPacket;
+import dev.aminhashemi.blueprinthell.model.entities.packets.BulkPacket;
 import dev.aminhashemi.blueprinthell.model.world.ArcPoint;
 import dev.aminhashemi.blueprinthell.model.world.Wire;
 import dev.aminhashemi.blueprinthell.model.world.Impact;
@@ -311,43 +314,24 @@ public class GameEngine implements Runnable {
      * This is called when packets enter systems, not when they reach destinations
      */
     public void addCoinsForPacketEntry(Packet packet) {
-        PacketType packetType = packet.getType();
         int coinsToAdd = 0;
         
-        switch (packetType) {
-            case GREEN_DIAMOND_SMALL:
-                // Size: 2 units - No coins added
-                coinsToAdd = 0;
-                break;
-            case GREEN_DIAMOND_LARGE:
-                // Size: 3 units - Adds 3 coins
-                coinsToAdd = 3;
-                break;
-            case INFINITY_SYMBOL:
-                // Size: 1 unit - Adds 1 coin
-                coinsToAdd = 1;
-                break;
-            case PADLOCK_ICON:
-                // Size: Twice the initial packet - Adds 5 coins
-                coinsToAdd = 5;
-                break;
-            case CAMOUFLAGE_ICON_SMALL:
-                // Size: 4 units - Adds 3 coins
-                coinsToAdd = 3;
-                break;
-            case CAMOUFLAGE_ICON_LARGE:
-                // Size: 6 units - Adds 4 coins
-                coinsToAdd = 4;
-                break;
-            default:
-                // Phase 1 packets - No coins added
-                coinsToAdd = 0;
-                break;
+        // Handle specialized packet types
+        if (packet instanceof ProtectedPacket) {
+            coinsToAdd = ((ProtectedPacket) packet).getCoinReward();
+        } else if (packet instanceof ConfidentialPacket) {
+            coinsToAdd = ((ConfidentialPacket) packet).getCoinReward();
+        } else if (packet instanceof BulkPacket) {
+            coinsToAdd = ((BulkPacket) packet).getCoinReward();
+        } else {
+            // Handle regular packet types
+            PacketType packetType = packet.getType();
+            coinsToAdd = packetType.getCoinReward();
         }
         
         if (coinsToAdd > 0) {
             addCoins(coinsToAdd);
-            Logger.getInstance().info("Packet " + packetType + " entered system! +" + coinsToAdd + " coins added.");
+            Logger.getInstance().info("Packet " + packet.getType() + " entered system! +" + coinsToAdd + " coins added.");
         }
     }
 
