@@ -9,6 +9,7 @@ import dev.aminhashemi.blueprinthell.model.entities.systems.System;
 import dev.aminhashemi.blueprinthell.model.entities.systems.ReferenceSystem;
 import dev.aminhashemi.blueprinthell.model.entities.systems.VPNSystem;
 import dev.aminhashemi.blueprinthell.model.entities.systems.MaliciousSystem;
+import dev.aminhashemi.blueprinthell.model.entities.systems.SpySystem;
 import dev.aminhashemi.blueprinthell.model.entities.systems.Port;
 import dev.aminhashemi.blueprinthell.model.entities.packets.MessengerPacket;
 import dev.aminhashemi.blueprinthell.model.world.ArcPoint;
@@ -25,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.Iterator;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Map;
@@ -71,7 +71,7 @@ public class GameEngine implements Runnable {
     }
 
     private void init() {
-        LevelData levelData = LevelLoader.loadLevel(1);
+        LevelData levelData = LevelLoader.loadLevel(3); // Load level 3 to test SpySystem
         if (levelData == null || levelData.systems == null) {
             Logger.getInstance().error("Failed to load level data. Game cannot start.");
             return;
@@ -88,11 +88,17 @@ public class GameEngine implements Runnable {
                 case "MALICIOUS":
                     systems.add(new MaliciousSystem(sysData.position.x, sysData.position.y, sysData));
                     break;
+                case "SPY":
+                    systems.add(new SpySystem(sysData.position.x, sysData.position.y, sysData));
+                    break;
                 default:
                     Logger.getInstance().error("Unknown system type in level file: " + sysData.type);
                     break;
             }
         }
+        
+        // Set up spy network connections
+        setupSpyNetwork();
         
         // Set up wire callbacks for dynamic length updates
         setupWireCallbacks();
@@ -360,7 +366,7 @@ public class GameEngine implements Runnable {
             return;
         }
 
-        PortType packetPortType = getPortTypeForPacket(packet.getType());
+        // PortType packetPortType = getPortTypeForPacket(packet.getType()); // Not used in current implementation
         List<Wire> compatibleWires = outgoingWires.stream()
                 .filter(wire -> isPortCompatible(wire.getStartPort().getType(), packet.getType()))
                 .collect(Collectors.toList());
@@ -1014,6 +1020,29 @@ public class GameEngine implements Runnable {
         wireLengths.put(wire, newLength);
         
         Logger.getInstance().info("Wire length updated dynamically: " + originalLength + "m -> " + newLength + "m. Total used: " + usedWireLength + "m. Remaining: " + getRemainingWireLength() + "m. Difference: " + lengthDifference + "m");
+    }
+
+    /**
+     * Sets up spy network connections between all SpySystems
+     */
+    private void setupSpyNetwork() {
+        List<SpySystem> spySystems = new ArrayList<>();
+        
+        // Collect all SpySystems
+        for (System system : systems) {
+            if (system instanceof SpySystem) {
+                spySystems.add((SpySystem) system);
+            }
+        }
+        
+        // Set up spy network for each SpySystem
+        for (SpySystem spySystem : spySystems) {
+            spySystem.setSpyNetwork(spySystems);
+        }
+        
+        if (!spySystems.isEmpty()) {
+            Logger.getInstance().info("Spy network established with " + spySystems.size() + " SpySystems");
+        }
     }
 
     /**
