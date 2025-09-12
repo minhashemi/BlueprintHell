@@ -1,0 +1,121 @@
+{
+  "levelNumber": 3,
+  "levelName": "Spy Network Test",
+  "playerStart": {
+    "initialCoins": 30,
+    "initialWireLength": 10000
+  },
+  "systems": [
+    {
+      "id": "ref_sys_A",
+      "type": "REFERENCE",
+      "position": { "x": 100, "y": 200 },
+      "inputPorts": [
+      ],
+      "outputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" },
+        { "type": "PADLOCK" },
+        { "type": "CAMOUFLAGE" }
+      ],
+      "packetGeneration": {
+        "packetType": "MIXED",
+        "count": 20,
+        "frequency": 1.5
+      }
+    },
+    {
+      "id": "ref_sys_B",
+      "type": "REFERENCE",
+      "position": { "x": 950, "y": 450 },
+      "inputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" },
+        { "type": "PADLOCK" },
+        { "type": "CAMOUFLAGE" }
+      ],
+      "outputPorts": [
+      ]
+    },
+    {
+      "id": "spy_sys_1",
+      "type": "SPY",
+      "position": { "x": 300, "y": 300 },
+      "inputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" },
+        { "type": "PADLOCK" },
+        { "type": "CAMOUFLAGE" }
+      ],
+      "outputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" },
+        { "type": "PADLOCK" },
+        { "type": "CAMOUFLAGE" }
+      ]
+    },
+    {
+      "id": "spy_sys_2",
+      "type": "SPY",
+      "position": { "x": 600, "y": 200 },
+      "inputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" },
+        { "type": "PADLOCK" },
+        { "type": "CAMOUFLAGE" }
+      ],
+      "outputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" },
+        { "type": "PADLOCK" },
+        { "type": "CAMOUFLAGE" }
+      ]
+    },
+    {
+      "id": "spy_sys_3",
+      "type": "SPY",
+      "position": { "x": 750, "y": 400 },
+      "inputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" },
+        { "type": "PADLOCK" },
+        { "type": "CAMOUFLAGE" }
+      ],
+      "outputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" },
+        { "type": "PADLOCK" },
+        { "type": "CAMOUFLAGE" }
+      ]
+    },
+    {
+      "id": "vpn_sys",
+      "type": "VPN",
+      "position": { "x": 450, "y": 350 },
+      "inputPorts": [
+        { "type": "PADLOCK" },
+        { "type": "CAMOUFLAGE" }
+      ],
+      "outputPorts": [
+        { "type": "PADLOCK" },
+        { "type": "CAMOUFLAGE" }
+      ]
+    }
+  ]
+}
