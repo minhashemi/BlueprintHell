@@ -5,6 +5,8 @@ import dev.aminhashemi.blueprinthell.model.LevelData;
 import dev.aminhashemi.blueprinthell.model.entities.packets.MessengerPacket;
 import dev.aminhashemi.blueprinthell.model.entities.packets.Packet;
 import dev.aminhashemi.blueprinthell.model.entities.packets.PacketType;
+import dev.aminhashemi.blueprinthell.model.entities.packets.ConfidentialPacket;
+import dev.aminhashemi.blueprinthell.model.entities.packets.BulkPacket;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -58,9 +60,28 @@ public class ReferenceSystem extends System {
         }
 
         PacketType randomType = possibleTypes.get(random.nextInt(possibleTypes.size()));
-        Packet newPacket = new MessengerPacket(this.x, this.y, randomType);
+        Packet newPacket = createPacketByType(this.x, this.y, randomType);
 
         engine.spawnPacket(newPacket, this);
+    }
+
+    /**
+     * Creates the appropriate packet type based on the packet type
+     */
+    private Packet createPacketByType(int x, int y, PacketType packetType) {
+        switch (packetType) {
+            case CAMOUFLAGE_ICON_SMALL:
+                return new ConfidentialPacket(x, y, ConfidentialPacket.ConfidentialType.SMALL);
+            case CAMOUFLAGE_ICON_LARGE:
+                return new ConfidentialPacket(x, y, ConfidentialPacket.ConfidentialType.LARGE);
+            case BULK_PACKET_SMALL:
+                return new BulkPacket(x, y, BulkPacket.BulkType.SMALL);
+            case BULK_PACKET_LARGE:
+                return new BulkPacket(x, y, BulkPacket.BulkType.LARGE);
+            default:
+                // All other packet types use MessengerPacket
+                return new MessengerPacket(x, y, packetType);
+        }
     }
 
     @Override
