@@ -4,7 +4,9 @@ import dev.aminhashemi.blueprinthell.core.GameEngine;
 import dev.aminhashemi.blueprinthell.model.entities.systems.PortType;
 import dev.aminhashemi.blueprinthell.model.entities.systems.System;
 import dev.aminhashemi.blueprinthell.model.entities.packets.Packet;
-import dev.aminhashemi.blueprinthell.model.entities.packets.PacketType;
+import dev.aminhashemi.blueprinthell.model.entities.packets.ProtectedPacket;
+import dev.aminhashemi.blueprinthell.model.entities.packets.ConfidentialPacket;
+import dev.aminhashemi.blueprinthell.model.entities.packets.BulkPacket;
 import dev.aminhashemi.blueprinthell.model.world.Wire;
 import dev.aminhashemi.blueprinthell.utils.Logger;
 
@@ -24,14 +26,9 @@ public class MovingPacket {
     private float noiseLevel = 0.0f;
     private boolean isLost = false;
 
-    private static final double SPEED = 2.0; // Pixels per update tick
-
     // Enhanced movement behavior
     private float currentSpeed;
     private float acceleration;
-    private boolean isReturningToSource;
-    private Point sourcePosition;
-    private int collisionCount;
     private boolean spawnProtection = false; // Prevents immediate destruction
     private long spawnTime; // Spawn timestamp
     
@@ -45,9 +42,6 @@ public class MovingPacket {
         // Initialize movement properties
         this.currentSpeed = calculateBaseSpeed();
         this.acceleration = 0.0f;
-        this.isReturningToSource = false;
-        this.sourcePosition = new Point(packet.getX(), packet.getY());
-        this.collisionCount = 0;
         this.spawnTime = java.lang.System.currentTimeMillis();
         
         if (!path.isEmpty()) {
@@ -60,12 +54,28 @@ public class MovingPacket {
             return;
         }
 
+        // Update packet-specific behavior first
+        packet.update(engine);
+        
+        // Update speed based on packet type and current conditions
+        updateSpeed();
+        
+        // Check if packet is on a curve (has arc points)
+        boolean isOnCurve = isOnCurvedSegment();
+        
+        // Apply curve-specific behavior for bulk packets
+        if (packet instanceof BulkPacket) {
+            ((BulkPacket) packet).setOnCurve(isOnCurve);
+        }
+
         Point start = path.get(currentSegmentIndex);
         Point end = path.get(currentSegmentIndex + 1);
         double segmentLength = start.distance(end);
         if (segmentLength == 0) segmentLength = 1; // Avoid division by zero
 
-        double progressThisUpdate = SPEED / segmentLength;
+        // Calculate movement based on current speed and packet type
+        double effectiveSpeed = calculateEffectiveSpeed();
+        double progressThisUpdate = effectiveSpeed / segmentLength;
         progressOnSegment += progressThisUpdate;
 
         if (progressOnSegment >= 1.0) {
@@ -178,47 +188,71 @@ public class MovingPacket {
             case GREEN_DIAMOND_SMALL:
                 if (!isCompatible) {
                     currentSpeed = 0.5f; // Half speed from incompatible ports
+                    acceleration = 0.0f; // No acceleration
                 } else {
                     currentSpeed = 1.0f; // Normal speed from compatible ports
+                    acceleration = 0.0f; // No acceleration
                 }
                 break;
                 
             case GREEN_DIAMOND_LARGE:
                 if (!isCompatible) {
-                    currentSpeed = 1.5f; // Accelerated through incompatible ports
+                    currentSpeed = 1.0f; // Start at normal speed
+                    acceleration = 0.2f; // Accelerate through incompatible ports
                 } else {
                     currentSpeed = 1.0f; // Constant speed from compatible ports
+                    acceleration = 0.0f; // No acceleration
                 }
                 break;
                 
             case INFINITY_SYMBOL:
                 if (!isCompatible) {
+                    currentSpeed = 1.0f; // Start at normal speed
                     acceleration = -0.1f; // Deceleration through incompatible ports
                 } else {
+                    currentSpeed = 1.0f; // Start at normal speed
                     acceleration = 0.1f; // Constant acceleration from compatible ports
                 }
                 break;
                 
             case CAMOUFLAGE_ICON_SMALL:
             case CAMOUFLAGE_ICON_LARGE:
-                // Check if passing by malicious, spy, or VPN systems
-                if (portType == PortType.MALICIOUS || portType == PortType.SPY || portType == PortType.VPN) {
-                    currentSpeed = Math.max(currentSpeed * 0.5f, 0.3f); // Slow down to avoid detection
+                // Confidential packets slow down near malicious systems
+                if (portType == PortType.MALICIOUS || portType == PortType.SPY) {
+                    currentSpeed = 0.5f; // Slow down to avoid detection
+                    acceleration = 0.0f;
+                } else {
+                    currentSpeed = 1.0f; // Normal speed
+                    acceleration = 0.0f;
                 }
                 break;
+                
+            case PADLOCK_ICON:
+                // Protected packets maintain normal speed but with random variation
+                currentSpeed = 1.0f;
+                acceleration = 0.0f;
+                break;
+                
+            default:
+                // Other packets maintain normal speed
+                currentSpeed = 1.0f;
+                acceleration = 0.0f;
+                break;
         }
+        
+        Logger.getInstance().debug("Applied port compatibility: " + packet.getType() + 
+                                 " compatible=" + isCompatible + 
+                                 " speed=" + currentSpeed + 
+                                 " acceleration=" + acceleration);
     }
     
     /**
      * Handles collision behavior based on packet type
      */
     public void handleCollision() {
-        collisionCount++;
-        
         switch (packet.getType()) {
             case INFINITY_SYMBOL:
                 // Return to source system on collision
-                isReturningToSource = true;
                 // Reverse the path to return to source
                 reversePath();
                 break;
@@ -250,13 +284,88 @@ public class MovingPacket {
     }
     
     /**
-     * Updates the packet's speed based on acceleration
+     * Updates the packet's speed based on acceleration and packet type
      */
     private void updateSpeed() {
-        if (packet.getType() == PacketType.INFINITY_SYMBOL) {
-            currentSpeed += acceleration;
-            currentSpeed = Math.max(0.1f, Math.min(2.0f, currentSpeed)); // Clamp speed
+        switch (packet.getType()) {
+            case INFINITY_SYMBOL:
+                // Infinity packets have constant acceleration/deceleration
+                currentSpeed += acceleration;
+                currentSpeed = Math.max(0.1f, Math.min(2.0f, currentSpeed)); // Clamp speed
+                break;
+                
+            case GREEN_DIAMOND_LARGE:
+                // Large diamond packets accelerate through incompatible ports
+                if (acceleration > 0) {
+                    currentSpeed += acceleration * 0.1f; // Gradual acceleration
+                    currentSpeed = Math.min(2.5f, currentSpeed); // Cap at 2.5x speed
+                }
+                break;
+                
+            case CAMOUFLAGE_ICON_SMALL:
+            case CAMOUFLAGE_ICON_LARGE:
+                // Confidential packets adjust speed based on nearby packets
+                if (packet instanceof ConfidentialPacket) {
+                    ConfidentialPacket confPacket = (ConfidentialPacket) packet;
+                    currentSpeed = confPacket.getCurrentSpeed();
+                }
+                break;
+                
+            case PADLOCK_ICON:
+                // Protected packets have random movement patterns
+                if (packet instanceof ProtectedPacket) {
+                    // Speed varies randomly for protected packets
+                    currentSpeed = 0.8f + (float)(Math.random() * 0.4f); // 0.8 to 1.2
+                }
+                break;
+                
+            default:
+                // Other packets maintain their base speed
+                break;
         }
+    }
+    
+    /**
+     * Calculates the effective speed for movement based on packet type and conditions
+     */
+    private double calculateEffectiveSpeed() {
+        double baseSpeed = currentSpeed * 2.0; // Convert to pixels per update
+        
+        // Apply packet-specific speed modifications
+        if (packet instanceof BulkPacket) {
+            BulkPacket bulkPacket = (BulkPacket) packet;
+            baseSpeed *= bulkPacket.getCurrentSpeed();
+        } else if (packet instanceof ConfidentialPacket) {
+            ConfidentialPacket confPacket = (ConfidentialPacket) packet;
+            baseSpeed *= confPacket.getCurrentSpeed();
+        }
+        
+        return baseSpeed;
+    }
+    
+    /**
+     * Checks if the current segment is curved (has arc points)
+     */
+    private boolean isOnCurvedSegment() {
+        // Check if the wire has arc points and we're between them
+        List<Point> arcPoints = wire.getArcPoints().stream()
+            .map(arc -> arc.getPosition())
+            .collect(java.util.stream.Collectors.toList());
+            
+        if (arcPoints.isEmpty()) {
+            return false; // No curves
+        }
+        
+        // Check if current segment involves an arc point
+        if (currentSegmentIndex < path.size() - 1) {
+            Point currentPoint = path.get(currentSegmentIndex);
+            Point nextPoint = path.get(currentSegmentIndex + 1);
+            
+            // If either point is an arc point, we're on a curve
+            return arcPoints.contains(currentPoint) || arcPoints.contains(nextPoint);
+        }
+        
+        return false;
     }
     
     public void increaseNoise(float amount) {
