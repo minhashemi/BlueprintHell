@@ -47,6 +47,7 @@ public class GameEngine implements Runnable {
     private List<Wire> wires;
     private List<MovingPacket> movingPackets;
     private ImpactManager impactManager;
+    private TimeTravelManager timeTravelManager;
 
     private System draggedSystem = null;
     private ArcPoint draggedArcPoint = null;
@@ -69,6 +70,7 @@ public class GameEngine implements Runnable {
         wires = new ArrayList<>();
         movingPackets = new ArrayList<>();
         impactManager = new ImpactManager();
+        timeTravelManager = new TimeTravelManager();
         lastUpdateTime = java.lang.System.nanoTime();
         gameStartTime = java.lang.System.currentTimeMillis(); // Initialize game start time
         init();
@@ -153,21 +155,44 @@ public class GameEngine implements Runnable {
     }
 
     private void update() {
-        // Update all systems (ReferenceSystem has special spawning logic)
-        for (System system : systems) {
-            if (system instanceof ReferenceSystem) {
-                ((ReferenceSystem) system).update(this);
-            } else {
-                system.update(this);
+        // Only update systems and packets if not in time travel execution mode
+        if (!timeTravelManager.isTimeTravelMode() || !timeTravelManager.isExecuting() || timeTravelManager.isPaused()) {
+            // Update all systems (ReferenceSystem has special spawning logic)
+            for (System system : systems) {
+                if (system instanceof ReferenceSystem) {
+                    ((ReferenceSystem) system).update(this);
+                } else {
+                    system.update(this);
+                }
             }
-        }
 
-        // Update active packets
-        for (MovingPacket movingPacket : new ArrayList<>(movingPackets)) {
-            if (movingPacket == null || movingPacket.isLost()) {
-                continue;
+            // Update active packets
+            for (MovingPacket movingPacket : new ArrayList<>(movingPackets)) {
+                if (movingPacket == null || movingPacket.isLost()) {
+                    continue;
+                }
+                movingPacket.update(this);
+                
+                // Check if packet has reached its destination (for time travel tracking)
+                if (movingPacket.hasArrived()) {
+                    timeTravelManager.recordPacketReturn();
+                    Logger.getInstance().debug("Packet returned to destination");
+                }
             }
-            movingPacket.update(this);
+        } else {
+            // During time travel execution, only update packets for movement
+            for (MovingPacket movingPacket : new ArrayList<>(movingPackets)) {
+                if (movingPacket == null || movingPacket.isLost()) {
+                    continue;
+                }
+                movingPacket.update(this);
+                
+                // Check if packet has reached its destination (for time travel tracking)
+                if (movingPacket.hasArrived()) {
+                    timeTravelManager.recordPacketReturn();
+                    Logger.getInstance().debug("Packet returned to destination");
+                }
+            }
         }
         
         // Handle packet collisions and cleanup
@@ -178,6 +203,9 @@ public class GameEngine implements Runnable {
         
         // Handle wire degradation and cleanup
         cleanupDestroyedWires();
+        
+        // Update time travel manager
+        timeTravelManager.update(this);
         
         updateHUD();
     }
@@ -200,6 +228,9 @@ public class GameEngine implements Runnable {
         for (MovingPacket packet : packetsToRemove) {
             movingPackets.remove(packet);
             AudioManager.getInstance().playSound("boom.wav");
+            
+            // Record packet loss for time travel
+            timeTravelManager.recordPacketLoss();
         }
     }
     
@@ -490,6 +521,10 @@ public class GameEngine implements Runnable {
             movingPacket.setSpawnProtection(true);
             
             movingPackets.add(movingPacket);
+            
+            // Record packet spawn for time travel
+            timeTravelManager.recordPacketSpawn();
+            
             Logger.getInstance().info("Packet " + packet.getType() + " spawned with spawn protection. Total packets: " + movingPackets.size());
         } else {
             Logger.getInstance().warning("No available wires for packet spawning from " + spawner);
@@ -1307,5 +1342,70 @@ public class GameEngine implements Runnable {
      */
     public Map<Wire, Integer> getWireLengths() {
         return wireLengths;
+    }
+    
+    // ==================== TIME TRAVEL SYSTEM ====================
+    
+    /**
+     * Enters time travel mode
+     */
+    public void enterTimeTravelMode() {
+        timeTravelManager.enterTimeTravelMode();
+    }
+    
+    /**
+     * Exits time travel mode
+     */
+    public void exitTimeTravelMode() {
+        timeTravelManager.exitTimeTravelMode();
+    }
+    
+    /**
+     * Toggles time travel mode
+     */
+    public void toggleTimeTravelMode() {
+        if (timeTravelManager.isTimeTravelMode()) {
+            exitTimeTravelMode();
+        } else {
+            enterTimeTravelMode();
+        }
+        Logger.getInstance().info("Time Travel Mode: " + (timeTravelManager.isTimeTravelMode() ? "ON" : "OFF"));
+    }
+    
+    /**
+     * Starts network execution
+     */
+    public void startNetworkExecution() {
+        timeTravelManager.startExecution(this);
+    }
+    
+    /**
+     * Pauses/resumes time travel
+     */
+    public void toggleTimeTravelPause() {
+        if (timeTravelManager.isTimeTravelMode()) {
+            timeTravelManager.setPaused(!timeTravelManager.isPaused());
+        }
+    }
+    
+    /**
+     * Seeks to a specific time
+     */
+    public void seekToTime(long time) {
+        timeTravelManager.seekToTime(this, time);
+    }
+    
+    /**
+     * Sets playback speed
+     */
+    public void setPlaybackSpeed(double speed) {
+        timeTravelManager.setPlaybackSpeed(speed);
+    }
+    
+    /**
+     * Gets time travel manager
+     */
+    public TimeTravelManager getTimeTravelManager() {
+        return timeTravelManager;
     }
 }
