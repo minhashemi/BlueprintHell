@@ -1,6 +1,6 @@
 {
-  "coins": 2,
-  "usedWireLength": 390,
+  "coins": 4,
+  "usedWireLength": 492,
   "totalWireLength": 8000,
   "isWiringMode": false,
   "systems": [
@@ -165,8 +165,8 @@
     },
     {
       "type": "SPY",
-      "x": 600,
-      "y": 200,
+      "x": 699,
+      "y": 141,
       "id": "SpySystem_600_200",
       "inputPorts": [
         {
@@ -351,29 +351,8 @@
       "isDestroyed": false
     }
   ],
-  "movingPackets": [
-    {
-      "packet": {
-        "type": "SQUARE_MESSENGER",
-        "x": 478,
-        "y": 205,
-        "packetClass": "MessengerPacket",
-        "properties": {}
-      },
-      "sourceSystemId": "ReferenceSystem_100_200",
-      "destinationSystemId": "SpySystem_600_200",
-      "wireId": "ReferenceSystem_100_200_OUT_0_SpySystem_600_200_IN_0",
-      "progress": 0.7179487179487165,
-      "noiseLevel": 0.0,
-      "hasSpawnProtection": true,
-      "spawnProtectionEndTime": 0,
-      "currentSpeed": 1.0,
-      "acceleration": 0.0,
-      "isOnCurve": false,
-      "wirePassCount": 0
-    }
-  ],
+  "movingPackets": [],
   "wireLengths": {
-    "ReferenceSystem_100_200_OUT_0_SpySystem_600_200_IN_0": 390
+    "ReferenceSystem_100_200_OUT_0_SpySystem_600_200_IN_0": 492
   }
 }
