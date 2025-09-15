@@ -84,6 +84,7 @@ public class MovingPacket {
                 // Packet arrived at destination
                 hasArrived = true;
                 packet.setPosition(end.x - packet.getWidth() / 2, end.y - packet.getHeight() / 2);
+                Logger.getInstance().info("Packet " + packet.getType() + " arrived at destination system");
                 engine.handlePacketArrival(this);
                 return;
             }

@@ -22,11 +22,13 @@ import dev.aminhashemi.blueprinthell.utils.LevelLoader;
 import dev.aminhashemi.blueprinthell.utils.AudioManager;
 import dev.aminhashemi.blueprinthell.utils.Logger;
 import dev.aminhashemi.blueprinthell.utils.SaveManager;
+import dev.aminhashemi.blueprinthell.model.SaveData;
 import dev.aminhashemi.blueprinthell.view.GamePanel;
 
 import java.awt.*;
 import java.awt.geom.Line2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,6 +36,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Map;
 import java.util.HashMap;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class GameEngine implements Runnable {
 
@@ -47,7 +52,6 @@ public class GameEngine implements Runnable {
     private List<Wire> wires;
     private List<MovingPacket> movingPackets;
     private ImpactManager impactManager;
-    private TimeTravelManager timeTravelManager;
 
     private System draggedSystem = null;
     private ArcPoint draggedArcPoint = null;
@@ -56,7 +60,6 @@ public class GameEngine implements Runnable {
     private Wire previewWire = null;
     private Point currentMousePos = new Point();
     private long lastUpdateTime;
-    private long gameStartTime; // Game start time for HUD progress calculation
     private int totalWireLength = 8000; // Total available wire length
     private int usedWireLength = 0; // Wire length already used
     private Map<Wire, Integer> wireLengths = new HashMap<>(); // Track individual wire lengths
@@ -64,13 +67,32 @@ public class GameEngine implements Runnable {
     private long lastSpawnTime = 0; // Prevent multiple spawns
     private static final long SPAWN_COOLDOWN = 500; // 500ms between spawns
     
+    // ==================== TIME TRAVEL SYSTEM ====================
+    private boolean isTimeTravelMode = false;
+    private boolean isPaused = false;
+    private long gameStartTime = 0;
+    private long currentGameTime = 0;
+    private long lastSnapshotTime = 0;
+    private int snapshotInterval = 16; // 60 FPS = 16ms intervals
+    private int timeTravelWindowSeconds = 5; // How many seconds back we can go
+    private List<SaveData> timeSnapshots = new ArrayList<>();
+    private int currentSnapshotIndex = -1;
+    private String snapshotsDirectory = "snapshots";
+    private int snapshotCounter = 0;
+    private long timeTravelStartTime = 0;
+    
+    // Time travel controls
+    private boolean timeTravelLeftPressed = false;
+    private boolean timeTravelRightPressed = false;
+    private long lastTimeTravelInput = 0;
+    private int timeTravelInputDelay = 100; // ms between time travel inputs
+    
     public GameEngine(GamePanel gamePanel) {
         this.gamePanel = gamePanel;
         systems = new ArrayList<>();
         wires = new ArrayList<>();
         movingPackets = new ArrayList<>();
         impactManager = new ImpactManager();
-        timeTravelManager = new TimeTravelManager();
         lastUpdateTime = java.lang.System.nanoTime();
         gameStartTime = java.lang.System.currentTimeMillis(); // Initialize game start time
         init();
@@ -105,6 +127,9 @@ public class GameEngine implements Runnable {
         
         // Set up spy network connections
         setupSpyNetwork();
+        
+        // Load wires from level data
+        loadWiresFromLevel(levelData);
         
         // Set up wire callbacks for dynamic length updates
         setupWireCallbacks();
@@ -155,44 +180,39 @@ public class GameEngine implements Runnable {
     }
 
     private void update() {
-        // Only update systems and packets if not in time travel execution mode
-        if (!timeTravelManager.isTimeTravelMode() || !timeTravelManager.isExecuting() || timeTravelManager.isPaused()) {
-            // Update all systems (ReferenceSystem has special spawning logic)
-            for (System system : systems) {
-                if (system instanceof ReferenceSystem) {
-                    ((ReferenceSystem) system).update(this);
-                } else {
-                    system.update(this);
-                }
+        if (isPaused && !isTimeTravelMode) {
+            return; // Don't update when paused
+        }
+        
+        if (isTimeTravelMode) {
+            updateTimeTravel();
+            return;
+        }
+        
+        // Update game time
+        currentGameTime = java.lang.System.currentTimeMillis() - gameStartTime;
+        
+        // Create snapshots for time travel
+        if (currentGameTime - lastSnapshotTime >= snapshotInterval) {
+            createTimeSnapshot();
+            lastSnapshotTime = currentGameTime;
+        }
+        
+        // Update all systems (ReferenceSystem has special spawning logic)
+        for (System system : systems) {
+            if (system instanceof ReferenceSystem) {
+                ((ReferenceSystem) system).update(this);
+            } else {
+                system.update(this);
             }
+        }
 
-            // Update active packets
-            for (MovingPacket movingPacket : new ArrayList<>(movingPackets)) {
-                if (movingPacket == null || movingPacket.isLost()) {
-                    continue;
-                }
-                movingPacket.update(this);
-                
-                // Check if packet has reached its destination (for time travel tracking)
-                if (movingPacket.hasArrived()) {
-                    timeTravelManager.recordPacketReturn();
-                    Logger.getInstance().debug("Packet returned to destination");
-                }
+        // Update active packets
+        for (MovingPacket movingPacket : new ArrayList<>(movingPackets)) {
+            if (movingPacket == null || movingPacket.isLost()) {
+                continue;
             }
-        } else {
-            // During time travel execution, only update packets for movement
-            for (MovingPacket movingPacket : new ArrayList<>(movingPackets)) {
-                if (movingPacket == null || movingPacket.isLost()) {
-                    continue;
-                }
-                movingPacket.update(this);
-                
-                // Check if packet has reached its destination (for time travel tracking)
-                if (movingPacket.hasArrived()) {
-                    timeTravelManager.recordPacketReturn();
-                    Logger.getInstance().debug("Packet returned to destination");
-                }
-            }
+            movingPacket.update(this);
         }
         
         // Handle packet collisions and cleanup
@@ -203,9 +223,6 @@ public class GameEngine implements Runnable {
         
         // Handle wire degradation and cleanup
         cleanupDestroyedWires();
-        
-        // Update time travel manager
-        timeTravelManager.update(this);
         
         updateHUD();
     }
@@ -228,9 +245,6 @@ public class GameEngine implements Runnable {
         for (MovingPacket packet : packetsToRemove) {
             movingPackets.remove(packet);
             AudioManager.getInstance().playSound("boom.wav");
-            
-            // Record packet loss for time travel
-            timeTravelManager.recordPacketLoss();
         }
     }
     
@@ -326,6 +340,32 @@ public class GameEngine implements Runnable {
         g.drawString("Wire System: Collision Detection Active", 10, 60);
         g.drawString("Arc Points: 1 coin each", 10, 80);
         g.drawString("Wire Degradation: 3 bulk packet limit", 10, 100);
+        
+        // Display time travel status
+        if (isTimeTravelMode) {
+            List<String> availableSnapshots = getAvailableSnapshotFiles();
+            g.setColor(Color.MAGENTA);
+            g.setFont(new Font("Arial", Font.BOLD, 16));
+            g.drawString("TIME TRAVEL MODE", 10, 140);
+            g.setFont(new Font("Arial", Font.PLAIN, 12));
+            g.drawString("Snapshot: " + (currentSnapshotIndex + 1) + "/" + availableSnapshots.size(), 10, 160);
+            g.drawString("Use LEFT/RIGHT arrows to navigate", 10, 180);
+            g.drawString("Press T to exit time travel", 10, 200);
+        } else if (isPaused) {
+            g.setColor(Color.YELLOW);
+            g.setFont(new Font("Arial", Font.BOLD, 16));
+            g.drawString("GAME PAUSED", 10, 140);
+            g.setFont(new Font("Arial", Font.PLAIN, 12));
+            g.drawString("Press P to resume", 10, 160);
+            g.drawString("Press T for time travel", 10, 180);
+        } else {
+            // Display time travel info when not in time travel mode
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Arial", Font.PLAIN, 10));
+            g.drawString("Time: " + (currentGameTime / 1000.0) + "s", 10, 140);
+            g.drawString("Snapshots: " + timeSnapshots.size() + " (disk: " + getDiskSnapshotCount() + ")", 10, 160);
+            g.drawString("SPACE=spawn, P=pause, T=time travel", 10, 180);
+        }
     }
 
     private void drawPreviewWire(Graphics2D g) {
@@ -521,11 +561,8 @@ public class GameEngine implements Runnable {
             movingPacket.setSpawnProtection(true);
             
             movingPackets.add(movingPacket);
-            
-            // Record packet spawn for time travel
-            timeTravelManager.recordPacketSpawn();
-            
             Logger.getInstance().info("Packet " + packet.getType() + " spawned with spawn protection. Total packets: " + movingPackets.size());
+            Logger.getInstance().info("Packet path has " + movingPacket.getWire().getAllPoints().size() + " points");
         } else {
             Logger.getInstance().warning("No available wires for packet spawning from " + spawner);
         }
@@ -1153,6 +1190,55 @@ public class GameEngine implements Runnable {
     }
 
     /**
+     * Loads wires from level data
+     */
+    private void loadWiresFromLevel(LevelData levelData) {
+        if (levelData.wires == null || levelData.wires.isEmpty()) {
+            Logger.getInstance().info("No wires defined in level data");
+            return;
+        }
+        
+        // Create a map of system IDs to systems for quick lookup
+        Map<String, System> systemMap = new HashMap<>();
+        for (System system : systems) {
+            systemMap.put(system.getId(), system);
+        }
+        
+        int wireCount = 0;
+        for (LevelData.WireData wireData : levelData.wires) {
+            System startSystem = systemMap.get(wireData.startSystemId);
+            System endSystem = systemMap.get(wireData.endSystemId);
+            
+            if (startSystem == null || endSystem == null) {
+                Logger.getInstance().warning("Cannot create wire: system not found. Start: " + wireData.startSystemId + ", End: " + wireData.endSystemId);
+                continue;
+            }
+            
+            // Get the ports
+            List<Port> startPorts = startSystem.getOutputPorts();
+            List<Port> endPorts = endSystem.getInputPorts();
+            
+            if (wireData.startPortIndex >= startPorts.size() || wireData.endPortIndex >= endPorts.size()) {
+                Logger.getInstance().warning("Cannot create wire: port index out of bounds. Start: " + wireData.startPortIndex + ", End: " + wireData.endPortIndex);
+                continue;
+            }
+            
+            Port startPort = startPorts.get(wireData.startPortIndex);
+            Port endPort = endPorts.get(wireData.endPortIndex);
+            
+            // Create the wire
+            Wire wire = new Wire(startPort);
+            wire.setEndPort(endPort);
+            wires.add(wire);
+            wireCount++;
+            
+            Logger.getInstance().info("Created wire from " + wireData.startSystemId + " to " + wireData.endSystemId);
+        }
+        
+        Logger.getInstance().info("Loaded " + wireCount + " wires from level data");
+    }
+    
+    /**
      * Sets up spy network connections between all SpySystems
      */
     private void setupSpyNetwork() {
@@ -1346,66 +1432,271 @@ public class GameEngine implements Runnable {
     
     // ==================== TIME TRAVEL SYSTEM ====================
     
+    private void updateTimeTravel() {
+        // Handle time travel navigation
+        long currentTime = java.lang.System.currentTimeMillis();
+        
+        if (timeTravelLeftPressed && currentTime - lastTimeTravelInput >= timeTravelInputDelay) {
+            navigateTimeBackward();
+            lastTimeTravelInput = currentTime;
+        }
+        
+        if (timeTravelRightPressed && currentTime - lastTimeTravelInput >= timeTravelInputDelay) {
+            navigateTimeForward();
+            lastTimeTravelInput = currentTime;
+        }
+    }
+    
+    private void createTimeSnapshot() {
+        try {
+            SaveData snapshot = SaveManager.createSaveData(this);
+            timeSnapshots.add(snapshot);
+            
+            // Save snapshot to disk for debugging
+            saveSnapshotToDisk(snapshot);
+            
+            // Remove old snapshots beyond time window
+            int maxSnapshots = timeTravelWindowSeconds * 60; // 60 FPS
+            if (timeSnapshots.size() > maxSnapshots) {
+                timeSnapshots.remove(0);
+            }
+            
+            // Debug output every 60 snapshots (1 second)
+            if (timeSnapshots.size() % 60 == 0) {
+                java.lang.System.out.println("Time snapshot created: " + timeSnapshots.size() + " snapshots, " + movingPackets.size() + " packets");
+            }
+            
+        } catch (Exception e) {
+            java.lang.System.out.println("Failed to create time snapshot: " + e.getMessage());
+        }
+    }
+    
     /**
-     * Enters time travel mode
+     * Saves a snapshot to disk for debugging purposes
      */
+    private void saveSnapshotToDisk(SaveData snapshot) {
+        try {
+            // Ensure snapshots directory exists
+            File snapshotsDir = new File(snapshotsDirectory);
+            if (!snapshotsDir.exists()) {
+                snapshotsDir.mkdirs();
+            }
+            
+            // Create filename with timestamp and counter
+            String timestamp = String.format("%.3f", currentGameTime / 1000.0);
+            String filename = String.format("snapshot_%06d_%s.json", snapshotCounter++, timestamp);
+            File snapshotFile = new File(snapshotsDir, filename);
+            
+            // Convert SaveData to JSON and write to file
+            String json = SaveManager.saveDataToJson(snapshot);
+            try (FileWriter writer = new FileWriter(snapshotFile)) {
+                writer.write(json);
+            }
+            
+            // Clean up old snapshot files (keep only recent ones)
+            cleanupOldSnapshotFiles();
+            
+        } catch (Exception e) {
+            java.lang.System.err.println("Error saving snapshot to disk: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Cleans up old snapshot files to prevent disk space issues
+     */
+    private void cleanupOldSnapshotFiles() {
+        try {
+            File snapshotsDir = new File(snapshotsDirectory);
+            if (!snapshotsDir.exists()) return;
+            
+            File[] files = snapshotsDir.listFiles((dir, name) -> name.startsWith("snapshot_") && name.endsWith(".json"));
+            if (files == null) return;
+            
+            // Keep only the most recent files (exactly FPS * time window)
+            int maxFiles = timeTravelWindowSeconds * 60; // FPS * seconds
+            if (files.length > maxFiles) {
+                // Sort by filename (which includes counter) to get chronological order
+                Arrays.sort(files, (a, b) -> {
+                    String nameA = a.getName();
+                    String nameB = b.getName();
+                    // Extract counter from filename: snapshot_XXXXXX_timestamp.json
+                    int counterA = Integer.parseInt(nameA.substring(9, 15)); // XXXXXX part
+                    int counterB = Integer.parseInt(nameB.substring(9, 15));
+                    return Integer.compare(counterA, counterB);
+                });
+                
+                // Delete oldest files
+                int filesToDelete = files.length - maxFiles;
+                for (int i = 0; i < filesToDelete; i++) {
+                    files[i].delete();
+                }
+            }
+        } catch (Exception e) {
+            java.lang.System.err.println("Error cleaning up snapshot files: " + e.getMessage());
+        }
+    }
+    
+    private void navigateTimeBackward() {
+        List<String> availableSnapshots = getAvailableSnapshotFiles();
+        if (currentSnapshotIndex > 0) {
+            currentSnapshotIndex--;
+            restoreTimeSnapshotFromDisk(currentSnapshotIndex, availableSnapshots);
+            java.lang.System.out.println("Time travel: Moved backward to snapshot " + (currentSnapshotIndex + 1) + "/" + availableSnapshots.size());
+        } else {
+            java.lang.System.out.println("Time travel: Already at earliest snapshot");
+        }
+    }
+    
+    private void navigateTimeForward() {
+        List<String> availableSnapshots = getAvailableSnapshotFiles();
+        if (currentSnapshotIndex < availableSnapshots.size() - 1) {
+            currentSnapshotIndex++;
+            restoreTimeSnapshotFromDisk(currentSnapshotIndex, availableSnapshots);
+            java.lang.System.out.println("Time travel: Moved forward to snapshot " + (currentSnapshotIndex + 1) + "/" + availableSnapshots.size());
+        } else {
+            java.lang.System.out.println("Time travel: Already at latest snapshot");
+        }
+    }
+    
+    /**
+     * Gets list of available snapshot files from disk
+     */
+    private List<String> getAvailableSnapshotFiles() {
+        List<String> snapshotFiles = new ArrayList<>();
+        try {
+            File snapshotsDir = new File(snapshotsDirectory);
+            if (!snapshotsDir.exists()) return snapshotFiles;
+            
+            File[] files = snapshotsDir.listFiles((dir, name) -> name.startsWith("snapshot_") && name.endsWith(".json"));
+            if (files == null) return snapshotFiles;
+            
+            // Sort by filename (counter) to get chronological order
+            Arrays.sort(files, (a, b) -> {
+                String nameA = a.getName();
+                String nameB = b.getName();
+                int counterA = Integer.parseInt(nameA.substring(9, 15)); // XXXXXX part
+                int counterB = Integer.parseInt(nameB.substring(9, 15));
+                return Integer.compare(counterA, counterB);
+            });
+            
+            for (File file : files) {
+                snapshotFiles.add(file.getName());
+            }
+        } catch (Exception e) {
+            java.lang.System.err.println("Error getting snapshot files: " + e.getMessage());
+        }
+        return snapshotFiles;
+    }
+    
+    /**
+     * Restores game state from a disk snapshot file
+     */
+    private void restoreTimeSnapshotFromDisk(int snapshotIndex, List<String> availableSnapshots) {
+        if (snapshotIndex >= 0 && snapshotIndex < availableSnapshots.size()) {
+            try {
+                String filename = availableSnapshots.get(snapshotIndex);
+                File snapshotFile = new File(snapshotsDirectory, filename);
+                
+                if (snapshotFile.exists()) {
+                    // Load and restore the snapshot
+                    SaveManager.loadGameFromFile(this, snapshotFile.getAbsolutePath());
+                    java.lang.System.out.println("Time snapshot restored from disk: " + filename);
+                } else {
+                    java.lang.System.err.println("Snapshot file not found: " + filename);
+                }
+            } catch (Exception e) {
+                java.lang.System.err.println("Error restoring snapshot from disk: " + e.getMessage());
+            }
+        }
+    }
+    
+    private void restoreTimeSnapshot(int snapshotIndex) {
+        if (snapshotIndex >= 0 && snapshotIndex < timeSnapshots.size()) {
+            try {
+                SaveData snapshot = timeSnapshots.get(snapshotIndex);
+                SaveManager.restoreGameState(this, snapshot);
+                java.lang.System.out.println("Time snapshot restored: " + movingPackets.size() + " packets, " + systems.size() + " systems, " + wires.size() + " wires");
+            } catch (Exception e) {
+                java.lang.System.out.println("Failed to restore time snapshot: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+    
     public void enterTimeTravelMode() {
-        timeTravelManager.enterTimeTravelMode();
+        // Load available snapshots from disk
+        List<String> availableSnapshots = getAvailableSnapshotFiles();
+        if (availableSnapshots.isEmpty()) {
+            java.lang.System.out.println("No time snapshots available for time travel");
+            return;
+        }
+        
+        isTimeTravelMode = true;
+        isPaused = true;
+        currentSnapshotIndex = availableSnapshots.size() - 1; // Start at most recent
+        timeTravelStartTime = java.lang.System.currentTimeMillis();
+        
+        // Restore the most recent snapshot from disk
+        restoreTimeSnapshotFromDisk(currentSnapshotIndex, availableSnapshots);
+        
+        java.lang.System.out.println("Entered time travel mode. Use LEFT/RIGHT arrows to navigate time.");
+        java.lang.System.out.println("Available snapshots: " + availableSnapshots.size() + ", Starting at: " + (currentSnapshotIndex + 1));
     }
     
-    /**
-     * Exits time travel mode
-     */
     public void exitTimeTravelMode() {
-        timeTravelManager.exitTimeTravelMode();
+        isTimeTravelMode = false;
+        isPaused = false;
+        currentSnapshotIndex = -1;
+        
+        java.lang.System.out.println("Exited time travel mode. Game resumed.");
     }
     
-    /**
-     * Toggles time travel mode
-     */
-    public void toggleTimeTravelMode() {
-        if (timeTravelManager.isTimeTravelMode()) {
+    public void togglePause() {
+        if (isTimeTravelMode) {
             exitTimeTravelMode();
         } else {
-            enterTimeTravelMode();
-        }
-        Logger.getInstance().info("Time Travel Mode: " + (timeTravelManager.isTimeTravelMode() ? "ON" : "OFF"));
-    }
-    
-    /**
-     * Starts network execution
-     */
-    public void startNetworkExecution() {
-        timeTravelManager.startExecution(this);
-    }
-    
-    /**
-     * Pauses/resumes time travel
-     */
-    public void toggleTimeTravelPause() {
-        if (timeTravelManager.isTimeTravelMode()) {
-            timeTravelManager.setPaused(!timeTravelManager.isPaused());
+            isPaused = !isPaused;
+            if (isPaused) {
+                java.lang.System.out.println("Game paused. Press P to resume or T for time travel.");
+            } else {
+                java.lang.System.out.println("Game resumed.");
+            }
         }
     }
     
-    /**
-     * Seeks to a specific time
-     */
-    public void seekToTime(long time) {
-        timeTravelManager.seekToTime(this, time);
+    public void setTimeTravelWindow(int seconds) {
+        this.timeTravelWindowSeconds = Math.max(1, Math.min(30, seconds)); // 1-30 seconds
+        java.lang.System.out.println("Time travel window set to " + timeTravelWindowSeconds + " seconds");
     }
     
-    /**
-     * Sets playback speed
-     */
-    public void setPlaybackSpeed(double speed) {
-        timeTravelManager.setPlaybackSpeed(speed);
+    public void setTimeTravelLeftPressed(boolean pressed) {
+        this.timeTravelLeftPressed = pressed;
     }
     
+    public void setTimeTravelRightPressed(boolean pressed) {
+        this.timeTravelRightPressed = pressed;
+    }
+    
+    // Getters for time travel state
+    public boolean isTimeTravelMode() { return isTimeTravelMode; }
+    public boolean isPaused() { return isPaused; }
+    public long getCurrentGameTime() { return currentGameTime; }
+    public int getTimeSnapshotsCount() { return timeSnapshots.size(); }
+    public int getCurrentSnapshotIndex() { return currentSnapshotIndex; }
+    public int getTimeTravelWindowSeconds() { return timeTravelWindowSeconds; }
+    
     /**
-     * Gets time travel manager
+     * Gets the count of snapshot files on disk
      */
-    public TimeTravelManager getTimeTravelManager() {
-        return timeTravelManager;
+    public int getDiskSnapshotCount() {
+        try {
+            File snapshotsDir = new File(snapshotsDirectory);
+            if (!snapshotsDir.exists()) return 0;
+            
+            File[] files = snapshotsDir.listFiles((dir, name) -> name.startsWith("snapshot_") && name.endsWith(".json"));
+            return files != null ? files.length : 0;
+        } catch (Exception e) {
+            return 0;
+        }
     }
 }
