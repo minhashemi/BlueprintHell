@@ -22,6 +22,11 @@ public class Wire {
     private List<Point> cachedPath;
     private WireStyle style = WireStyle.CURVED;
     
+    // Wire degradation tracking
+    private int bulkPacketPasses = 0;
+    private static final int MAX_BULK_PACKET_PASSES = 3;
+    private boolean isDestroyed = false;
+    
     // Callback for path updates
     private Runnable onPathChangedCallback;
 
@@ -40,7 +45,19 @@ public class Wire {
     public void draw(Graphics2D g) {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setStroke(new BasicStroke(2));
-        g.setColor(Color.PINK);
+        
+        // Change wire color based on damage status
+        if (isDestroyed) {
+            g.setColor(Color.RED); // Destroyed wire
+        } else if (bulkPacketPasses > 0) {
+            // Gradually change color as wire gets damaged
+            float damageRatio = (float) bulkPacketPasses / MAX_BULK_PACKET_PASSES;
+            int red = (int) (255 * damageRatio);
+            int green = (int) (255 * (1 - damageRatio));
+            g.setColor(new Color(red, green, 0)); // Yellow to red gradient
+        } else {
+            g.setColor(Color.PINK); // Healthy wire
+        }
 
         if (!cachedPath.isEmpty()) {
             for (int i = 0; i < cachedPath.size() - 1; i++) {
@@ -53,6 +70,26 @@ public class Wire {
         for (ArcPoint arc : arcPoints) {
             arc.draw(g);
         }
+        
+        // Draw damage indicator
+        if (bulkPacketPasses > 0 && !isDestroyed) {
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Arial", Font.BOLD, 10));
+            Point midPoint = getMidPoint();
+            g.drawString(bulkPacketPasses + "/" + MAX_BULK_PACKET_PASSES, midPoint.x, midPoint.y);
+        }
+    }
+    
+    /**
+     * Gets the midpoint of the wire for damage indicator
+     */
+    private Point getMidPoint() {
+        if (cachedPath.isEmpty()) {
+            return new Point(0, 0);
+        }
+        
+        int midIndex = cachedPath.size() / 2;
+        return cachedPath.get(midIndex);
     }
 
     public void regeneratePath() {
@@ -154,5 +191,36 @@ public class Wire {
         if (onPathChangedCallback != null) {
             onPathChangedCallback.run();
         }
+    }
+    
+    /**
+     * Records a bulk packet pass through this wire
+     */
+    public void recordBulkPacketPass() {
+        bulkPacketPasses++;
+        if (bulkPacketPasses >= MAX_BULK_PACKET_PASSES) {
+            isDestroyed = true;
+        }
+    }
+    
+    /**
+     * Gets the number of bulk packet passes
+     */
+    public int getBulkPacketPasses() {
+        return bulkPacketPasses;
+    }
+    
+    /**
+     * Checks if the wire is destroyed
+     */
+    public boolean isDestroyed() {
+        return isDestroyed;
+    }
+    
+    /**
+     * Gets the remaining bulk packet passes before destruction
+     */
+    public int getRemainingPasses() {
+        return Math.max(0, MAX_BULK_PACKET_PASSES - bulkPacketPasses);
     }
 }
