@@ -30,4 +30,30 @@ public class ArcPoint {
     public boolean contains(Point p) {
         return position.distance(p) <= SIZE / 2.0;
     }
+    
+    // ==================== SAVE SYSTEM SUPPORT ====================
+    
+    private boolean isDragging = false;
+    
+    /**
+     * Constructor for save system (without parent wire)
+     */
+    public ArcPoint(int x, int y) {
+        this.position = new Point(x, y);
+        this.parentWire = null;
+    }
+    
+    /**
+     * Gets the dragging state
+     */
+    public boolean isDragging() {
+        return isDragging;
+    }
+    
+    /**
+     * Sets the dragging state
+     */
+    public void setDragging(boolean isDragging) {
+        this.isDragging = isDragging;
+    }
 }

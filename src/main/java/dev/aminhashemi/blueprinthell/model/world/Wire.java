@@ -223,4 +223,20 @@ public class Wire {
     public int getRemainingPasses() {
         return Math.max(0, MAX_BULK_PACKET_PASSES - bulkPacketPasses);
     }
+    
+    /**
+     * Gets the wire style
+     */
+    public WireStyle getStyle() {
+        return style;
+    }
+    
+    /**
+     * Adds an arc point to the wire
+     */
+    public void addArcPoint(ArcPoint arcPoint) {
+        arcPoints.add(arcPoint);
+        regeneratePath();
+        notifyPathChanged();
+    }
 }
