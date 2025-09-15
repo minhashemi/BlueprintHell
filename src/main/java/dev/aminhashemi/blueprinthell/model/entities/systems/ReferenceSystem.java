@@ -105,4 +105,37 @@ public class ReferenceSystem extends System {
     public void update(GameEngine engine) {
         // Manual spawning only for now
     }
+    
+    // ==================== SAVE SYSTEM SUPPORT ====================
+    
+    private int packetGenerationRate = 1000; // milliseconds
+    private long lastSpawnTime = 0;
+    
+    /**
+     * Gets the packet generation rate
+     */
+    public int getPacketGenerationRate() {
+        return packetGenerationRate;
+    }
+    
+    /**
+     * Sets the packet generation rate
+     */
+    public void setPacketGenerationRate(int packetGenerationRate) {
+        this.packetGenerationRate = packetGenerationRate;
+    }
+    
+    /**
+     * Gets the last spawn time
+     */
+    public long getLastSpawnTime() {
+        return lastSpawnTime;
+    }
+    
+    /**
+     * Sets the last spawn time
+     */
+    public void setLastSpawnTime(long lastSpawnTime) {
+        this.lastSpawnTime = lastSpawnTime;
+    }
 }

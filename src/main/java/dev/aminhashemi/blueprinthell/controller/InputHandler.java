@@ -64,6 +64,34 @@ public class InputHandler extends MouseAdapter {
                 case KeyEvent.VK_SPACE:
                     gameEngine.handleManualPacketSpawn(); // Spawn packets manually
                     break;
+                case KeyEvent.VK_S:
+                    if (e.isControlDown() || e.isMetaDown()) {
+                        // Ctrl+S (Windows/Linux) or Cmd+S (macOS) to save
+                        System.out.println("Saving game...");
+                        if (gameEngine.saveGame()) {
+                            System.out.println("✅ Game saved successfully!");
+                            System.out.println("Systems: " + gameEngine.getSystems().size() + 
+                                             ", Wires: " + gameEngine.getWires().size() + 
+                                             ", Coins: " + gameEngine.getCoins());
+                        } else {
+                            System.out.println("❌ Failed to save game!");
+                        }
+                    }
+                    break;
+                case KeyEvent.VK_L:
+                    if (e.isControlDown() || e.isMetaDown()) {
+                        // Ctrl+L (Windows/Linux) or Cmd+L (macOS) to load
+                        System.out.println("Loading game...");
+                        if (gameEngine.loadGame()) {
+                            System.out.println("✅ Game loaded successfully!");
+                            System.out.println("Systems: " + gameEngine.getSystems().size() + 
+                                             ", Wires: " + gameEngine.getWires().size() + 
+                                             ", Coins: " + gameEngine.getCoins());
+                        } else {
+                            System.out.println("❌ Failed to load game!");
+                        }
+                    }
+                    break;
             }
         }
 
