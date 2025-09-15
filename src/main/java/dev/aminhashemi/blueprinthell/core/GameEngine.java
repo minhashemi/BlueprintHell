@@ -174,6 +174,10 @@ public class GameEngine implements Runnable {
         List<MovingPacket> destroyedPackets = impactManager.processImpacts(movingPackets);
         movingPackets.removeAll(destroyedPackets);
         cleanupLostPackets();
+        
+        // Handle wire degradation and cleanup
+        cleanupDestroyedWires();
+        
         updateHUD();
     }
 
@@ -195,6 +199,29 @@ public class GameEngine implements Runnable {
         for (MovingPacket packet : packetsToRemove) {
             movingPackets.remove(packet);
             AudioManager.getInstance().playSound("boom.wav");
+        }
+    }
+    
+    /** Removes destroyed wires and updates wire length tracking */
+    private void cleanupDestroyedWires() {
+        List<Wire> wiresToRemove = new ArrayList<>();
+        
+        for (Wire wire : wires) {
+            if (wire.isDestroyed()) {
+                wiresToRemove.add(wire);
+                Logger.getInstance().warning("Wire destroyed after " + wire.getBulkPacketPasses() + " bulk packet passes");
+            }
+        }
+        
+        // Remove destroyed wires and update wire length
+        for (Wire wire : wiresToRemove) {
+            wires.remove(wire);
+            // Remove from wire length tracking
+            Integer wireLength = wireLengths.remove(wire);
+            if (wireLength != null) {
+                usedWireLength -= wireLength;
+                Logger.getInstance().info("Wire removed. Length freed: " + wireLength + "m. Remaining: " + getRemainingWireLength() + "m");
+            }
         }
     }
 
@@ -258,6 +285,13 @@ public class GameEngine implements Runnable {
             String packetInfo = String.format("%s", packet.getPacket().getType());
             g.drawString(packetInfo, pos.x + 20, pos.y + 20);
         }
+        
+        // Display wire system status
+        g.setColor(Color.CYAN);
+        g.setFont(new Font("Arial", Font.BOLD, 12));
+        g.drawString("Wire System: Collision Detection Active", 10, 60);
+        g.drawString("Arc Points: 1 coin each", 10, 80);
+        g.drawString("Wire Degradation: 3 bulk packet limit", 10, 100);
     }
 
     private void drawPreviewWire(Graphics2D g) {
@@ -266,11 +300,15 @@ public class GameEngine implements Runnable {
         previewWire.getArcPoints().forEach(arcPoint -> points.add(arcPoint.getPosition()));
         points.add(currentMousePos);
 
+        // Check if the preview wire path is valid
         boolean isValid = true;
         for (int i = 0; i < points.size() - 1; i++) {
-            Line2D.Float segment = new Line2D.Float(points.get(i), points.get(i + 1));
+            Point start = points.get(i);
+            Point end = points.get(i + 1);
+            
             for (System system : systems) {
-                if (system != previewWire.getStartPort().getParentSystem() && segment.intersects(system.getBounds())) {
+                if (system != previewWire.getStartPort().getParentSystem() && 
+                    lineIntersectsSystem(start, end, system)) {
                     isValid = false;
                     break;
                 }
@@ -278,17 +316,33 @@ public class GameEngine implements Runnable {
             if (!isValid) break;
         }
 
+        // Draw wire in green if valid, red if invalid
         g.setColor(isValid ? Color.GREEN : Color.RED);
         g.setStroke(new BasicStroke(2));
 
         for (int i = 0; i < points.size() - 1; i++) {
             g.drawLine(points.get(i).x, points.get(i).y, points.get(i + 1).x, points.get(i + 1).y);
         }
+        
+        // Add text indicator
+        if (!isValid) {
+            g.setColor(Color.RED);
+            g.setFont(new Font("Arial", Font.BOLD, 12));
+            g.drawString("INVALID PATH", currentMousePos.x + 10, currentMousePos.y - 10);
+        }
     }
 
     public void handlePacketArrival(MovingPacket arrivedPacket) {
         movingPackets.remove(arrivedPacket);
         System destinationSystem = arrivedPacket.getDestinationSystem();
+        
+        // Track bulk packet passes for wire degradation
+        if (arrivedPacket.getPacket() instanceof BulkPacket) {
+            Wire wire = arrivedPacket.getWire();
+            wire.recordBulkPacketPass();
+            Logger.getInstance().info("Bulk packet passed through wire. Passes: " + wire.getBulkPacketPasses() + "/3");
+        }
+        
         destinationSystem.receivePacket(arrivedPacket.getPacket(), this);
         
         // Only add coins when packet reaches the END reference system (the one with only inputs)
@@ -601,14 +655,20 @@ public class GameEngine implements Runnable {
             if (clickedPort != null && clickedPort.isInput() && clickedPort.getParentSystem() != previewWire.getStartPort().getParentSystem()) {
                 previewWire.setEndPort(clickedPort);
                 
-                // Set up the wire path change callback for dynamic length updates
-                previewWire.setOnPathChangedCallback(() -> {
-                    Logger.getInstance().info("Wire path changed - updating length...");
-                    updateWireLengthForWire(previewWire);
-                });
-                
-                wires.add(previewWire);
-                updateWireLength(previewWire); // Update used wire length when a new wire is created
+                // Check if wire path is valid (doesn't pass through systems)
+                if (isWirePathValid(previewWire)) {
+                    // Set up the wire path change callback for dynamic length updates
+                    previewWire.setOnPathChangedCallback(() -> {
+                        Logger.getInstance().info("Wire path changed - updating length...");
+                        updateWireLengthForWire(previewWire);
+                    });
+                    
+                    wires.add(previewWire);
+                    updateWireLength(previewWire); // Update used wire length when a new wire is created
+                    Logger.getInstance().info("Wire created successfully");
+                } else {
+                    Logger.getInstance().warning("Cannot create wire - path passes through systems");
+                }
             }
             previewWire = null;
         } else if (draggedSystem != null) {
@@ -625,11 +685,21 @@ public class GameEngine implements Runnable {
         if (wire != null) {
             // Check if we can add more arc points (limit is 3)
             if (wire.getArcPoints().size() < 3) {
-                wire.addArcPoint(point);
-                
-                // Update wire length when arc points are added
-                Logger.getInstance().info("Arc point added to wire - updating length...");
-                updateWireLengthForWire(wire);
+                // Check if player has enough coins (1 coin per arc point)
+                if (coins >= 1) {
+                    // Deduct coin cost
+                    coins -= 1;
+                    Logger.getInstance().info("Arc point cost: -1 coin. Remaining coins: " + coins);
+                    
+                    // Add the arc point
+                    wire.addArcPoint(point);
+                    
+                    // Update wire length when arc points are added
+                    Logger.getInstance().info("Arc point added to wire - updating length...");
+                    updateWireLengthForWire(wire);
+                } else {
+                    Logger.getInstance().warning("Cannot add arc point - insufficient coins (need 1, have " + coins + ")");
+                }
             } else {
                 Logger.getInstance().info("Cannot add more arc points - limit reached (3)");
             }
@@ -1004,6 +1074,44 @@ public class GameEngine implements Runnable {
         wireLengths.put(wire, newLength);
         
         Logger.getInstance().info("Wire length updated dynamically: " + originalLength + "m -> " + newLength + "m. Total used: " + usedWireLength + "m. Remaining: " + getRemainingWireLength() + "m. Difference: " + lengthDifference + "m");
+    }
+
+    /**
+     * Validates that a wire path doesn't pass through any systems
+     */
+    private boolean isWirePathValid(Wire wire) {
+        List<Point> path = wire.getAllPoints();
+        if (path.size() < 2) return true;
+        
+        // Check each segment of the wire path
+        for (int i = 0; i < path.size() - 1; i++) {
+            Point start = path.get(i);
+            Point end = path.get(i + 1);
+            
+            // Check if this segment intersects with any system
+            for (System system : systems) {
+                if (system == wire.getStartPort().getParentSystem() || 
+                    system == wire.getEndPort().getParentSystem()) {
+                    continue; // Skip the systems the wire connects to
+                }
+                
+                if (lineIntersectsSystem(start, end, system)) {
+                    return false; // Wire passes through a system
+                }
+            }
+        }
+        
+        return true; // Wire path is valid
+    }
+    
+    /**
+     * Checks if a line segment intersects with a system's bounds
+     */
+    private boolean lineIntersectsSystem(Point start, Point end, System system) {
+        Rectangle systemBounds = system.getBounds();
+        
+        // Check if line segment intersects with system rectangle
+        return systemBounds.intersectsLine(start.x, start.y, end.x, end.y);
     }
 
     /**
