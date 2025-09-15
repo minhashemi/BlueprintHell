@@ -460,6 +460,28 @@ public class MovingPacket {
     }
     
     /**
+     * Updates the packet's visual position based on current progress
+     * This is used when restoring from snapshots
+     */
+    public void updatePositionFromProgress() {
+        if (path.size() < 2) return;
+        
+        if (currentSegmentIndex >= path.size() - 1) {
+            // Packet has arrived at destination
+            Point end = path.get(path.size() - 1);
+            packet.setPosition(end.x - packet.getWidth() / 2, end.y - packet.getHeight() / 2);
+            hasArrived = true;
+        } else {
+            // Interpolate position on current segment
+            Point start = path.get(currentSegmentIndex);
+            Point end = path.get(currentSegmentIndex + 1);
+            int currentX = (int) (start.x + (end.x - start.x) * progressOnSegment);
+            int currentY = (int) (start.y + (end.y - start.y) * progressOnSegment);
+            packet.setPosition(currentX - packet.getWidth() / 2, currentY - packet.getHeight() / 2);
+        }
+    }
+    
+    /**
      * Gets the spawn protection end time
      */
     public long getSpawnProtectionEndTime() {

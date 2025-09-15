@@ -75,11 +75,13 @@ public class GameEngine implements Runnable {
     private long lastSnapshotTime = 0;
     private int snapshotInterval = 16; // 60 FPS = 16ms intervals
     private int timeTravelWindowSeconds = 5; // How many seconds back we can go
+    private int maxSnapshots = 300; // 60 FPS * 5 seconds = 300 snapshots
+    
+    // In-memory snapshots for fast navigation
     private List<SaveData> timeSnapshots = new ArrayList<>();
     private int currentSnapshotIndex = -1;
     private String snapshotsDirectory = "snapshots";
     private int snapshotCounter = 0;
-    private long timeTravelStartTime = 0;
     
     // Time travel controls
     private boolean timeTravelLeftPressed = false;
@@ -192,12 +194,6 @@ public class GameEngine implements Runnable {
         // Update game time
         currentGameTime = java.lang.System.currentTimeMillis() - gameStartTime;
         
-        // Create snapshots for time travel
-        if (currentGameTime - lastSnapshotTime >= snapshotInterval) {
-            createTimeSnapshot();
-            lastSnapshotTime = currentGameTime;
-        }
-        
         // Update all systems (ReferenceSystem has special spawning logic)
         for (System system : systems) {
             if (system instanceof ReferenceSystem) {
@@ -213,6 +209,17 @@ public class GameEngine implements Runnable {
                 continue;
             }
             movingPacket.update(this);
+        }
+        
+        // Create snapshots for time travel AFTER updating everything
+        if (currentGameTime - lastSnapshotTime >= snapshotInterval) {
+            // Debug: Check packet count before snapshot
+            int packetCount = movingPackets.size();
+            if (packetCount > 0) {
+                java.lang.System.out.println("Creating snapshot with " + packetCount + " packets");
+            }
+            createTimeSnapshot();
+            lastSnapshotTime = currentGameTime;
         }
         
         // Handle packet collisions and cleanup
@@ -343,12 +350,11 @@ public class GameEngine implements Runnable {
         
         // Display time travel status
         if (isTimeTravelMode) {
-            List<String> availableSnapshots = getAvailableSnapshotFiles();
             g.setColor(Color.MAGENTA);
             g.setFont(new Font("Arial", Font.BOLD, 16));
             g.drawString("TIME TRAVEL MODE", 10, 140);
             g.setFont(new Font("Arial", Font.PLAIN, 12));
-            g.drawString("Snapshot: " + (currentSnapshotIndex + 1) + "/" + availableSnapshots.size(), 10, 160);
+            g.drawString("Snapshot: " + (currentSnapshotIndex + 1) + "/" + timeSnapshots.size(), 10, 160);
             g.drawString("Use LEFT/RIGHT arrows to navigate", 10, 180);
             g.drawString("Press T to exit time travel", 10, 200);
         } else if (isPaused) {
@@ -1449,25 +1455,28 @@ public class GameEngine implements Runnable {
     
     private void createTimeSnapshot() {
         try {
+            // Create snapshot using the working save logic
             SaveData snapshot = SaveManager.createSaveData(this);
+            
+            // Add to in-memory snapshots
             timeSnapshots.add(snapshot);
             
-            // Save snapshot to disk for debugging
-            saveSnapshotToDisk(snapshot);
-            
-            // Remove old snapshots beyond time window
-            int maxSnapshots = timeTravelWindowSeconds * 60; // 60 FPS
+            // Keep only last maxSnapshots (FPS * time window)
             if (timeSnapshots.size() > maxSnapshots) {
                 timeSnapshots.remove(0);
             }
             
+            // Save to disk for network transfer
+            saveSnapshotToDisk(snapshot);
+            
             // Debug output every 60 snapshots (1 second)
-            if (timeSnapshots.size() % 60 == 0) {
+            if (snapshotCounter % 60 == 0) {
                 java.lang.System.out.println("Time snapshot created: " + timeSnapshots.size() + " snapshots, " + movingPackets.size() + " packets");
             }
             
         } catch (Exception e) {
             java.lang.System.out.println("Failed to create time snapshot: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
@@ -1537,24 +1546,40 @@ public class GameEngine implements Runnable {
     }
     
     private void navigateTimeBackward() {
-        List<String> availableSnapshots = getAvailableSnapshotFiles();
         if (currentSnapshotIndex > 0) {
             currentSnapshotIndex--;
-            restoreTimeSnapshotFromDisk(currentSnapshotIndex, availableSnapshots);
-            java.lang.System.out.println("Time travel: Moved backward to snapshot " + (currentSnapshotIndex + 1) + "/" + availableSnapshots.size());
+            restoreTimeSnapshot(currentSnapshotIndex);
+            java.lang.System.out.println("Time travel: Moved backward to snapshot " + (currentSnapshotIndex + 1) + "/" + timeSnapshots.size());
         } else {
             java.lang.System.out.println("Time travel: Already at earliest snapshot");
         }
     }
     
     private void navigateTimeForward() {
-        List<String> availableSnapshots = getAvailableSnapshotFiles();
-        if (currentSnapshotIndex < availableSnapshots.size() - 1) {
+        if (currentSnapshotIndex < timeSnapshots.size() - 1) {
             currentSnapshotIndex++;
-            restoreTimeSnapshotFromDisk(currentSnapshotIndex, availableSnapshots);
-            java.lang.System.out.println("Time travel: Moved forward to snapshot " + (currentSnapshotIndex + 1) + "/" + availableSnapshots.size());
+            restoreTimeSnapshot(currentSnapshotIndex);
+            java.lang.System.out.println("Time travel: Moved forward to snapshot " + (currentSnapshotIndex + 1) + "/" + timeSnapshots.size());
         } else {
             java.lang.System.out.println("Time travel: Already at latest snapshot");
+        }
+    }
+    
+    /**
+     * Restores game state from in-memory snapshot using working restore logic
+     */
+    private void restoreTimeSnapshot(int snapshotIndex) {
+        if (snapshotIndex >= 0 && snapshotIndex < timeSnapshots.size()) {
+            try {
+                SaveData snapshot = timeSnapshots.get(snapshotIndex);
+                int packetsBefore = movingPackets.size();
+                SaveManager.restoreGameState(this, snapshot);
+                int packetsAfter = movingPackets.size();
+                java.lang.System.out.println("Time snapshot restored: " + packetsAfter + " packets, " + systems.size() + " systems, " + wires.size() + " wires (was " + packetsBefore + ")");
+            } catch (Exception e) {
+                java.lang.System.out.println("Failed to restore time snapshot: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
     }
     
@@ -1610,37 +1635,20 @@ public class GameEngine implements Runnable {
         }
     }
     
-    private void restoreTimeSnapshot(int snapshotIndex) {
-        if (snapshotIndex >= 0 && snapshotIndex < timeSnapshots.size()) {
-            try {
-                SaveData snapshot = timeSnapshots.get(snapshotIndex);
-                SaveManager.restoreGameState(this, snapshot);
-                java.lang.System.out.println("Time snapshot restored: " + movingPackets.size() + " packets, " + systems.size() + " systems, " + wires.size() + " wires");
-            } catch (Exception e) {
-                java.lang.System.out.println("Failed to restore time snapshot: " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
-    }
     
     public void enterTimeTravelMode() {
-        // Load available snapshots from disk
-        List<String> availableSnapshots = getAvailableSnapshotFiles();
-        if (availableSnapshots.isEmpty()) {
+        if (timeSnapshots.isEmpty()) {
             java.lang.System.out.println("No time snapshots available for time travel");
             return;
         }
         
         isTimeTravelMode = true;
         isPaused = true;
-        currentSnapshotIndex = availableSnapshots.size() - 1; // Start at most recent
-        timeTravelStartTime = java.lang.System.currentTimeMillis();
+        currentSnapshotIndex = timeSnapshots.size() - 1; // Start at most recent
         
-        // Restore the most recent snapshot from disk
-        restoreTimeSnapshotFromDisk(currentSnapshotIndex, availableSnapshots);
-        
+        // Don't restore snapshot when entering - just show current state
         java.lang.System.out.println("Entered time travel mode. Use LEFT/RIGHT arrows to navigate time.");
-        java.lang.System.out.println("Available snapshots: " + availableSnapshots.size() + ", Starting at: " + (currentSnapshotIndex + 1));
+        java.lang.System.out.println("Available snapshots: " + timeSnapshots.size() + ", Starting at: " + (currentSnapshotIndex + 1));
     }
     
     public void exitTimeTravelMode() {
@@ -1648,6 +1656,7 @@ public class GameEngine implements Runnable {
         isPaused = false;
         currentSnapshotIndex = -1;
         
+        // Don't restore snapshot when exiting - keep current state
         java.lang.System.out.println("Exited time travel mode. Game resumed.");
     }
     

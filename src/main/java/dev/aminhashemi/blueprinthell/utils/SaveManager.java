@@ -465,6 +465,9 @@ public class SaveManager {
         movingPacket.setOnCurve(packetData.isOnCurve);
         movingPacket.setWirePassCount(packetData.wirePassCount);
         
+        // Update packet position based on progress
+        movingPacket.updatePositionFromProgress();
+        
         return movingPacket;
     }
     
