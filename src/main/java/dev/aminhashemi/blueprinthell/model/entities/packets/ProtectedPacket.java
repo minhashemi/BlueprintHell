@@ -163,4 +163,28 @@ public class ProtectedPacket extends Packet {
     public int getPacketSize() {
         return 2; // Twice the size of original packet
     }
+    
+    // ==================== SAVE SYSTEM SUPPORT ====================
+    
+    /**
+     * Gets the original packet type
+     */
+    public PacketType getOriginalPacketType() {
+        return originalType;
+    }
+    
+    /**
+     * Gets the last visibility toggle time
+     */
+    public long getLastVisibilityToggle() {
+        return lastVisibilityToggle;
+    }
+    
+    /**
+     * Toggles visibility (for save system)
+     */
+    public void toggleVisibility() {
+        isVisible = !isVisible;
+        lastVisibilityToggle = System.currentTimeMillis();
+    }
 }

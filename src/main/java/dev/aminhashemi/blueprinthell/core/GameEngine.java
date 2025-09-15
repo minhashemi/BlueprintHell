@@ -21,6 +21,7 @@ import dev.aminhashemi.blueprinthell.model.world.Impact;
 import dev.aminhashemi.blueprinthell.utils.LevelLoader;
 import dev.aminhashemi.blueprinthell.utils.AudioManager;
 import dev.aminhashemi.blueprinthell.utils.Logger;
+import dev.aminhashemi.blueprinthell.utils.SaveManager;
 import dev.aminhashemi.blueprinthell.view.GamePanel;
 
 import java.awt.*;
@@ -163,7 +164,7 @@ public class GameEngine implements Runnable {
 
         // Update active packets
         for (MovingPacket movingPacket : new ArrayList<>(movingPackets)) {
-            if (movingPacket.isLost()) {
+            if (movingPacket == null || movingPacket.isLost()) {
                 continue;
             }
             movingPacket.update(this);
@@ -229,7 +230,9 @@ public class GameEngine implements Runnable {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         for (Wire wire : new ArrayList<>(wires)) {
-            wire.draw(g);
+            if (wire != null) {
+                wire.draw(g);
+            }
         }
 
         for (MovingPacket movingPacket : new ArrayList<>(movingPackets)) {
@@ -1170,5 +1173,139 @@ public class GameEngine implements Runnable {
      */
     public int getCoins() {
         return coins;
+    }
+    
+    // ==================== SAVE/LOAD SYSTEM ====================
+    
+    /**
+     * Saves the current game state to a JSON file
+     */
+    public boolean saveGame() {
+        return SaveManager.saveGame(this);
+    }
+    
+    /**
+     * Loads game state from a JSON file
+     */
+    public boolean loadGame() {
+        return SaveManager.loadGame(this);
+    }
+    
+    /**
+     * Clears the current game state (used when loading)
+     */
+    public void clearGameState() {
+        systems.clear();
+        wires.clear();
+        movingPackets.clear();
+        wireLengths.clear();
+        usedWireLength = 0;
+        coins = 0;
+        inWiringMode = false;
+        previewWire = null;
+        draggedSystem = null;
+        draggedArcPoint = null;
+        currentMousePos = new Point(0, 0);
+        Logger.getInstance().info("Game state cleared");
+    }
+    
+    /**
+     * Adds a system to the game (used when loading)
+     */
+    public void addSystem(System system) {
+        systems.add(system);
+    }
+    
+    /**
+     * Adds a wire to the game (used when loading)
+     */
+    public void addWire(Wire wire) {
+        wires.add(wire);
+    }
+    
+    /**
+     * Adds a moving packet to the game (used when loading)
+     */
+    public void addMovingPacket(MovingPacket movingPacket) {
+        movingPackets.add(movingPacket);
+    }
+    
+    /**
+     * Sets the wire lengths map (used when loading)
+     */
+    public void setWireLengths(Map<Wire, Integer> wireLengths) {
+        this.wireLengths = new HashMap<>(wireLengths);
+    }
+    
+    /**
+     * Sets the used wire length (used when loading)
+     */
+    public void setUsedWireLength(int usedWireLength) {
+        this.usedWireLength = usedWireLength;
+    }
+    
+    /**
+     * Sets the total wire length (used when loading)
+     */
+    public void setTotalWireLength(int totalWireLength) {
+        this.totalWireLength = totalWireLength;
+    }
+    
+    /**
+     * Sets the coins (used when loading)
+     */
+    public void setCoins(int coins) {
+        this.coins = coins;
+    }
+    
+    /**
+     * Sets the wiring mode (used when loading)
+     */
+    public void setWiringMode(boolean isWiringMode) {
+        this.inWiringMode = isWiringMode;
+    }
+    
+    // ==================== GETTERS FOR SAVE SYSTEM ====================
+    
+    /**
+     * Gets the total wire length
+     */
+    public int getTotalWireLength() {
+        return totalWireLength;
+    }
+    
+    /**
+     * Gets the wiring mode state
+     */
+    public boolean isWiringMode() {
+        return inWiringMode;
+    }
+    
+    /**
+     * Gets the systems list
+     */
+    public List<System> getSystems() {
+        return systems;
+    }
+    
+    /**
+     * Gets the wires list
+     */
+    public List<Wire> getWires() {
+        return wires;
+    }
+    
+    /**
+     * Gets the moving packets list
+     */
+    public List<MovingPacket> getMovingPackets() {
+        return movingPackets;
+    }
+    
+    /**
+     * Gets the wire lengths map
+     */
+    public Map<Wire, Integer> getWireLengths() {
+        return wireLengths;
     }
 }

@@ -1,0 +1,379 @@
+{
+  "coins": 2,
+  "usedWireLength": 390,
+  "totalWireLength": 8000,
+  "isWiringMode": false,
+  "systems": [
+    {
+      "type": "REFERENCE",
+      "x": 100,
+      "y": 200,
+      "id": "ReferenceSystem_100_200",
+      "inputPorts": [],
+      "outputPorts": [
+        {
+          "type": "SQUARE",
+          "index": 0,
+          "isInput": false
+        },
+        {
+          "type": "TRIANGLE",
+          "index": 1,
+          "isInput": false
+        },
+        {
+          "type": "DIAMOND",
+          "index": 2,
+          "isInput": false
+        },
+        {
+          "type": "INFINITY",
+          "index": 3,
+          "isInput": false
+        },
+        {
+          "type": "PADLOCK",
+          "index": 4,
+          "isInput": false
+        },
+        {
+          "type": "CAMOUFLAGE",
+          "index": 5,
+          "isInput": false
+        }
+      ],
+      "properties": {
+        "lastSpawnTime": 0,
+        "packetGenerationRate": 1000
+      }
+    },
+    {
+      "type": "REFERENCE",
+      "x": 950,
+      "y": 450,
+      "id": "ReferenceSystem_950_450",
+      "inputPorts": [
+        {
+          "type": "SQUARE",
+          "index": 0,
+          "isInput": true
+        },
+        {
+          "type": "TRIANGLE",
+          "index": 1,
+          "isInput": true
+        },
+        {
+          "type": "DIAMOND",
+          "index": 2,
+          "isInput": true
+        },
+        {
+          "type": "INFINITY",
+          "index": 3,
+          "isInput": true
+        },
+        {
+          "type": "PADLOCK",
+          "index": 4,
+          "isInput": true
+        },
+        {
+          "type": "CAMOUFLAGE",
+          "index": 5,
+          "isInput": true
+        }
+      ],
+      "outputPorts": [],
+      "properties": {
+        "lastSpawnTime": 0,
+        "packetGenerationRate": 1000
+      }
+    },
+    {
+      "type": "SPY",
+      "x": 300,
+      "y": 300,
+      "id": "SpySystem_300_300",
+      "inputPorts": [
+        {
+          "type": "SQUARE",
+          "index": 0,
+          "isInput": true
+        },
+        {
+          "type": "TRIANGLE",
+          "index": 1,
+          "isInput": true
+        },
+        {
+          "type": "DIAMOND",
+          "index": 2,
+          "isInput": true
+        },
+        {
+          "type": "INFINITY",
+          "index": 3,
+          "isInput": true
+        },
+        {
+          "type": "PADLOCK",
+          "index": 4,
+          "isInput": true
+        },
+        {
+          "type": "CAMOUFLAGE",
+          "index": 5,
+          "isInput": true
+        }
+      ],
+      "outputPorts": [
+        {
+          "type": "SQUARE",
+          "index": 0,
+          "isInput": false
+        },
+        {
+          "type": "TRIANGLE",
+          "index": 1,
+          "isInput": false
+        },
+        {
+          "type": "DIAMOND",
+          "index": 2,
+          "isInput": false
+        },
+        {
+          "type": "INFINITY",
+          "index": 3,
+          "isInput": false
+        },
+        {
+          "type": "PADLOCK",
+          "index": 4,
+          "isInput": false
+        },
+        {
+          "type": "CAMOUFLAGE",
+          "index": 5,
+          "isInput": false
+        }
+      ],
+      "properties": {
+        "isActive": true
+      }
+    },
+    {
+      "type": "SPY",
+      "x": 600,
+      "y": 200,
+      "id": "SpySystem_600_200",
+      "inputPorts": [
+        {
+          "type": "SQUARE",
+          "index": 0,
+          "isInput": true
+        },
+        {
+          "type": "TRIANGLE",
+          "index": 1,
+          "isInput": true
+        },
+        {
+          "type": "DIAMOND",
+          "index": 2,
+          "isInput": true
+        },
+        {
+          "type": "INFINITY",
+          "index": 3,
+          "isInput": true
+        },
+        {
+          "type": "PADLOCK",
+          "index": 4,
+          "isInput": true
+        },
+        {
+          "type": "CAMOUFLAGE",
+          "index": 5,
+          "isInput": true
+        }
+      ],
+      "outputPorts": [
+        {
+          "type": "SQUARE",
+          "index": 0,
+          "isInput": false
+        },
+        {
+          "type": "TRIANGLE",
+          "index": 1,
+          "isInput": false
+        },
+        {
+          "type": "DIAMOND",
+          "index": 2,
+          "isInput": false
+        },
+        {
+          "type": "INFINITY",
+          "index": 3,
+          "isInput": false
+        },
+        {
+          "type": "PADLOCK",
+          "index": 4,
+          "isInput": false
+        },
+        {
+          "type": "CAMOUFLAGE",
+          "index": 5,
+          "isInput": false
+        }
+      ],
+      "properties": {
+        "isActive": true
+      }
+    },
+    {
+      "type": "SPY",
+      "x": 750,
+      "y": 400,
+      "id": "SpySystem_750_400",
+      "inputPorts": [
+        {
+          "type": "SQUARE",
+          "index": 0,
+          "isInput": true
+        },
+        {
+          "type": "TRIANGLE",
+          "index": 1,
+          "isInput": true
+        },
+        {
+          "type": "DIAMOND",
+          "index": 2,
+          "isInput": true
+        },
+        {
+          "type": "INFINITY",
+          "index": 3,
+          "isInput": true
+        },
+        {
+          "type": "PADLOCK",
+          "index": 4,
+          "isInput": true
+        },
+        {
+          "type": "CAMOUFLAGE",
+          "index": 5,
+          "isInput": true
+        }
+      ],
+      "outputPorts": [
+        {
+          "type": "SQUARE",
+          "index": 0,
+          "isInput": false
+        },
+        {
+          "type": "TRIANGLE",
+          "index": 1,
+          "isInput": false
+        },
+        {
+          "type": "DIAMOND",
+          "index": 2,
+          "isInput": false
+        },
+        {
+          "type": "INFINITY",
+          "index": 3,
+          "isInput": false
+        },
+        {
+          "type": "PADLOCK",
+          "index": 4,
+          "isInput": false
+        },
+        {
+          "type": "CAMOUFLAGE",
+          "index": 5,
+          "isInput": false
+        }
+      ],
+      "properties": {
+        "isActive": true
+      }
+    },
+    {
+      "type": "VPN",
+      "x": 450,
+      "y": 350,
+      "id": "VPNSystem_450_350",
+      "inputPorts": [
+        {
+          "type": "PADLOCK",
+          "index": 0,
+          "isInput": true
+        },
+        {
+          "type": "CAMOUFLAGE",
+          "index": 1,
+          "isInput": true
+        }
+      ],
+      "outputPorts": [
+        {
+          "type": "PADLOCK",
+          "index": 0,
+          "isInput": false
+        },
+        {
+          "type": "CAMOUFLAGE",
+          "index": 1,
+          "isInput": false
+        }
+      ],
+      "properties": {}
+    }
+  ],
+  "wires": [
+    {
+      "startPortId": "ReferenceSystem_100_200_OUT_0",
+      "endPortId": "SpySystem_600_200_IN_0",
+      "arcPoints": [],
+      "style": "CURVED",
+      "bulkPacketPasses": 0,
+      "isDestroyed": false
+    }
+  ],
+  "movingPackets": [
+    {
+      "packet": {
+        "type": "SQUARE_MESSENGER",
+        "x": 478,
+        "y": 205,
+        "packetClass": "MessengerPacket",
+        "properties": {}
+      },
+      "sourceSystemId": "ReferenceSystem_100_200",
+      "destinationSystemId": "SpySystem_600_200",
+      "wireId": "ReferenceSystem_100_200_OUT_0_SpySystem_600_200_IN_0",
+      "progress": 0.7179487179487165,
+      "noiseLevel": 0.0,
+      "hasSpawnProtection": true,
+      "spawnProtectionEndTime": 0,
+      "currentSpeed": 1.0,
+      "acceleration": 0.0,
+      "isOnCurve": false,
+      "wirePassCount": 0
+    }
+  ],
+  "wireLengths": {
+    "ReferenceSystem_100_200_OUT_0_SpySystem_600_200_IN_0": 390
+  }
+}

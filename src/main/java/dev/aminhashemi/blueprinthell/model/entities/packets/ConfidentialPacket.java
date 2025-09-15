@@ -218,4 +218,20 @@ public class ConfidentialPacket extends Packet {
             }
         }
     }
+    
+    // ==================== SAVE SYSTEM SUPPORT ====================
+    
+    /**
+     * Gets the last speed check time
+     */
+    public long getLastSpeedCheck() {
+        return lastSpeedCheck;
+    }
+    
+    /**
+     * Sets the last speed check time (for save system)
+     */
+    public void setLastSpeedCheck(long time) {
+        this.lastSpeedCheck = time;
+    }
 }

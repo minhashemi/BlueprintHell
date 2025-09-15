@@ -141,4 +141,17 @@ public class Port {
     public PortType getType() {
         return type;
     }
+    
+    public int getIndex() {
+        return index;
+    }
+    
+    // ==================== SAVE SYSTEM SUPPORT ====================
+    
+    /**
+     * Gets the port ID
+     */
+    public String getId() {
+        return parentSystem.getId() + "_" + (isInput ? "IN" : "OUT") + "_" + index;
+    }
 }

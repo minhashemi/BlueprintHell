@@ -51,4 +51,25 @@ public abstract class System extends Entity {
     public List<Port> getOutputPorts() {
         return outputPorts;
     }
+    
+    // ==================== SAVE SYSTEM SUPPORT ====================
+    
+    private String id;
+    
+    /**
+     * Gets the system ID
+     */
+    public String getId() {
+        if (id == null) {
+            id = this.getClass().getSimpleName() + "_" + x + "_" + y;
+        }
+        return id;
+    }
+    
+    /**
+     * Sets the system ID
+     */
+    public void setId(String id) {
+        this.id = id;
+    }
 }

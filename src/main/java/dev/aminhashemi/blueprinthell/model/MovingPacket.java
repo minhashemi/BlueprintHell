@@ -403,4 +403,129 @@ public class MovingPacket {
     public void setLost(boolean lost) {
         this.isLost = lost;
     }
+    
+    // ==================== SAVE SYSTEM SUPPORT ====================
+    
+    private System sourceSystem;
+    private System destinationSystem;
+    private boolean isOnCurve = false;
+    private int wirePassCount = 0;
+    private long spawnProtectionEndTime = 0;
+    
+    /**
+     * Constructor for save system
+     */
+    public MovingPacket(Packet packet, System sourceSystem, System destinationSystem, Wire wire) {
+        this.packet = packet;
+        this.wire = wire;
+        this.sourceSystem = sourceSystem;
+        this.destinationSystem = destinationSystem;
+        this.path = wire.getAllPoints();
+        this.currentSegmentIndex = 0;
+        this.progressOnSegment = 0.0;
+        
+        // Initialize movement properties
+        this.currentSpeed = calculateBaseSpeed();
+        this.acceleration = 0.0f;
+        this.spawnTime = java.lang.System.currentTimeMillis();
+        
+        if (!path.isEmpty()) {
+            packet.setPosition(path.get(0).x, path.get(0).y);
+        }
+    }
+    
+    
+    /**
+     * Gets the progress on the wire
+     */
+    public double getProgress() {
+        if (path.size() <= 1) return 0.0;
+        return (currentSegmentIndex + progressOnSegment) / (path.size() - 1);
+    }
+    
+    /**
+     * Sets the progress on the wire
+     */
+    public void setProgress(double progress) {
+        if (path.size() <= 1) return;
+        double totalProgress = progress * (path.size() - 1);
+        currentSegmentIndex = (int) totalProgress;
+        progressOnSegment = totalProgress - currentSegmentIndex;
+        
+        if (currentSegmentIndex >= path.size() - 1) {
+            currentSegmentIndex = path.size() - 2;
+            progressOnSegment = 1.0;
+        }
+    }
+    
+    /**
+     * Gets the spawn protection end time
+     */
+    public long getSpawnProtectionEndTime() {
+        return spawnProtectionEndTime;
+    }
+    
+    /**
+     * Gets the current speed
+     */
+    public double getCurrentSpeed() {
+        return currentSpeed;
+    }
+    
+    /**
+     * Sets the current speed
+     */
+    public void setCurrentSpeed(double currentSpeed) {
+        this.currentSpeed = (float) currentSpeed;
+    }
+    
+    /**
+     * Gets the acceleration
+     */
+    public double getAcceleration() {
+        return acceleration;
+    }
+    
+    /**
+     * Sets the acceleration
+     */
+    public void setAcceleration(double acceleration) {
+        this.acceleration = (float) acceleration;
+    }
+    
+    /**
+     * Checks if on curve
+     */
+    public boolean isOnCurve() {
+        return isOnCurve;
+    }
+    
+    /**
+     * Sets if on curve
+     */
+    public void setOnCurve(boolean isOnCurve) {
+        this.isOnCurve = isOnCurve;
+    }
+    
+    /**
+     * Gets wire pass count
+     */
+    public int getWirePassCount() {
+        return wirePassCount;
+    }
+    
+    /**
+     * Sets wire pass count
+     */
+    public void setWirePassCount(int wirePassCount) {
+        this.wirePassCount = wirePassCount;
+    }
+    
+    /**
+     * Sets spawn protection with end time
+     */
+    public void setSpawnProtection(boolean hasSpawnProtection, long spawnProtectionEndTime) {
+        this.spawnProtection = hasSpawnProtection;
+        this.spawnProtectionEndTime = spawnProtectionEndTime;
+    }
 }

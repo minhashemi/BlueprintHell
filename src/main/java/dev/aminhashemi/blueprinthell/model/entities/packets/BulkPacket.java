@@ -218,4 +218,13 @@ public class BulkPacket extends Packet {
         Logger.getInstance().info("Merging packets into BulkPacket");
         return new BulkPacket(0, 0, BulkType.SMALL); // Placeholder
     }
+    
+    // ==================== SAVE SYSTEM SUPPORT ====================
+    
+    /**
+     * Checks if the packet is on a curve
+     */
+    public boolean isOnCurve() {
+        return isOnCurve;
+    }
 }
