@@ -2,7 +2,6 @@ package dev.aminhashemi.blueprinthell.view;
 
 import dev.aminhashemi.blueprinthell.controller.InputHandler;
 import dev.aminhashemi.blueprinthell.core.GameEngine;
-import dev.aminhashemi.blueprinthell.view.ui.TimeTravelPanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,7 +14,6 @@ public class GamePanel extends JPanel {
     private boolean showHUD = true;
     private long hudToggleTime = 0;
     private static final long HUD_DISPLAY_DURATION = 3000; // 3 seconds
-    private TimeTravelPanel timeTravelPanel;
     
     // HUD state variables
     private int remainingWireLength = 8000;
@@ -64,12 +62,6 @@ public class GamePanel extends JPanel {
                 }
             }
         });
-        
-        // Create and add time travel panel
-        timeTravelPanel = new TimeTravelPanel(gameEngine);
-        timeTravelPanel.setBounds(20, 20, 350, 200); // Position in top-left corner
-        timeTravelPanel.setVisible(false); // Initially hidden
-        add(timeTravelPanel);
     }
 
     private void initPanel() {
@@ -77,7 +69,6 @@ public class GamePanel extends JPanel {
         setPreferredSize(new Dimension(1280, 720));
         setBackground(new Color(20, 25, 40)); // Dark blue-gray background
         setFocusable(true); // Required for key events
-        setLayout(null); // Use absolute positioning for time travel panel
     }
 
     @Override
@@ -91,12 +82,6 @@ public class GamePanel extends JPanel {
         }
         
         drawHUD(g2d);
-        
-        // Update time travel panel visibility
-        if (timeTravelPanel != null && gameEngine != null) {
-            boolean isTimeTravelMode = gameEngine.getTimeTravelManager().isTimeTravelMode();
-            timeTravelPanel.setVisible(isTimeTravelMode);
-        }
         
         // Auto-hide HUD after timeout
         if (System.currentTimeMillis() - hudToggleTime > HUD_DISPLAY_DURATION && hudToggleTime > 0) {

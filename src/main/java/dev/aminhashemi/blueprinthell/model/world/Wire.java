@@ -20,7 +20,7 @@ public class Wire {
     private Port endPort;
     private final List<ArcPoint> arcPoints;
     private List<Point> cachedPath;
-    private WireStyle style = WireStyle.CURVED;
+    private WireStyle style = WireStyle.POLYLINE;
     
     // Wire degradation tracking
     private int bulkPacketPasses = 0;
