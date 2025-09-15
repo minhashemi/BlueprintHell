@@ -8,6 +8,7 @@ public class LevelData {
     public String levelName;
     public PlayerStart playerStart;
     public List<SystemData> systems;
+    public List<WireData> wires;
 
     public static class PlayerStart {
         public int initialCoins;
@@ -36,5 +37,12 @@ public class LevelData {
         public String packetType;
         public int count;
         public double frequency;
+    }
+    
+    public static class WireData {
+        public String startSystemId;
+        public int startPortIndex;
+        public String endSystemId;
+        public int endPortIndex;
     }
 }

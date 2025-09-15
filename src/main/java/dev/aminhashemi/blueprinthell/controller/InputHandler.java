@@ -62,7 +62,28 @@ public class InputHandler extends MouseAdapter {
                     gameEngine.toggleWiringMode(true);
                     break;
                 case KeyEvent.VK_SPACE:
-                    gameEngine.handleManualPacketSpawn(); // Spawn packets manually
+                    // SPACE always spawns packets (never pauses)
+                    gameEngine.handleManualPacketSpawn();
+                    break;
+                case KeyEvent.VK_P:
+                    // P key for pause/play
+                    gameEngine.togglePause();
+                    break;
+                case KeyEvent.VK_T:
+                    // T key for time travel mode
+                    if (gameEngine.isTimeTravelMode()) {
+                        gameEngine.exitTimeTravelMode();
+                    } else {
+                        gameEngine.enterTimeTravelMode();
+                    }
+                    break;
+                case KeyEvent.VK_LEFT:
+                    // Left arrow for time travel navigation
+                    gameEngine.setTimeTravelLeftPressed(true);
+                    break;
+                case KeyEvent.VK_RIGHT:
+                    // Right arrow for time travel navigation
+                    gameEngine.setTimeTravelRightPressed(true);
                     break;
                 case KeyEvent.VK_S:
                     if (e.isControlDown() || e.isMetaDown()) {
@@ -92,57 +113,23 @@ public class InputHandler extends MouseAdapter {
                         }
                     }
                     break;
-                case KeyEvent.VK_T:
-                    // T key to toggle time travel mode
-                    gameEngine.toggleTimeTravelMode();
-                    System.out.println("Time Travel Mode: " + 
-                        (gameEngine.getTimeTravelManager().isTimeTravelMode() ? "ON" : "OFF"));
-                    break;
-                case KeyEvent.VK_R:
-                    // R key to start network execution
-                    if (gameEngine.getTimeTravelManager().isTimeTravelMode()) {
-                        gameEngine.startNetworkExecution();
-                        System.out.println("🚀 Starting Network Execution!");
-                        System.out.println("Time Travel Mode: " + gameEngine.getTimeTravelManager().isTimeTravelMode());
-                        System.out.println("Executing: " + gameEngine.getTimeTravelManager().isExecuting());
-                    } else {
-                        System.out.println("❌ Time Travel Mode is OFF - press T first!");
-                    }
-                    break;
-                case KeyEvent.VK_P:
-                    // P key to pause/resume time travel
-                    if (gameEngine.getTimeTravelManager().isTimeTravelMode()) {
-                        gameEngine.toggleTimeTravelPause();
-                        System.out.println("Time Travel: " + 
-                            (gameEngine.getTimeTravelManager().isPaused() ? "PAUSED" : "PLAYING"));
-                    }
-                    break;
-                case KeyEvent.VK_LEFT:
-                    // Left arrow to rewind time
-                    if (gameEngine.getTimeTravelManager().isTimeTravelMode()) {
-                        long currentTime = gameEngine.getTimeTravelManager().getCurrentTime();
-                        long newTime = Math.max(0, currentTime - 1000); // Rewind 1 second
-                        gameEngine.seekToTime(newTime);
-                        System.out.println("⏪ Rewound to: " + newTime + "ms");
-                    }
-                    break;
-                case KeyEvent.VK_RIGHT:
-                    // Right arrow to fast forward time
-                    if (gameEngine.getTimeTravelManager().isTimeTravelMode()) {
-                        long currentTime = gameEngine.getTimeTravelManager().getCurrentTime();
-                        long maxTime = gameEngine.getTimeTravelManager().getMaxTime();
-                        long newTime = Math.min(maxTime, currentTime + 1000); // Forward 1 second
-                        gameEngine.seekToTime(newTime);
-                        System.out.println("⏩ Fast forwarded to: " + newTime + "ms");
-                    }
-                    break;
             }
         }
 
         @Override
         public void keyReleased(KeyEvent e) {
-            if (e.getKeyCode() == KeyEvent.VK_W) {
-                gameEngine.toggleWiringMode(false);
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_W:
+                    gameEngine.toggleWiringMode(false);
+                    break;
+                case KeyEvent.VK_LEFT:
+                    // Left arrow released
+                    gameEngine.setTimeTravelLeftPressed(false);
+                    break;
+                case KeyEvent.VK_RIGHT:
+                    // Right arrow released
+                    gameEngine.setTimeTravelRightPressed(false);
+                    break;
             }
         }
     }

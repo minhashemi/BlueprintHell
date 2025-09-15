@@ -117,5 +117,43 @@
         { "type": "CAMOUFLAGE" }
       ]
     }
+  ],
+  "wires": [
+    {
+      "startSystemId": "ref_sys_A",
+      "startPortIndex": 0,
+      "endSystemId": "spy_sys_1",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "spy_sys_1",
+      "startPortIndex": 0,
+      "endSystemId": "spy_sys_2",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "spy_sys_2",
+      "startPortIndex": 0,
+      "endSystemId": "spy_sys_3",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "spy_sys_3",
+      "startPortIndex": 0,
+      "endSystemId": "ref_sys_B",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "ref_sys_A",
+      "startPortIndex": 1,
+      "endSystemId": "vpn_sys",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "vpn_sys",
+      "startPortIndex": 0,
+      "endSystemId": "ref_sys_B",
+      "endPortIndex": 1
+    }
   ]
 }

@@ -54,6 +54,29 @@ public class SaveManager {
     }
     
     /**
+     * Converts SaveData to JSON string for disk storage
+     */
+    public static String saveDataToJson(SaveData saveData) {
+        return gson.toJson(saveData);
+    }
+    
+    /**
+     * Loads game state from a specific file
+     */
+    public static boolean loadGameFromFile(GameEngine engine, String filename) {
+        try {
+            try (FileReader reader = new FileReader(filename)) {
+                SaveData saveData = gson.fromJson(reader, SaveData.class);
+                restoreGameState(engine, saveData);
+                return true;
+            }
+        } catch (Exception e) {
+            java.lang.System.out.println("Failed to load game from file " + filename + ": " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
      * Loads game state from a JSON file
      */
     public static boolean loadGame(GameEngine engine) {
@@ -80,7 +103,7 @@ public class SaveManager {
     /**
      * Creates SaveData from GameEngine
      */
-    private static SaveData createSaveData(GameEngine engine) {
+    public static SaveData createSaveData(GameEngine engine) {
         SaveData saveData = new SaveData();
         
         // Save basic game state
@@ -243,7 +266,7 @@ public class SaveManager {
     /**
      * Restores game state from SaveData
      */
-    private static void restoreGameState(GameEngine engine, SaveData saveData) {
+    public static void restoreGameState(GameEngine engine, SaveData saveData) {
         // Clear current state
         engine.clearGameState();
         
