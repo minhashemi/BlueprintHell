@@ -2,6 +2,7 @@ package dev.aminhashemi.blueprinthell.view;
 
 import dev.aminhashemi.blueprinthell.controller.InputHandler;
 import dev.aminhashemi.blueprinthell.core.GameEngine;
+import dev.aminhashemi.blueprinthell.utils.Config;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,13 +14,13 @@ public class GamePanel extends JPanel {
     private GameEngine gameEngine;
     private boolean showHUD = true;
     private long hudToggleTime = 0;
-    private static final long HUD_DISPLAY_DURATION = 3000; // 3 seconds
+    private static final long HUD_DISPLAY_DURATION = Config.HUD_DISPLAY_DURATION; // 3 seconds
     
     // HUD state variables
-    private int remainingWireLength = 8000;
+    private int remainingWireLength = Config.TOTAL_WIRE_LENGTH;
     private int temporalProgress = 0;
     private int packetLoss = 0;
-    private int coins = 20;
+    private int coins = Config.LevelDefaults.INITIAL_COINS;
 
     public GamePanel() {
         initPanel();
@@ -66,8 +67,8 @@ public class GamePanel extends JPanel {
 
     private void initPanel() {
         setName(GameFrame.GAME_PANEL);
-        setPreferredSize(new Dimension(1280, 720));
-        setBackground(new Color(20, 25, 40)); // Dark blue-gray background
+        setPreferredSize(new Dimension(Config.WINDOW_WIDTH, Config.WINDOW_HEIGHT));
+        setBackground(Config.BACKGROUND_COLOR); // Dark blue-gray background
         setFocusable(true); // Required for key events
     }
 
@@ -98,68 +99,62 @@ public class GamePanel extends JPanel {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         
         // HUD background (semi-transparent dark panel) - Fixed size for required content only
-        int hudWidth = 280;
-        int hudHeight = 160;
-        int hudX = getWidth() - hudWidth - 20;
-        int hudY = 20;
+        int hudWidth = Config.HUD_WIDTH;
+        int hudHeight = Config.HUD_HEIGHT;
+        int hudX = getWidth() - hudWidth - Config.HUD_MARGIN;
+        int hudY = Config.HUD_MARGIN;
         
         // Semi-transparent background
-        g.setColor(new Color(0, 0, 0, 180));
+        g.setColor(new Color(0, 0, 0, Config.HUD_BACKGROUND_ALPHA));
         g.fillRoundRect(hudX, hudY, hudWidth, hudHeight, 15, 15);
         
         // HUD border
-        g.setColor(new Color(255, 255, 255, 100));
+        g.setColor(new Color(255, 255, 255, Config.HUD_BORDER_ALPHA));
         g.setStroke(new BasicStroke(2));
         g.drawRoundRect(hudX, hudY, hudWidth, hudHeight, 15, 15);
         
         // HUD title
         g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.BOLD, 16));
+        g.setFont(new Font(Config.Fonts.DEFAULT_FONT_FAMILY, Font.BOLD, Config.Fonts.HUD_TITLE_SIZE));
         g.drawString("Game Status", hudX + 15, hudY + 25);
         
         // HUD content - Only required information from documentation
-        g.setFont(new Font("Arial", Font.PLAIN, 14));
+        g.setFont(new Font(Config.Fonts.DEFAULT_FONT_FAMILY, Font.PLAIN, Config.Fonts.HUD_TEXT_SIZE));
         int textY = hudY + 45;
         int lineHeight = 20;
         
         // Required: Wire Length
-        if (remainingWireLength > 2000) {
-            g.setColor(Color.CYAN);
-        } else if (remainingWireLength > 500) {
-            g.setColor(Color.ORANGE);
-        } else {
-            g.setColor(Color.RED);
-        }
+        g.setColor(Config.getWireLengthColor(remainingWireLength));
         g.drawString("Wire Length: " + remainingWireLength + "m", hudX + 15, textY);
         textY += lineHeight;
         
         // Required: Packet Loss
-        g.setColor(Color.RED);
+        g.setColor(Config.HUD_PACKET_LOSS_COLOR);
         g.drawString("Packet Loss: " + packetLoss, hudX + 15, textY);
         textY += lineHeight;
         
         // Required: Coins
-        g.setColor(Color.decode("#FFD700")); // Gold color
+        g.setColor(Config.HUD_COINS_COLOR); // Gold color
         g.drawString("Coins: " + coins, hudX + 15, textY);
         textY += lineHeight + 5;
         
         // Required: Active Network Capabilities
         g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.BOLD, 12));
+        g.setFont(new Font(Config.Fonts.DEFAULT_FONT_FAMILY, Font.BOLD, Config.Fonts.HUD_SMALL_TEXT_SIZE));
         g.drawString("Network Status:", hudX + 15, textY);
         textY += 15;
         
-        g.setFont(new Font("Arial", Font.PLAIN, 12));
-        g.setColor(Color.GREEN);
+        g.setFont(new Font(Config.Fonts.DEFAULT_FONT_FAMILY, Font.PLAIN, Config.Fonts.HUD_SMALL_TEXT_SIZE));
+        g.setColor(Config.HUD_ACTIVE_SYSTEMS_COLOR);
         g.drawString("Active Systems: " + getActiveSystemCount(), hudX + 15, textY);
         textY += lineHeight;
         
-        g.setColor(Color.BLUE);
+        g.setColor(Config.HUD_WIRE_CONNECTIONS_COLOR);
         g.drawString("Wire Connections: " + getWireConnectionCount(), hudX + 15, textY);
         
         // HUD toggle indicator
         g.setColor(new Color(255, 255, 255, 150));
-        g.setFont(new Font("Arial", Font.ITALIC, 10));
+        g.setFont(new Font(Config.Fonts.DEFAULT_FONT_FAMILY, Font.ITALIC, Config.Fonts.HUD_TINY_TEXT_SIZE));
         g.drawString("Press 'H' to toggle HUD", hudX + 15, hudY + hudHeight - 5);
     }
 

@@ -1,6 +1,7 @@
 package dev.aminhashemi.blueprinthell.model.entities.systems;
 
 import java.awt.*;
+import dev.aminhashemi.blueprinthell.utils.Config;
 
 public class Port {
 
@@ -9,7 +10,7 @@ public class Port {
     private final boolean isInput;
     private final int index;
 
-    public static final int PORT_SIZE = 10;
+    public static final int PORT_SIZE = Config.PORT_SIZE;
 
     public Port(PortType type, System parentSystem, boolean isInput, int index) {
         this.type = type;

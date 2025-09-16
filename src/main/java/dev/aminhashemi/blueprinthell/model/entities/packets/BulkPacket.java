@@ -3,6 +3,7 @@ package dev.aminhashemi.blueprinthell.model.entities.packets;
 import dev.aminhashemi.blueprinthell.core.GameEngine;
 import dev.aminhashemi.blueprinthell.model.world.Wire;
 import dev.aminhashemi.blueprinthell.utils.Logger;
+import dev.aminhashemi.blueprinthell.utils.Config;
 
 import java.awt.*;
 import java.util.List;
@@ -41,7 +42,7 @@ public class BulkPacket extends Packet {
     private float currentSpeed = 1.0f;
     private boolean isOnCurve = false;
     private int wirePassCount = 0;
-    private static final int MAX_WIRE_PASSES = 3;
+    private static final int MAX_WIRE_PASSES = Config.MAX_BULK_PACKET_PASSES;
 
     public BulkPacket(int x, int y, BulkType bulkType) {
         super(x, y, bulkType.getSize() * 4, bulkType.getSize() * 4); // Larger visual size
@@ -54,9 +55,9 @@ public class BulkPacket extends Packet {
         // Bulk packets have different movement behavior
         // Constant speed on straight wires, acceleration on curves
         if (isOnCurve) {
-            currentSpeed = Math.min(2.0f, currentSpeed + 0.05f); // Accelerate on curves
+            currentSpeed = Math.min(Config.BULK_MAX_SPEED, currentSpeed + Config.BULK_CURVE_ACCELERATION); // Accelerate on curves
         } else {
-            currentSpeed = Math.max(1.0f, currentSpeed - 0.02f); // Decelerate on straight wires
+            currentSpeed = Math.max(Config.BULK_MIN_SPEED, currentSpeed - Config.BULK_STRAIGHT_DECELERATION); // Decelerate on straight wires
         }
         
         // LARGE bulk packets have center deviation behavior
@@ -65,9 +66,9 @@ public class BulkPacket extends Packet {
         }
         
         // Bulk packets also have slight random movement to simulate bulk data transfer
-        if (Math.random() < 0.1) { // 10% chance to add slight random movement
-            dx = (Math.random() - 0.5) * 0.3;
-            dy = (Math.random() - 0.5) * 0.3;
+        if (Math.random() < Config.BULK_RANDOM_MOVEMENT_CHANCE) { // 10% chance to add slight random movement
+            dx = (Math.random() - 0.5) * Config.BULK_RANDOM_MOVEMENT_AMOUNT;
+            dy = (Math.random() - 0.5) * Config.BULK_RANDOM_MOVEMENT_AMOUNT;
         }
     }
     
@@ -78,14 +79,14 @@ public class BulkPacket extends Packet {
     private void applyCenterDeviation() {
         // Simulate center deviation by adding slight random offset
         // This simulates the "center deviates from wire" behavior
-        if (Math.random() < 0.2) { // 20% chance to deviate
-            float deviationAmount = 0.5f; // Amount of deviation
+        if (Math.random() < Config.BULK_DEVIATION_CHANCE) { // 20% chance to deviate
+            float deviationAmount = Config.BULK_DEVIATION_AMOUNT; // Amount of deviation
             dx += (Math.random() - 0.5) * deviationAmount;
             dy += (Math.random() - 0.5) * deviationAmount;
             
             // Clamp deviation to reasonable bounds
-            dx = Math.max(-1.0f, Math.min(1.0f, dx));
-            dy = Math.max(-1.0f, Math.min(1.0f, dy));
+            dx = Math.max(-Config.BULK_DEVIATION_BOUNDS, Math.min(Config.BULK_DEVIATION_BOUNDS, dx));
+            dy = Math.max(-Config.BULK_DEVIATION_BOUNDS, Math.min(Config.BULK_DEVIATION_BOUNDS, dy));
         }
     }
 

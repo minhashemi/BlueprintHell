@@ -1,20 +1,21 @@
 package dev.aminhashemi.blueprinthell.model.entities.systems;
 
 import java.awt.Color;
+import dev.aminhashemi.blueprinthell.utils.Config;
 
 public enum PortType {
     // Phase 1 Port Types
-    SQUARE(Color.decode("#FF4757")),        // Bright red
-    TRIANGLE(Color.decode("#2ED573")),      // Bright green
+    SQUARE(Config.PortColors.SQUARE_COLOR),        // Bright red
+    TRIANGLE(Config.PortColors.TRIANGLE_COLOR),      // Bright green
     
     // Phase 2 Port Types
-    DIAMOND(Color.decode("#00FFFF")),       // Pure cyan
-    INFINITY(Color.decode("#FFFF00")),      // Pure yellow
-    PADLOCK(Color.decode("#FF69B4")),       // Hot pink
-    CAMOUFLAGE(Color.decode("#FFD700")),    // Pure gold
-    VPN(Color.decode("#FF00FF")),           // Pure magenta
-    MALICIOUS(Color.decode("#FF3838")),     // Bright crimson
-    SPY(Color.decode("#FF9F43"));           // Bright orange-red
+    DIAMOND(Config.PortColors.DIAMOND_COLOR),       // Pure cyan
+    INFINITY(Config.PortColors.INFINITY_COLOR),      // Pure yellow
+    PADLOCK(Config.PortColors.PADLOCK_COLOR),       // Hot pink
+    CAMOUFLAGE(Config.PortColors.CAMOUFLAGE_COLOR),    // Pure gold
+    VPN(Config.PortColors.VPN_COLOR),           // Pure magenta
+    MALICIOUS(Config.PortColors.MALICIOUS_COLOR),     // Bright crimson
+    SPY(Config.PortColors.SPY_COLOR);           // Bright orange-red
 
     private final Color color;
 

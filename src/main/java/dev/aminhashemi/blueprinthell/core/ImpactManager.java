@@ -3,6 +3,7 @@ package dev.aminhashemi.blueprinthell.core;
 import dev.aminhashemi.blueprinthell.model.MovingPacket;
 import dev.aminhashemi.blueprinthell.model.world.Impact;
 import dev.aminhashemi.blueprinthell.utils.AudioManager;
+import dev.aminhashemi.blueprinthell.utils.Config;
 
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -19,15 +20,15 @@ public class ImpactManager {
     private boolean waveEffectsEnabled;
     
     // Collision detection constants
-    private static final double COLLISION_THRESHOLD = 15.0; // Minimum distance for collision
-    private static final float NOISE_INCREASE_AMOUNT = 30.0f; // Noise increase on direct collision
-    private static final float WAVE_INTENSITY = 8.0f; // Reduced from 50.0f to prevent instant destruction
-    private static final long IMPACT_COOLDOWN_MS = 1000; // 1 second cooldown between impacts
+    private static final double COLLISION_THRESHOLD = Config.COLLISION_THRESHOLD; // Minimum distance for collision
+    private static final float NOISE_INCREASE_AMOUNT = Config.COLLISION_NOISE_INCREASE; // Noise increase on direct collision
+    private static final float WAVE_INTENSITY = Config.WAVE_INTENSITY; // Reduced from 50.0f to prevent instant destruction
+    private static final long IMPACT_COOLDOWN_MS = Config.IMPACT_COOLDOWN_MS; // 1 second cooldown between impacts
     
     // Chain reaction constants
-    private static final double CHAIN_REACTION_RADIUS = 80.0; // Radius for secondary impacts
-    private static final float CHAIN_REACTION_INTENSITY = 20.0f; // Intensity for chain reactions
-    private static final int MAX_CHAIN_REACTIONS = 3; // Maximum chain reaction depth
+    private static final double CHAIN_REACTION_RADIUS = Config.CHAIN_REACTION_RADIUS; // Radius for secondary impacts
+    private static final float CHAIN_REACTION_INTENSITY = Config.CHAIN_REACTION_INTENSITY; // Intensity for chain reactions
+    private static final int MAX_CHAIN_REACTIONS = Config.MAX_CHAIN_REACTIONS; // Maximum chain reaction depth
 
     public ImpactManager() {
         this.activeImpacts = new ArrayList<>();
