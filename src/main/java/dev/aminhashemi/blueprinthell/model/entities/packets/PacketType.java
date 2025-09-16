@@ -20,7 +20,10 @@ public enum PacketType {
     
     // Bulk Packet Types
     BULK_PACKET_SMALL(Config.Phase2Packets.BULK_SMALL_COLOR, Config.Phase2Packets.BULK_SMALL_SIZE, 0, Config.Phase2Packets.BULK_SMALL_COINS),        // Brown - Size 8, 8 coins
-    BULK_PACKET_LARGE(Config.Phase2Packets.BULK_LARGE_COLOR, Config.Phase2Packets.BULK_LARGE_SIZE, 0, Config.Phase2Packets.BULK_LARGE_COINS);      // Dark brown - Size 10, 10 coins
+    BULK_PACKET_LARGE(Config.Phase2Packets.BULK_LARGE_COLOR, Config.Phase2Packets.BULK_LARGE_SIZE, 0, Config.Phase2Packets.BULK_LARGE_COINS),      // Dark brown - Size 10, 10 coins
+    
+    // Trojan Packet Type (created by malicious systems)
+    TROJAN_PACKET(Color.decode("#8B0000"), 2, 0, 0);  // Dark red - Size 2, 0 coins (harmful)
 
     private final Color color;
     private final int size;

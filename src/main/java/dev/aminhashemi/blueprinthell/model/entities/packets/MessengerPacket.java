@@ -62,6 +62,12 @@ public class MessengerPacket extends Packet {
                 g.fillOval(x + 3, y + 3, 6, 6);
                 g.setColor(type.getColor());
                 break;
+            case TROJAN_PACKET:
+                // Draw trojan packet as corrupted square
+                g.fillRect(x, y, width, height);
+                g.setColor(Color.RED);
+                g.drawRect(x - 1, y - 1, width + 2, height + 2);
+                break;
             default:
                 // Fallback: draw as circle
                 g.fillOval(x, y, width, height);

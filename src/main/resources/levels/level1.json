@@ -3,7 +3,7 @@
   "levelName": "Phase 2 Packet Diversity Test",
   "playerStart": {
     "initialCoins": 20,
-    "initialWireLength": 8000
+    "initialWireLength": 5000
   },
   "systems": [
     {

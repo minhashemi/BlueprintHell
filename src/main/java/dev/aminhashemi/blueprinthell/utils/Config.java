@@ -138,6 +138,8 @@ public class Config {
     public static class Phase1Packets {
         public static final Color SQUARE_MESSENGER_COLOR = Color.decode("#FF4757");
         public static final Color TRIANGLE_MESSENGER_COLOR = Color.decode("#2ED573");
+        public static final int PROTECTED_PACKET_COINS = 5; // Protected packets give 5 coins
+        public static final int PROTECTED_PACKET_SIZE = 2; // Size value for protected packets
     }
     
     /** Phase 2 Packet Types */
@@ -252,7 +254,7 @@ public class Config {
     /** Default level settings */
     public static class LevelDefaults {
         public static final int INITIAL_COINS = 20;
-        public static final int INITIAL_WIRE_LENGTH = 8000;
+        public static final int INITIAL_WIRE_LENGTH = 5000;
         public static final int PACKET_GENERATION_COUNT = 15;
         public static final double PACKET_GENERATION_FREQUENCY = 2.0;
     }
@@ -375,5 +377,63 @@ public class Config {
      */
     public static int calculateMaxSnapshots(int fps, int timeWindowSeconds) {
         return fps * timeWindowSeconds;
+    }
+    
+    // ==================== ADDITIONAL HARDCODED VALUES ====================
+    
+    // Game Engine Constants
+    public static final double CLICK_THRESHOLD = 8.0; // Increased threshold for easier wire detection
+    public static final String WIRING_MODE_TEXT = "WIRING MODE ACTIVE";
+    public static final String IMPACT_TEXT = "IMPACT";
+    public static final String DESTROYED_TEXT = "DESTROYED";
+    public static final String TIME_TRAVEL_MODE_TEXT = "TIME TRAVEL MODE";
+    public static final String FONT_NAME = "Arial";
+    public static final int WIRING_MODE_FONT_SIZE = 14;
+    public static final int IMPACT_FONT_SIZE = 12;
+    public static final int DESTROYED_FONT_SIZE = 10;
+    public static final int TIME_TRAVEL_FONT_SIZE = 16;
+    public static final int SMALL_FONT_SIZE = 8;
+    public static final int MEDIUM_FONT_SIZE = 10;
+    public static final int LARGE_FONT_SIZE = 12;
+    
+    // System Constants
+    public static final int PACKET_GENERATION_RATE = 1000; // milliseconds
+    public static final double TROJAN_CONVERSION_PROBABILITY = 0.3; // 30% chance to convert to trojan
+    public static final double NOISE_ADDITION_PROBABILITY = 0.5; // 50% chance to add noise
+    public static final float NOISE_ADDITION_AMOUNT = 0.2f; // Amount of noise to add
+    
+    // Packet Constants
+    public static final long VISIBILITY_TOGGLE_INTERVAL = 2000; // 2 seconds
+    public static final int PROTECTED_PACKET_SIZE = 24; // Twice the size of normal packets
+    public static final int NORMAL_PACKET_SIZE = 12; // Base packet size
+    
+    
+    // HUD Constants
+    public static final int HUD_LINE_HEIGHT = 20;
+    public static final int HUD_TEXT_SPACING = 15;
+    
+    // Color Constants for hardcoded colors
+    public static final Color WIRING_MODE_COLOR = Color.YELLOW;
+    public static final Color IMPACT_COLOR = Color.RED;
+    public static final Color DESTROYED_COLOR = Color.RED;
+    public static final Color WIRE_VALID_COLOR = Color.GREEN;
+    public static final Color WIRE_INVALID_COLOR = Color.RED;
+    public static final Color TIME_TRAVEL_COLOR = Color.CYAN;
+    public static final Color SNAPSHOT_COLOR = Color.MAGENTA;
+    public static final Color WIRE_LENGTH_COLOR = Color.YELLOW;
+    public static final Color SYSTEM_COUNT_COLOR = Color.WHITE;
+    public static final Color WIRE_COUNT_COLOR = Color.RED;
+    public static final Color PACKET_COUNT_COLOR = Color.ORANGE;
+    public static final Color SYSTEM_BORDER_COLOR = Color.WHITE;
+    public static final Color SYSTEM_TEXT_COLOR = Color.WHITE;
+    public static final Color REFERENCE_TEXT_COLOR = Color.BLACK;
+    public static final Color INACTIVE_SYSTEM_COLOR = Color.decode("#95A5A6"); // Gray when inactive
+    
+    // Port Colors for systems
+    public static class SystemColors {
+        public static final Color MALICIOUS_COLOR = Color.decode("#FF3838"); // Bright crimson
+        public static final Color VPN_COLOR = Color.decode("#A55EEA"); // Bright purple
+        public static final Color SPY_COLOR = Color.decode("#FF9F43"); // Bright orange-red
+        public static final Color REFERENCE_COLOR = Color.decode("#00D2FF"); // Bright cyan
     }
 }

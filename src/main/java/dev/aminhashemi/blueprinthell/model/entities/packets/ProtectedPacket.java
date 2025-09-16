@@ -2,6 +2,7 @@ package dev.aminhashemi.blueprinthell.model.entities.packets;
 
 import dev.aminhashemi.blueprinthell.core.GameEngine;
 import dev.aminhashemi.blueprinthell.utils.Logger;
+import dev.aminhashemi.blueprinthell.utils.Config;
 
 import java.awt.*;
 
@@ -21,10 +22,10 @@ public class ProtectedPacket extends Packet {
     private final PacketType protectedType;
     private boolean isVisible = false; // Hidden by default
     private long lastVisibilityToggle = 0;
-    private static final long VISIBILITY_TOGGLE_INTERVAL = 2000; // 2 seconds
+    private static final long VISIBILITY_TOGGLE_INTERVAL = Config.VISIBILITY_TOGGLE_INTERVAL; // 2 seconds
 
     public ProtectedPacket(int x, int y, PacketType originalType) {
-        super(x, y, 24, 24); // Twice the size of normal packets
+        super(x, y, Config.PROTECTED_PACKET_SIZE, Config.PROTECTED_PACKET_SIZE); // Twice the size of normal packets
         this.originalType = originalType;
         this.protectedType = PacketType.PADLOCK_ICON; // Always appears as protected
     }
@@ -92,12 +93,12 @@ public class ProtectedPacket extends Packet {
         g.fillRect(x + 8, y + 10, width - 16, height - 12);
         
         // Draw protection indicator
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.BOLD, 8));
+        g.setColor(Config.SYSTEM_TEXT_COLOR);
+        g.setFont(new Font(Config.FONT_NAME, Font.BOLD, Config.SMALL_FONT_SIZE));
         g.drawString("P", x + width/2 - 3, y + height/2 + 3);
         
         // Draw size indicator (showing it's larger)
-        g.setColor(Color.YELLOW);
+        g.setColor(Config.WIRING_MODE_COLOR);
         g.drawRect(x, y, width, height);
     }
 
@@ -154,14 +155,14 @@ public class ProtectedPacket extends Packet {
      * Returns the coin reward for this packet type
      */
     public int getCoinReward() {
-        return 5; // Protected packets give 5 coins
+        return Config.Phase1Packets.PROTECTED_PACKET_COINS; // Protected packets give 5 coins
     }
 
     /**
      * Returns the size of this packet
      */
     public int getPacketSize() {
-        return 2; // Twice the size of original packet
+        return Config.Phase1Packets.PROTECTED_PACKET_SIZE; // Twice the size of original packet
     }
     
     // ==================== SAVE SYSTEM SUPPORT ====================

@@ -7,16 +7,26 @@ import dev.aminhashemi.blueprinthell.view.ui.SettingsPanel;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * Main application window that manages different UI panels.
+ * Uses CardLayout to switch between main menu, game, and settings screens.
+ */
 public class GameFrame extends JFrame {
 
-    private final CardLayout cardLayout;
-    private final JPanel mainPanel;
-    private GameEngine gameEngine;
+    // ==================== UI COMPONENTS ====================
+    private final CardLayout cardLayout;    // Layout manager for panel switching
+    private final JPanel mainPanel;        // Container for all panels
+    private GameEngine gameEngine;         // Core game engine instance
 
+    // ==================== PANEL CONSTANTS ====================
     public static final String MAIN_MENU_PANEL = "MainMenuPanel";
     public static final String GAME_PANEL = "GamePanel";
     public static final String SETTINGS_PANEL = "SettingsPanel";
 
+    /**
+     * Constructs the main game window and initializes all UI panels.
+     * Sets up the game engine and establishes connections between components.
+     */
     public GameFrame() {
         setUndecorated(true);
         setResizable(false);
@@ -25,6 +35,7 @@ public class GameFrame extends JFrame {
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
 
+        // Create UI panels
         MainMenuPanel mainMenuPanel = new MainMenuPanel(this);
         GamePanel gamePanel = new GamePanel();
         SettingsPanel settingsPanel = new SettingsPanel(this);
@@ -33,6 +44,7 @@ public class GameFrame extends JFrame {
         gameEngine = new GameEngine(gamePanel);
         gamePanel.setGameEngine(gameEngine);
 
+        // Add panels to main container
         mainPanel.add(mainMenuPanel, MAIN_MENU_PANEL);
         mainPanel.add(gamePanel, GAME_PANEL);
         mainPanel.add(settingsPanel, SETTINGS_PANEL);
@@ -45,6 +57,10 @@ public class GameFrame extends JFrame {
         setVisible(true);
     }
 
+    /**
+     * Switches to the specified panel and starts game loop if needed.
+     * @param panelName The name of the panel to switch to
+     */
     public void switchToPanel(String panelName) {
         cardLayout.show(mainPanel, panelName);
         mainPanel.revalidate();

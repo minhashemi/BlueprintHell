@@ -20,4 +20,14 @@ public abstract class Packet extends Entity {
     @Override
     public abstract void update(GameEngine engine);
     public abstract PacketType getType();
+    
+    // Getters and setters
+    public double getNoise() { return noise; }
+    public void setNoise(double noise) { this.noise = noise; }
+    public double getSpeed() { return speed; }
+    public void setSpeed(double speed) { this.speed = speed; }
+    public double getDx() { return dx; }
+    public void setDx(double dx) { this.dx = dx; }
+    public double getDy() { return dy; }
+    public void setDy(double dy) { this.dy = dy; }
 }

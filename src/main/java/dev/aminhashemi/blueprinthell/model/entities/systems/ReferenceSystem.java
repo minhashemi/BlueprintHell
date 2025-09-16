@@ -7,6 +7,7 @@ import dev.aminhashemi.blueprinthell.model.entities.packets.Packet;
 import dev.aminhashemi.blueprinthell.model.entities.packets.PacketType;
 import dev.aminhashemi.blueprinthell.model.entities.packets.ConfidentialPacket;
 import dev.aminhashemi.blueprinthell.model.entities.packets.BulkPacket;
+import dev.aminhashemi.blueprinthell.utils.Config;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ public class ReferenceSystem extends System {
     private final Random random = new Random();
 
     public ReferenceSystem(int x, int y, LevelData.SystemData data) {
-        super(x, y, 100, 80, data);
+        super(x, y, Config.SYSTEM_WIDTH, Config.SYSTEM_HEIGHT, data);
     }
 
     public void spawnRandomPacket(GameEngine engine) {
@@ -86,11 +87,11 @@ public class ReferenceSystem extends System {
 
     @Override
     public void draw(Graphics2D g) {
-        g.setColor(Color.decode("#00D2FF")); // Bright cyan
+        g.setColor(Config.SystemColors.REFERENCE_COLOR); // Bright cyan
         g.fillRect(x, y, width, height);
-        g.setColor(Color.WHITE); // White border
+        g.setColor(Config.SYSTEM_BORDER_COLOR); // White border
         g.drawRect(x, y, width, height);
-        g.setColor(Color.BLACK); // Black text
+        g.setColor(Config.REFERENCE_TEXT_COLOR); // Black text
         g.drawString("REF", x + 10, y + 20);
 
         for (Port port : inputPorts) {
@@ -108,7 +109,7 @@ public class ReferenceSystem extends System {
     
     // ==================== SAVE SYSTEM SUPPORT ====================
     
-    private int packetGenerationRate = 1000; // milliseconds
+    private int packetGenerationRate = Config.PACKET_GENERATION_RATE; // milliseconds
     private long lastSpawnTime = 0;
     
     /**
