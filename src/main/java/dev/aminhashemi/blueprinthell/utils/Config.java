@@ -461,13 +461,22 @@ public class Config {
         public static final int SHOP_BUTTON_HEIGHT = 30;
         public static final int SHOP_MARGIN = 20;
         
-        // Shop Items
-        public static final int WIRE_LENGTH_UPGRADE_COST = 10; // 10 coins for 1000m wire
-        public static final int WIRE_LENGTH_UPGRADE_AMOUNT = 1000; // 1000m per upgrade
-        public static final int SYSTEM_UPGRADE_COST = 15; // 15 coins for system upgrade
-        public static final int PACKET_SPEED_UPGRADE_COST = 20; // 20 coins for speed boost
-        public static final int PACKET_SPEED_UPGRADE_AMOUNT = 1; // 1 speed unit per upgrade
-        public static final int COIN_MULTIPLIER_COST = 25; // 25 coins for 2x coin multiplier
-        public static final int COIN_MULTIPLIER_AMOUNT = 2; // 2x multiplier
+        // Phase 1 Shop Items (Temporary Effects)
+        public static final int O_ATAR_COST = 3; // 3 coins - disables impact waves for 10 seconds
+        public static final int O_ATAR_DURATION = 10; // 10 seconds
+        
+        public static final int O_AIRYAMAN_COST = 4; // 4 coins - disables collisions for 5 seconds
+        public static final int O_AIRYAMAN_DURATION = 5; // 5 seconds
+        
+        public static final int O_ANAHITA_COST = 5; // 5 coins - zeros all packet noise
+        
+        // Phase 2 Shop Items (Temporary Effects)
+        public static final int SCROLL_AERGIA_COST = 10; // 10 coins - zero acceleration for 20 seconds
+        public static final int SCROLL_AERGIA_DURATION = 20; // 20 seconds
+        
+        public static final int SCROLL_SISYPHUS_COST = 15; // 15 coins - move system
+        
+        public static final int SCROLL_ELIPHAS_COST = 20; // 20 coins - restore gravity for 30 seconds
+        public static final int SCROLL_ELIPHAS_DURATION = 30; // 30 seconds
     }
 }

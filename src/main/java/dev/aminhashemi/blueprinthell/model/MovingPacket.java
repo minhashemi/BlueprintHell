@@ -86,7 +86,7 @@ public class MovingPacket {
         if (segmentLength == 0) segmentLength = 1; // Avoid division by zero
 
         // Calculate movement based on current speed and packet type
-        double effectiveSpeed = calculateEffectiveSpeed();
+        double effectiveSpeed = calculateEffectiveSpeed(engine);
         double progressThisUpdate = effectiveSpeed / segmentLength;
         progressOnSegment += progressThisUpdate;
 
@@ -363,8 +363,11 @@ public class MovingPacket {
     /**
      * Calculates the effective speed for movement based on packet type and conditions
      */
-    private double calculateEffectiveSpeed() {
+    private double calculateEffectiveSpeed(GameEngine engine) {
         double baseSpeed = currentSpeed * 2.0; // Convert to pixels per update
+        
+        // Apply global speed multiplier from shop upgrades
+        baseSpeed *= engine.getPacketSpeedMultiplier();
         
         // Apply packet-specific speed modifications
         if (packet instanceof BulkPacket) {
