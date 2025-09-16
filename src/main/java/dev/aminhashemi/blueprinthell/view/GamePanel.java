@@ -9,23 +9,37 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyAdapter;
 
+/**
+ * Main game rendering panel that displays the game world and HUD.
+ * Handles input events and renders all game entities including systems, wires, and packets.
+ */
 public class GamePanel extends JPanel {
 
-    private GameEngine gameEngine;
-    private boolean showHUD = true;
-    private long hudToggleTime = 0;
+    // ==================== CORE COMPONENTS ====================
+    private GameEngine gameEngine;              // Reference to the game engine
+    
+    // ==================== HUD STATE ====================
+    private boolean showHUD = true;             // Whether HUD is currently visible
+    private long hudToggleTime = 0;             // When HUD was last toggled
     private static final long HUD_DISPLAY_DURATION = Config.HUD_DISPLAY_DURATION; // 3 seconds
     
-    // HUD state variables
-    private int remainingWireLength = Config.TOTAL_WIRE_LENGTH;
-    private int temporalProgress = 0;
-    private int packetLoss = 0;
-    private int coins = Config.LevelDefaults.INITIAL_COINS;
+    // HUD data variables
+    private int remainingWireLength = Config.TOTAL_WIRE_LENGTH;  // Available wire length
+    private int temporalProgress = 0;           // Game progress percentage
+    private int packetLoss = 0;                 // Number of lost packets
+    private int coins = Config.LevelDefaults.INITIAL_COINS; // Current coin count
 
+    /**
+     * Constructs the game panel and initializes basic settings.
+     */
     public GamePanel() {
         initPanel();
     }
 
+    /**
+     * Sets the game engine and configures input handlers.
+     * @param gameEngine The game engine instance to connect to
+     */
     public void setGameEngine(GameEngine gameEngine) {
         this.gameEngine = gameEngine;
 
@@ -121,7 +135,7 @@ public class GamePanel extends JPanel {
         // HUD content - Only required information from documentation
         g.setFont(new Font(Config.Fonts.DEFAULT_FONT_FAMILY, Font.PLAIN, Config.Fonts.HUD_TEXT_SIZE));
         int textY = hudY + 45;
-        int lineHeight = 20;
+        int lineHeight = Config.HUD_LINE_HEIGHT;
         
         // Required: Wire Length
         g.setColor(Config.getWireLengthColor(remainingWireLength));
@@ -142,7 +156,7 @@ public class GamePanel extends JPanel {
         g.setColor(Color.WHITE);
         g.setFont(new Font(Config.Fonts.DEFAULT_FONT_FAMILY, Font.BOLD, Config.Fonts.HUD_SMALL_TEXT_SIZE));
         g.drawString("Network Status:", hudX + 15, textY);
-        textY += 15;
+        textY += Config.HUD_TEXT_SPACING;
         
         g.setFont(new Font(Config.Fonts.DEFAULT_FONT_FAMILY, Font.PLAIN, Config.Fonts.HUD_SMALL_TEXT_SIZE));
         g.setColor(Config.HUD_ACTIVE_SYSTEMS_COLOR);

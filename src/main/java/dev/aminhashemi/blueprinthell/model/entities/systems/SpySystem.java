@@ -5,6 +5,7 @@ import dev.aminhashemi.blueprinthell.model.LevelData;
 import dev.aminhashemi.blueprinthell.model.entities.packets.Packet;
 import dev.aminhashemi.blueprinthell.model.MovingPacket;
 import dev.aminhashemi.blueprinthell.utils.Logger;
+import dev.aminhashemi.blueprinthell.utils.Config;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ public class SpySystem extends System {
     private boolean isActive = true; // Can be disabled by other systems
 
     public SpySystem(int x, int y, LevelData.SystemData data) {
-        super(x, y, 100, 80, data);
+        super(x, y, Config.SYSTEM_WIDTH, Config.SYSTEM_HEIGHT, data);
         this.spyNetwork = new ArrayList<>();
     }
 
@@ -224,14 +225,14 @@ public class SpySystem extends System {
     public void draw(Graphics2D g) {
         // Draw system body with spy-themed colors
         if (isActive) {
-            g.setColor(Color.decode("#FF9F43")); // Bright orange-red when active
+            g.setColor(Config.SystemColors.SPY_COLOR); // Bright orange-red when active
         } else {
-            g.setColor(Color.decode("#95A5A6")); // Gray when inactive
+            g.setColor(Config.INACTIVE_SYSTEM_COLOR); // Gray when inactive
         }
         g.fillRect(x, y, width, height);
         
         // Draw border
-        g.setColor(Color.WHITE);
+        g.setColor(Config.SYSTEM_BORDER_COLOR);
         g.drawRect(x, y, width, height);
         
         // Draw spy symbol
