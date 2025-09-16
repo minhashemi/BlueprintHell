@@ -1,6 +1,7 @@
 package dev.aminhashemi.blueprinthell.utils;
 
 import java.awt.Color;
+import java.awt.event.KeyEvent;
 
 /**
  * Centralized configuration class for all game constants and parameters.
@@ -335,19 +336,6 @@ public class Config {
     
     // ==================== INPUT CONFIGURATION ====================
     
-    /** Key bindings */
-    public static class KeyBindings {
-        public static final int WIRING_MODE_KEY = 87; // W key
-        public static final int PAUSE_KEY = 80; // P key
-        public static final int TIME_TRAVEL_KEY = 84; // T key
-        public static final int SPAWN_PACKET_KEY = 32; // Space key
-        public static final int TOGGLE_HUD_KEY = 72; // H key
-        public static final int TIME_LEFT_KEY = 37; // Left arrow
-        public static final int TIME_RIGHT_KEY = 39; // Right arrow
-        public static final int SAVE_KEY = 83; // S key (with Ctrl)
-        public static final int LOAD_KEY = 76; // L key (with Ctrl)
-    }
-    
     // ==================== UTILITY METHODS ====================
     
     /**
@@ -435,5 +423,51 @@ public class Config {
         public static final Color VPN_COLOR = Color.decode("#A55EEA"); // Bright purple
         public static final Color SPY_COLOR = Color.decode("#FF9F43"); // Bright orange-red
         public static final Color REFERENCE_COLOR = Color.decode("#00D2FF"); // Bright cyan
+    }
+    
+    // Input Constants
+    public static class Input {
+        public static final int WIRING_MODE_KEY = KeyEvent.VK_W;
+        public static final int PAUSE_KEY = KeyEvent.VK_P;
+        public static final int TIME_TRAVEL_KEY = KeyEvent.VK_T;
+        public static final int SAVE_KEY = KeyEvent.VK_S;
+        public static final int LOAD_KEY = KeyEvent.VK_L;
+        public static final int HUD_TOGGLE_KEY = KeyEvent.VK_H;
+        public static final int WIRE_CLEAN_KEY = KeyEvent.VK_C; // Hold C and click to clean wires
+        public static final int SHOP_KEY = KeyEvent.VK_B; // B key to open/close shop
+        public static final int SPAWN_PACKET_KEY = KeyEvent.VK_SPACE; // Space key to spawn packets
+        public static final int TIME_LEFT_KEY = KeyEvent.VK_LEFT; // Left arrow for time travel
+        public static final int TIME_RIGHT_KEY = KeyEvent.VK_RIGHT; // Right arrow for time travel
+    }
+    
+    // Shop Constants
+    public static class Shop {
+        // Shop UI Colors
+        public static final Color SHOP_BACKGROUND_COLOR = new Color(0, 0, 0, 200); // Semi-transparent black
+        public static final Color SHOP_PANEL_COLOR = new Color(50, 50, 50); // Dark gray
+        public static final Color SHOP_BORDER_COLOR = Color.WHITE;
+        public static final Color SHOP_TEXT_COLOR = Color.WHITE;
+        public static final Color SHOP_TITLE_COLOR = Color.YELLOW;
+        public static final Color SHOP_ITEM_COLOR = Color.CYAN;
+        public static final Color SHOP_PRICE_COLOR = Color.GREEN;
+        public static final Color SHOP_BUTTON_COLOR = new Color(70, 130, 180); // Steel blue
+        public static final Color SHOP_BUTTON_HOVER_COLOR = new Color(100, 149, 237); // Cornflower blue
+        
+        // Shop UI Dimensions
+        public static final int SHOP_PANEL_WIDTH = 600;
+        public static final int SHOP_PANEL_HEIGHT = 400;
+        public static final int SHOP_ITEM_HEIGHT = 40;
+        public static final int SHOP_BUTTON_WIDTH = 100;
+        public static final int SHOP_BUTTON_HEIGHT = 30;
+        public static final int SHOP_MARGIN = 20;
+        
+        // Shop Items
+        public static final int WIRE_LENGTH_UPGRADE_COST = 10; // 10 coins for 1000m wire
+        public static final int WIRE_LENGTH_UPGRADE_AMOUNT = 1000; // 1000m per upgrade
+        public static final int SYSTEM_UPGRADE_COST = 15; // 15 coins for system upgrade
+        public static final int PACKET_SPEED_UPGRADE_COST = 20; // 20 coins for speed boost
+        public static final int PACKET_SPEED_UPGRADE_AMOUNT = 1; // 1 speed unit per upgrade
+        public static final int COIN_MULTIPLIER_COST = 25; // 25 coins for 2x coin multiplier
+        public static final int COIN_MULTIPLIER_AMOUNT = 2; // 2x multiplier
     }
 }

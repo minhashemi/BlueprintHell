@@ -25,6 +25,8 @@ import dev.aminhashemi.blueprinthell.utils.Logger;
 import dev.aminhashemi.blueprinthell.utils.SaveManager;
 import dev.aminhashemi.blueprinthell.utils.Config;
 import dev.aminhashemi.blueprinthell.model.SaveData;
+import dev.aminhashemi.blueprinthell.model.shop.ShopManager;
+import dev.aminhashemi.blueprinthell.model.shop.WireLengthUpgrade;
 import dev.aminhashemi.blueprinthell.view.GamePanel;
 
 import java.awt.*;
@@ -67,6 +69,8 @@ public class GameEngine implements Runnable {
     private ArcPoint draggedArcPoint = null;     // Arc point being dragged for wire modification
     private Point dragOffset = null;             // Mouse offset when dragging
     private boolean inWiringMode = false;        // Whether user is in wire creation mode
+    private boolean isShopOpen = false;          // Whether shop overlay is open
+    private ShopManager shopManager;             // Shop management system
     private Wire previewWire = null;             // Preview wire being created
     private Point currentMousePos = new Point(); // Current mouse position for preview
     
@@ -161,6 +165,17 @@ public class GameEngine implements Runnable {
             totalWireLength = levelData.playerStart.initialWireLength;
             Logger.getInstance().info("Level loaded with initial wire length: " + totalWireLength + "m");
         }
+        
+        // Initialize shop manager
+        shopManager = new ShopManager(getCoins());
+        
+        // Add shop items (extensible design)
+        shopManager.addShopItem(new WireLengthUpgrade(() -> {
+            totalWireLength += Config.Shop.WIRE_LENGTH_UPGRADE_AMOUNT;
+            if (gamePanel != null) {
+                gamePanel.updateHUDData(getRemainingWireLength(), 0, 0, getCoins());
+            }
+        }));
     }
 
     /**
@@ -341,6 +356,11 @@ public class GameEngine implements Runnable {
             g.setColor(Config.WIRING_MODE_COLOR);
             g.setFont(new Font(Config.FONT_NAME, Font.BOLD, Config.WIRING_MODE_FONT_SIZE));
             g.drawString(Config.WIRING_MODE_TEXT, 10, 20);
+        }
+        
+        // Draw shop overlay if open
+        if (isShopOpen) {
+            drawShopOverlay(g);
         }
         
         // Display impact system info
@@ -646,7 +666,7 @@ public class GameEngine implements Runnable {
             movingPackets.add(movingPacket);
             Logger.getInstance().info("Packet " + packet.getType() + " spawned with spawn protection. Total packets: " + movingPackets.size());
             Logger.getInstance().info("Packet path has " + movingPacket.getWire().getAllPoints().size() + " points");
-                } else {
+            } else {
             Logger.getInstance().warning("No available wires for packet spawning from " + spawner);
         }
     }
@@ -760,6 +780,153 @@ public class GameEngine implements Runnable {
         this.inWiringMode = isEnabled;
         if (!isEnabled) {
             previewWire = null;
+        }
+    }
+    
+    /**
+     * Toggles shop overlay
+     */
+    public void toggleShop() {
+        this.isShopOpen = !this.isShopOpen;
+        if (isShopOpen) {
+            Logger.getInstance().info("Shop opened");
+        } else {
+            Logger.getInstance().info("Shop closed");
+        }
+    }
+    
+    /**
+     * Checks if shop is open
+     */
+    public boolean isShopOpen() {
+        return isShopOpen;
+    }
+    
+    /**
+     * Closes shop
+     */
+    public void closeShop() {
+        this.isShopOpen = false;
+        Logger.getInstance().info("Shop closed");
+    }
+    
+    /**
+     * Draws the shop overlay
+     */
+    private void drawShopOverlay(Graphics2D g) {
+        int screenWidth = gamePanel.getWidth();
+        int screenHeight = gamePanel.getHeight();
+        
+        // Draw semi-transparent background
+        g.setColor(Config.Shop.SHOP_BACKGROUND_COLOR);
+        g.fillRect(0, 0, screenWidth, screenHeight);
+        
+        // Calculate shop panel position (centered)
+        int panelX = (screenWidth - Config.Shop.SHOP_PANEL_WIDTH) / 2;
+        int panelY = (screenHeight - Config.Shop.SHOP_PANEL_HEIGHT) / 2;
+        
+        // Draw shop panel
+        g.setColor(Config.Shop.SHOP_PANEL_COLOR);
+        g.fillRect(panelX, panelY, Config.Shop.SHOP_PANEL_WIDTH, Config.Shop.SHOP_PANEL_HEIGHT);
+        
+        // Draw shop border
+        g.setColor(Config.Shop.SHOP_BORDER_COLOR);
+        g.setStroke(new BasicStroke(2));
+        g.drawRect(panelX, panelY, Config.Shop.SHOP_PANEL_WIDTH, Config.Shop.SHOP_PANEL_HEIGHT);
+        g.setStroke(new BasicStroke(1));
+        
+        // Draw shop title
+        g.setColor(Config.Shop.SHOP_TITLE_COLOR);
+        g.setFont(new Font(Config.FONT_NAME, Font.BOLD, 24));
+        String title = "🛒 SHOP";
+        int titleWidth = g.getFontMetrics().stringWidth(title);
+        g.drawString(title, panelX + (Config.Shop.SHOP_PANEL_WIDTH - titleWidth) / 2, panelY + 40);
+        
+        // Draw coins display
+        g.setColor(Config.Shop.SHOP_PRICE_COLOR);
+        g.setFont(new Font(Config.FONT_NAME, Font.BOLD, 18));
+        String coinsText = "💰 Coins: " + getCoins();
+        g.drawString(coinsText, panelX + Config.Shop.SHOP_MARGIN, panelY + 70);
+        
+        // Draw shop items using ShopManager
+        int itemY = panelY + 100;
+        g.setFont(new Font(Config.FONT_NAME, Font.PLAIN, 16));
+        
+        if (shopManager != null) {
+            for (int i = 0; i < shopManager.getShopItems().size(); i++) {
+                var item = shopManager.getShopItems().get(i);
+                drawShopItem(g, panelX, itemY, item.getName(), item.getCost(), item.getKeyBinding());
+                itemY += Config.Shop.SHOP_ITEM_HEIGHT;
+            }
+        }
+        
+        // Draw close button
+        int closeButtonX = panelX + Config.Shop.SHOP_PANEL_WIDTH - Config.Shop.SHOP_BUTTON_WIDTH - Config.Shop.SHOP_MARGIN;
+        int closeButtonY = panelY + Config.Shop.SHOP_PANEL_HEIGHT - Config.Shop.SHOP_BUTTON_HEIGHT - Config.Shop.SHOP_MARGIN;
+        
+        g.setColor(Config.Shop.SHOP_BUTTON_COLOR);
+        g.fillRect(closeButtonX, closeButtonY, Config.Shop.SHOP_BUTTON_WIDTH, Config.Shop.SHOP_BUTTON_HEIGHT);
+        g.setColor(Config.Shop.SHOP_BORDER_COLOR);
+        g.drawRect(closeButtonX, closeButtonY, Config.Shop.SHOP_BUTTON_WIDTH, Config.Shop.SHOP_BUTTON_HEIGHT);
+        
+        g.setColor(Config.Shop.SHOP_TEXT_COLOR);
+        g.setFont(new Font(Config.FONT_NAME, Font.BOLD, 14));
+        String closeText = "Close (B)";
+        int closeTextWidth = g.getFontMetrics().stringWidth(closeText);
+        g.drawString(closeText, closeButtonX + (Config.Shop.SHOP_BUTTON_WIDTH - closeTextWidth) / 2, closeButtonY + 20);
+        
+        // Draw instructions
+        g.setColor(Config.Shop.SHOP_TEXT_COLOR);
+        g.setFont(new Font(Config.FONT_NAME, Font.PLAIN, 12));
+        String instructions = "Press B1-B4 to buy items, B to close";
+        g.drawString(instructions, panelX + Config.Shop.SHOP_MARGIN, panelY + Config.Shop.SHOP_PANEL_HEIGHT - 10);
+    }
+    
+    /**
+     * Draws a shop item
+     */
+    private void drawShopItem(Graphics2D g, int panelX, int itemY, String itemName, int cost, String key) {
+        // Item background
+        g.setColor(new Color(60, 60, 60));
+        g.fillRect(panelX + Config.Shop.SHOP_MARGIN, itemY, Config.Shop.SHOP_PANEL_WIDTH - 2 * Config.Shop.SHOP_MARGIN, Config.Shop.SHOP_ITEM_HEIGHT - 5);
+        
+        // Item border
+        g.setColor(Config.Shop.SHOP_BORDER_COLOR);
+        g.drawRect(panelX + Config.Shop.SHOP_MARGIN, itemY, Config.Shop.SHOP_PANEL_WIDTH - 2 * Config.Shop.SHOP_MARGIN, Config.Shop.SHOP_ITEM_HEIGHT - 5);
+        
+        // Item name
+        g.setColor(Config.Shop.SHOP_ITEM_COLOR);
+        g.setFont(new Font(Config.FONT_NAME, Font.BOLD, 14));
+        g.drawString(itemName, panelX + Config.Shop.SHOP_MARGIN + 10, itemY + 20);
+        
+        // Price
+        g.setColor(Config.Shop.SHOP_PRICE_COLOR);
+        g.drawString("💰 " + cost + " coins", panelX + Config.Shop.SHOP_PANEL_WIDTH - 150, itemY + 20);
+        
+        // Key binding
+        g.setColor(Config.Shop.SHOP_TEXT_COLOR);
+        g.setFont(new Font(Config.FONT_NAME, Font.PLAIN, 12));
+        g.drawString("(" + key + ")", panelX + Config.Shop.SHOP_PANEL_WIDTH - 50, itemY + 20);
+    }
+    
+    /**
+     * Handles shop purchases using ShopManager (SOLID principles)
+     */
+    public void handleShopPurchase(int itemNumber) {
+        if (!isShopOpen || shopManager == null) return;
+        
+        // Update shop manager with current coins
+        shopManager.setPlayerCoins(getCoins());
+        
+        // Attempt purchase (0-based index)
+        if (shopManager.purchaseItem(itemNumber - 1)) {
+            // Update game coins to match shop manager
+            setCoins(shopManager.getPlayerCoins());
+            
+            // Update HUD
+            if (gamePanel != null) {
+                gamePanel.updateHUDData(getRemainingWireLength(), 0, 0, getCoins());
+            }
         }
     }
 

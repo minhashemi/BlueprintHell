@@ -74,6 +74,31 @@ public class GamePanel extends JPanel {
                         }
                         repaint();
                         break;
+                    case KeyEvent.VK_B:
+                        if (gameEngine != null) {
+                            gameEngine.toggleShop();
+                        }
+                        break;
+                    case KeyEvent.VK_1:
+                        if (gameEngine != null && gameEngine.isShopOpen()) {
+                            gameEngine.handleShopPurchase(1);
+                        }
+                        break;
+                    case KeyEvent.VK_2:
+                        if (gameEngine != null && gameEngine.isShopOpen()) {
+                            gameEngine.handleShopPurchase(2);
+                        }
+                        break;
+                    case KeyEvent.VK_3:
+                        if (gameEngine != null && gameEngine.isShopOpen()) {
+                            gameEngine.handleShopPurchase(3);
+                        }
+                        break;
+                    case KeyEvent.VK_4:
+                        if (gameEngine != null && gameEngine.isShopOpen()) {
+                            gameEngine.handleShopPurchase(4);
+                        }
+                        break;
                 }
             }
         });
