@@ -13,6 +13,7 @@ import dev.aminhashemi.blueprinthell.model.entities.systems.SpySystem;
 import dev.aminhashemi.blueprinthell.model.entities.systems.Port;
 import dev.aminhashemi.blueprinthell.model.entities.packets.MessengerPacket;
 import dev.aminhashemi.blueprinthell.model.entities.packets.ProtectedPacket;
+import dev.aminhashemi.blueprinthell.model.entities.packets.TrojanPacket;
 import dev.aminhashemi.blueprinthell.model.entities.packets.ConfidentialPacket;
 import dev.aminhashemi.blueprinthell.model.entities.packets.BulkPacket;
 import dev.aminhashemi.blueprinthell.model.world.ArcPoint;
@@ -41,55 +42,69 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+/**
+ * Core game engine that manages the game loop, entities, and game state.
+ * Handles packet routing, collision detection, time travel, and wire management.
+ * Implements the main game logic and coordinates between different game systems.
+ */
 public class GameEngine implements Runnable {
+    
+    // ==================== CORE GAME COMPONENTS ====================
+    private final GamePanel gamePanel;           // UI panel for rendering
+    private Thread gameThread;                   // Main game loop thread
+    private volatile boolean running = false;    // Game loop control flag
+    private final int FPS_SET = Config.TARGET_FPS;   // Target frames per second
+    private final int UPS_SET = Config.TARGET_UPS;   // Target updates per second
 
-    private final GamePanel gamePanel;
-    private Thread gameThread;
-    private volatile boolean running = false;
-    private final int FPS_SET = Config.TARGET_FPS;
-    private final int UPS_SET = Config.TARGET_UPS;
+    // ==================== GAME ENTITIES ====================
+    private List<System> systems;                // All network systems (Reference, VPN, Malicious, Spy)
+    private List<Wire> wires;                    // All wire connections between systems
+    private List<MovingPacket> movingPackets;    // All packets currently in transit
+    private ImpactManager impactManager;         // Handles packet collisions and impacts
 
-    private List<System> systems;
-    private List<Wire> wires;
-    private List<MovingPacket> movingPackets;
-    private ImpactManager impactManager;
-
-    private System draggedSystem = null;
-    private ArcPoint draggedArcPoint = null;
-    private Point dragOffset = null;
-    private boolean inWiringMode = false;
-    private Wire previewWire = null;
-    private Point currentMousePos = new Point();
-    private long lastUpdateTime;
+    // ==================== INTERACTION STATE ====================
+    private System draggedSystem = null;         // System being dragged by mouse
+    private ArcPoint draggedArcPoint = null;     // Arc point being dragged for wire modification
+    private Point dragOffset = null;             // Mouse offset when dragging
+    private boolean inWiringMode = false;        // Whether user is in wire creation mode
+    private Wire previewWire = null;             // Preview wire being created
+    private Point currentMousePos = new Point(); // Current mouse position for preview
+    
+    // ==================== GAME STATE ====================
+    private long lastUpdateTime;                 // Last update timestamp for FPS calculation
     private int totalWireLength = Config.TOTAL_WIRE_LENGTH; // Total available wire length
-    private int usedWireLength = 0; // Wire length already used
+    private int usedWireLength = 0;              // Wire length already used
     private Map<Wire, Integer> wireLengths = new HashMap<>(); // Track individual wire lengths
-    private int coins = 0; // Current coins - start at 0
-    private long lastSpawnTime = 0; // Prevent multiple spawns
+    private int coins = 0;                       // Current coins - start at 0
+    private long lastSpawnTime = 0;              // Prevent multiple spawns
     private static final long SPAWN_COOLDOWN = Config.PACKET_SPAWN_COOLDOWN; // 500ms between spawns
     
     // ==================== TIME TRAVEL SYSTEM ====================
-    private boolean isTimeTravelMode = false;
-    private boolean isPaused = false;
-    private long gameStartTime = 0;
-    private long currentGameTime = 0;
-    private long lastSnapshotTime = 0;
+    private boolean isTimeTravelMode = false;    // Whether currently in time travel mode
+    private boolean isPaused = false;            // Whether game is paused
+    private long gameStartTime = 0;              // Game start timestamp
+    private long currentGameTime = 0;            // Current game time in milliseconds
+    private long lastSnapshotTime = 0;           // Last time a snapshot was created
     private int snapshotInterval = Config.SNAPSHOT_INTERVAL; // 60 FPS = 16ms intervals
     private int timeTravelWindowSeconds = Config.TIME_TRAVEL_WINDOW_SECONDS; // How many seconds back we can go
     private int maxSnapshots = Config.MAX_SNAPSHOTS; // 60 FPS * 5 seconds = 300 snapshots
     
     // In-memory snapshots for fast navigation
-    private List<SaveData> timeSnapshots = new ArrayList<>();
-    private int currentSnapshotIndex = -1;
-    private String snapshotsDirectory = Config.SNAPSHOTS_DIRECTORY;
-    private int snapshotCounter = 0;
+    private List<SaveData> timeSnapshots = new ArrayList<>(); // Game state snapshots
+    private int currentSnapshotIndex = -1;       // Current snapshot being viewed
+    private String snapshotsDirectory = Config.SNAPSHOTS_DIRECTORY; // Directory for disk snapshots
+    private int snapshotCounter = 0;             // Counter for snapshot file naming
     
     // Time travel controls
-    private boolean timeTravelLeftPressed = false;
-    private boolean timeTravelRightPressed = false;
-    private long lastTimeTravelInput = 0;
+    private boolean timeTravelLeftPressed = false;  // Left arrow key state
+    private boolean timeTravelRightPressed = false; // Right arrow key state
+    private long lastTimeTravelInput = 0;           // Last time travel input timestamp
     private int timeTravelInputDelay = Config.TIME_TRAVEL_INPUT_DELAY; // ms between time travel inputs
     
+    /**
+     * Constructs the game engine and initializes all game systems.
+     * @param gamePanel The UI panel for rendering the game
+     */
     public GameEngine(GamePanel gamePanel) {
         this.gamePanel = gamePanel;
         systems = new ArrayList<>();
@@ -100,7 +115,11 @@ public class GameEngine implements Runnable {
         gameStartTime = java.lang.System.currentTimeMillis(); // Initialize game start time
         init();
     }
-
+    
+    /**
+     * Initializes the game by loading level data and setting up systems.
+     * Creates all network systems, wires, and establishes spy network connections.
+     */
     private void init() {
         LevelData levelData = LevelLoader.loadLevel(1); // Load level 1 - original starting level
         if (levelData == null || levelData.systems == null) {
@@ -109,21 +128,21 @@ public class GameEngine implements Runnable {
         }
 
         for (LevelData.SystemData sysData : levelData.systems) {
-            switch (sysData.type) {
-                case "REFERENCE":
+        switch (sysData.type) {
+            case "REFERENCE":
                     systems.add(new ReferenceSystem(sysData.position.x, sysData.position.y, sysData));
                     break;
-                case "VPN":
+            case "VPN":
                     systems.add(new VPNSystem(sysData.position.x, sysData.position.y, sysData));
                     break;
-                case "MALICIOUS":
+            case "MALICIOUS":
                     systems.add(new MaliciousSystem(sysData.position.x, sysData.position.y, sysData));
                     break;
-                case "SPY":
+            case "SPY":
                     systems.add(new SpySystem(sysData.position.x, sysData.position.y, sysData));
                     break;
-                default:
-                    Logger.getInstance().error("Unknown system type in level file: " + sysData.type);
+            default:
+                Logger.getInstance().error("Unknown system type in level file: " + sysData.type);
                     break;
             }
         }
@@ -136,24 +155,38 @@ public class GameEngine implements Runnable {
         
         // Set up wire callbacks for dynamic length updates
         setupWireCallbacks();
+        
+        // Set initial wire length from level data
+        if (levelData.playerStart != null) {
+            totalWireLength = levelData.playerStart.initialWireLength;
+            Logger.getInstance().info("Level loaded with initial wire length: " + totalWireLength + "m");
+        }
     }
 
+    /**
+     * Starts the main game loop in a separate thread.
+     * The game loop runs at the target FPS and UPS rates.
+     */
     public void startGameLoop() {
         gameThread = new Thread(this);
         running = true;
         gameThread.start();
     }
 
+    /**
+     * Main game loop that runs at target FPS and UPS.
+     * Separates update logic from rendering for consistent performance.
+     */
     @Override
     public void run() {
-        double timePerFrame = 1_000_000_000.0 / FPS_SET;
-        double timePerUpdate = 1_000_000_000.0 / UPS_SET;
+        double timePerFrame = 1_000_000_000.0 / FPS_SET;   // Time per frame in nanoseconds
+        double timePerUpdate = 1_000_000_000.0 / UPS_SET;  // Time per update in nanoseconds
         long previousTime = java.lang.System.nanoTime();
-        double deltaU = 0;
-        double deltaF = 0;
+        double deltaU = 0;  // Accumulated update time
+        double deltaF = 0;  // Accumulated frame time
         long lastCheck = java.lang.System.currentTimeMillis();
-        int frames = 0;
-        int updates = 0;
+        int frames = 0;     // Frame counter for FPS display
+        int updates = 0;    // Update counter for UPS display
 
         while (running) {
             long currentTime = java.lang.System.nanoTime();
@@ -175,13 +208,17 @@ public class GameEngine implements Runnable {
 
             if (java.lang.System.currentTimeMillis() - lastCheck >= 1000) {
                 lastCheck = java.lang.System.currentTimeMillis();
-                Logger.getInstance().info("FPS: " + frames + " | UPS: " + updates);
+                    Logger.getInstance().info("FPS: " + frames + " | UPS: " + updates);
                 frames = 0;
                 updates = 0;
             }
         }
     }
-
+    
+    /**
+     * Main update method called every frame.
+     * Updates all game entities, handles collisions, and manages time travel.
+     */
     private void update() {
         if (isPaused && !isTimeTravelMode) {
             return; // Don't update when paused
@@ -301,23 +338,23 @@ public class GameEngine implements Runnable {
         }
 
         if (inWiringMode) {
-            g.setColor(Color.YELLOW);
-            g.setFont(new Font("Arial", Font.BOLD, 14));
-            g.drawString("WIRING MODE ACTIVE", 10, 20);
+            g.setColor(Config.WIRING_MODE_COLOR);
+            g.setFont(new Font(Config.FONT_NAME, Font.BOLD, Config.WIRING_MODE_FONT_SIZE));
+            g.drawString(Config.WIRING_MODE_TEXT, 10, 20);
         }
         
         // Display impact system info
-        g.setColor(Color.RED);
-        g.setFont(new Font("Arial", Font.BOLD, 12));
+        g.setColor(Config.IMPACT_COLOR);
+        g.setFont(new Font(Config.FONT_NAME, Font.BOLD, Config.IMPACT_FONT_SIZE));
         g.drawString("Active Impacts: " + getActiveImpactCount(), 10, 40);
         
         // Draw impact effects
         for (Impact impact : impactManager.getActiveImpacts()) {
             Point collisionPoint = impact.getCollisionPoint();
-            g.setColor(Color.RED);
+            g.setColor(Config.IMPACT_COLOR);
             g.fillOval(collisionPoint.x - 5, collisionPoint.y - 5, 10, 10);
-            g.setColor(Color.WHITE);
-            g.drawString("IMPACT", collisionPoint.x + 10, collisionPoint.y + 5);
+            g.setColor(Config.SYSTEM_TEXT_COLOR);
+            g.drawString(Config.IMPACT_TEXT, collisionPoint.x + 10, collisionPoint.y + 5);
         }
         
         // Display packet status
@@ -325,42 +362,42 @@ public class GameEngine implements Runnable {
         for (MovingPacket packet : packetsCopy) {
             Point pos = packet.getPacket().getPosition();
             if (packet.isLost()) {
-                g.setColor(Color.RED);
-                g.setFont(new Font("Arial", Font.BOLD, 10));
-                g.drawString("DESTROYED", pos.x + 20, pos.y - 10);
+                g.setColor(Config.DESTROYED_COLOR);
+                g.setFont(new Font(Config.FONT_NAME, Font.BOLD, Config.DESTROYED_FONT_SIZE));
+                g.drawString(Config.DESTROYED_TEXT, pos.x + 20, pos.y - 10);
             } else if (packet.getNoiseLevel() > 0) {
-                g.setColor(Color.ORANGE);
-                g.setFont(new Font("Arial", Font.PLAIN, 10));
+                g.setColor(Config.PACKET_COUNT_COLOR);
+                g.setFont(new Font(Config.FONT_NAME, Font.PLAIN, Config.MEDIUM_FONT_SIZE));
                 String noiseText = String.format("Noise: %.1f", packet.getNoiseLevel());
                 g.drawString(noiseText, pos.x + 20, pos.y - 10);
             }
             
             // Phase 2: Display packet type and behavior info
             g.setColor(Color.WHITE);
-            g.setFont(new Font("Arial", Font.PLAIN, 8));
+            g.setFont(new Font(Config.FONT_NAME, Font.PLAIN, Config.SMALL_FONT_SIZE));
             String packetInfo = String.format("%s", packet.getPacket().getType());
             g.drawString(packetInfo, pos.x + 20, pos.y + 20);
         }
         
         // Display wire system status
-        g.setColor(Color.CYAN);
-        g.setFont(new Font("Arial", Font.BOLD, 12));
+        g.setColor(Config.TIME_TRAVEL_COLOR);
+        g.setFont(new Font(Config.FONT_NAME, Font.BOLD, Config.LARGE_FONT_SIZE));
         g.drawString("Wire System: Collision Detection Active", 10, 60);
         g.drawString("Arc Points: 1 coin each", 10, 80);
         g.drawString("Wire Degradation: 3 bulk packet limit", 10, 100);
         
         // Display time travel status
         if (isTimeTravelMode) {
-            g.setColor(Color.MAGENTA);
-            g.setFont(new Font("Arial", Font.BOLD, 16));
-            g.drawString("TIME TRAVEL MODE", 10, 140);
-            g.setFont(new Font("Arial", Font.PLAIN, 12));
+            g.setColor(Config.SNAPSHOT_COLOR);
+            g.setFont(new Font(Config.FONT_NAME, Font.BOLD, Config.TIME_TRAVEL_FONT_SIZE));
+            g.drawString(Config.TIME_TRAVEL_MODE_TEXT, 10, 140);
+            g.setFont(new Font(Config.FONT_NAME, Font.PLAIN, Config.LARGE_FONT_SIZE));
             g.drawString("Snapshot: " + (currentSnapshotIndex + 1) + "/" + timeSnapshots.size(), 10, 160);
             g.drawString("Use LEFT/RIGHT arrows to navigate", 10, 180);
             g.drawString("Press T to exit time travel", 10, 200);
         } else if (isPaused) {
-            g.setColor(Color.YELLOW);
-            g.setFont(new Font("Arial", Font.BOLD, 16));
+            g.setColor(Config.WIRING_MODE_COLOR);
+            g.setFont(new Font(Config.FONT_NAME, Font.BOLD, Config.TIME_TRAVEL_FONT_SIZE));
             g.drawString("GAME PAUSED", 10, 140);
             g.setFont(new Font("Arial", Font.PLAIN, 12));
             g.drawString("Press P to resume", 10, 160);
@@ -450,6 +487,8 @@ public class GameEngine implements Runnable {
             coinsToAdd = ((ConfidentialPacket) packet).getCoinReward();
         } else if (packet instanceof BulkPacket) {
             coinsToAdd = ((BulkPacket) packet).getCoinReward();
+        } else if (packet instanceof TrojanPacket) {
+            coinsToAdd = ((TrojanPacket) packet).getCoinReward(); // Trojan packets give 0 coins
         } else {
             // Handle regular packet types
             PacketType packetType = packet.getType();
@@ -467,7 +506,7 @@ public class GameEngine implements Runnable {
             Logger.getInstance().info("Packet " + packet.getType() + " returned home.");
             return;
         }
-
+        
         List<Wire> outgoingWires = wires.stream()
                 .filter(wire -> wire.getStartPort().getParentSystem() == currentSystem)
                 .collect(Collectors.toList());
@@ -476,7 +515,7 @@ public class GameEngine implements Runnable {
             Logger.getInstance().info("Packet " + packet.getType() + " is stuck. No outgoing wires.");
             return;
         }
-
+        
         // PortType packetPortType = getPortTypeForPacket(packet.getType()); // Not used in current implementation
         List<Wire> compatibleWires = outgoingWires.stream()
                 .filter(wire -> isPortCompatible(wire.getStartPort().getType(), packet.getType()))
@@ -523,7 +562,7 @@ public class GameEngine implements Runnable {
         Wire targetWire;
         if (!compatibleWires.isEmpty()) {
             targetWire = compatibleWires.get((int) (Math.random() * compatibleWires.size()));
-        } else {
+            } else {
             targetWire = outgoingWires.get((int) (Math.random() * outgoingWires.size()));
         }
 
@@ -607,7 +646,7 @@ public class GameEngine implements Runnable {
             movingPackets.add(movingPacket);
             Logger.getInstance().info("Packet " + packet.getType() + " spawned with spawn protection. Total packets: " + movingPackets.size());
             Logger.getInstance().info("Packet path has " + movingPacket.getWire().getAllPoints().size() + " points");
-        } else {
+                } else {
             Logger.getInstance().warning("No available wires for packet spawning from " + spawner);
         }
     }
@@ -636,8 +675,8 @@ public class GameEngine implements Runnable {
                     for (Wire wire : wires) {
                         if (wire.getStartPort() == port) {
                             hasConnectedOutputs = true;
-                            break;
-                        }
+                break;
+        }
                     }
                     if (hasConnectedOutputs) break;
                 }
@@ -666,7 +705,7 @@ public class GameEngine implements Runnable {
             for (Wire wire : wires) {
                 if (wire.getStartPort() == port) {
                     connectedOutputs.add(port);
-                    break;
+                break;
                 }
             }
         }
@@ -816,7 +855,7 @@ public class GameEngine implements Runnable {
                     // Update wire length when arc points are added
                     Logger.getInstance().info("Arc point added to wire - updating length...");
                     updateWireLengthForWire(wire);
-                } else {
+        } else {
                     Logger.getInstance().warning("Cannot add arc point - insufficient coins (need " + Config.ARC_POINT_COST + ", have " + coins + ")");
                 }
             } else {
@@ -848,7 +887,7 @@ public class GameEngine implements Runnable {
         }
         return null;
     }
-
+    
     private ArcPoint findArcPointAt(Point point) {
         for (Wire wire : wires) {
             for (ArcPoint arc : wire.getArcPoints()) {
@@ -859,9 +898,9 @@ public class GameEngine implements Runnable {
         }
         return null;
     }
-
+    
     private Wire findWireAt(Point point) {
-        final double CLICK_THRESHOLD = 8.0; // Increased threshold for easier wire detection
+        final double CLICK_THRESHOLD = Config.CLICK_THRESHOLD; // Increased threshold for easier wire detection
         Wire closestWire = null;
         double minDistance = Double.MAX_VALUE;
 
@@ -971,7 +1010,7 @@ public class GameEngine implements Runnable {
             packet.setNoiseLevel(0.0f);
         }
     }
-
+    
     /**
      * Demonstrates the new Phase 2 packet behaviors
      */
@@ -1208,7 +1247,7 @@ public class GameEngine implements Runnable {
             Point end = path.get(i + 1);
             
             // Check if this segment intersects with any system
-            for (System system : systems) {
+        for (System system : systems) {
                 if (system == wire.getStartPort().getParentSystem() || 
                     system == wire.getEndPort().getParentSystem()) {
                     continue; // Skip the systems the wire connects to

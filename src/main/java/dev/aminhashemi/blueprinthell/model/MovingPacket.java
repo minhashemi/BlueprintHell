@@ -14,26 +14,36 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents a packet that is currently moving along a wire.
+ * Handles movement, collision effects, and packet-specific behaviors.
+ */
 public class MovingPacket {
 
-    private final Packet packet;
-    private final Wire wire;
-    private final List<Point> path;
-    private int currentSegmentIndex;
-    private double progressOnSegment;
-    private boolean hasArrived = false;
+    // ==================== CORE PROPERTIES ====================
+    private final Packet packet;              // The packet being moved
+    private final Wire wire;                  // The wire the packet is traveling on
+    private final List<Point> path;           // Complete path from start to end
+    private int currentSegmentIndex;          // Current segment being traversed
+    private double progressOnSegment;         // Progress within current segment (0.0 to 1.0)
+    private boolean hasArrived = false;       // Whether packet has reached its destination
     
-    // Impact system properties
-    private float noiseLevel = 0.0f;
-    private boolean isLost = false;
+    // ==================== IMPACT SYSTEM ====================
+    private float noiseLevel = 0.0f;          // Current noise level (affects packet health)
+    private boolean isLost = false;           // Whether packet is lost due to high noise
 
-    // Enhanced movement behavior
-    private float currentSpeed;
-    private float acceleration;
-    private boolean spawnProtection = false; // Prevents immediate destruction
-    private long spawnTime; // Spawn timestamp
-    private boolean playerSpawned = false; // Tracks if packet was spawned by player (space key)
+    // ==================== MOVEMENT BEHAVIOR ====================
+    private float currentSpeed;               // Current movement speed
+    private float acceleration;               // Current acceleration/deceleration
+    private boolean spawnProtection = false;  // Prevents immediate destruction after spawning
+    private long spawnTime;                   // Timestamp when packet was created
+    private boolean playerSpawned = false;    // Whether packet was spawned by player (space key)
     
+    /**
+     * Constructs a moving packet with the specified packet and wire.
+     * @param packet The packet to move
+     * @param wire The wire to move along
+     */
     public MovingPacket(Packet packet, Wire wire) {
         this.packet = packet;
         this.wire = wire;

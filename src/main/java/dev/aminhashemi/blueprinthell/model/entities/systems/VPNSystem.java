@@ -6,22 +6,23 @@ import dev.aminhashemi.blueprinthell.model.entities.packets.Packet;
 import dev.aminhashemi.blueprinthell.model.entities.packets.ProtectedPacket;
 import dev.aminhashemi.blueprinthell.model.MovingPacket;
 import dev.aminhashemi.blueprinthell.utils.Logger;
+import dev.aminhashemi.blueprinthell.utils.Config;
 
 import java.awt.*;
 
 public class VPNSystem extends System {
 
     public VPNSystem(int x, int y, LevelData.SystemData data) {
-        super(x, y, 100, 80, data);
+        super(x, y, Config.SYSTEM_WIDTH, Config.SYSTEM_HEIGHT, data);
     }
 
     @Override
     public void draw(Graphics2D g) {
-        g.setColor(Color.decode("#A55EEA")); // Bright purple
+        g.setColor(Config.SystemColors.VPN_COLOR); // Bright purple
         g.fillRect(x, y, width, height);
-        g.setColor(Color.WHITE); // White border
+        g.setColor(Config.SYSTEM_BORDER_COLOR); // White border
         g.drawRect(x, y, width, height);
-        g.setColor(Color.WHITE); // White text
+        g.setColor(Config.SYSTEM_TEXT_COLOR); // White text
         g.drawString("VPN", x + 10, y + 20);
 
         for (Port port : inputPorts) {

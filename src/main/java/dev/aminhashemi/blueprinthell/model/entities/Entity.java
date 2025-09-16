@@ -3,11 +3,23 @@ package dev.aminhashemi.blueprinthell.model.entities;
 import dev.aminhashemi.blueprinthell.core.GameEngine;
 import java.awt.*;
 
+/**
+ * Abstract base class for all game entities.
+ * Provides common functionality for position, bounds checking, and rendering.
+ */
 public abstract class Entity {
 
-    protected int x, y;
-    protected int width, height;
+    // ==================== POSITION AND DIMENSIONS ====================
+    protected int x, y;           // Entity position
+    protected int width, height;  // Entity dimensions
 
+    /**
+     * Constructs an entity with the specified position and dimensions.
+     * @param x X coordinate
+     * @param y Y coordinate
+     * @param width Entity width
+     * @param height Entity height
+     */
     public Entity(int x, int y, int width, int height) {
         this.x = x;
         this.y = y;
@@ -15,8 +27,17 @@ public abstract class Entity {
         this.height = height;
     }
 
-    // The signature is now consistent for all entities
+    // ==================== ABSTRACT METHODS ====================
+    /**
+     * Updates the entity's state each frame.
+     * @param engine Reference to the game engine
+     */
     public abstract void update(GameEngine engine);
+    
+    /**
+     * Renders the entity to the screen.
+     * @param g Graphics2D context for drawing
+     */
     public abstract void draw(Graphics2D g);
 
     public boolean contains(Point p) {
