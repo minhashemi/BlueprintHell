@@ -101,7 +101,7 @@ public class GameEngine implements Runnable {
     }
 
     private void init() {
-        LevelData levelData = LevelLoader.loadLevel(3); // Load level 3 to test SpySystem
+        LevelData levelData = LevelLoader.loadLevel(1); // Load level 1 - original starting level
         if (levelData == null || levelData.systems == null) {
             Logger.getInstance().error("Failed to load level data. Game cannot start.");
             return;
@@ -423,23 +423,15 @@ public class GameEngine implements Runnable {
             Logger.getInstance().info("Bulk packet passed through wire. Passes: " + wire.getBulkPacketPasses() + "/3");
         }
         
-        destinationSystem.receivePacket(arrivedPacket.getPacket(), this);
+        destinationSystem.receiveMovingPacket(arrivedPacket, this);
         
-        // Only add coins when packet reaches the END reference system (the one with only inputs)
-        if (isReferenceSystem(destinationSystem) && destinationSystem.getOutputPorts().isEmpty()) {
-            // End reference system - add coins
+        // Only add coins when a player-spawned packet reaches the END reference system (the one with only inputs)
+        if (arrivedPacket.isPlayerSpawned() && isReferenceSystem(destinationSystem) && destinationSystem.getOutputPorts().isEmpty()) {
+            // Player-spawned packet reached the final reference system - add coins based on packet type
             addCoinsForPacketEntry(arrivedPacket.getPacket());
-            Logger.getInstance().info("Packet " + arrivedPacket.getPacket().getType() + " reached END reference system! Coins added.");
+            Logger.getInstance().info("Player-spawned packet " + arrivedPacket.getPacket().getType() + " reached END reference system! Coins added.");
         } else {
-            Logger.getInstance().info("Packet " + arrivedPacket.getPacket().getType() + " reached intermediate system - no coins added.");
-        }
-        
-        // Check if this packet traveled from a reference system to a reference system
-        System sourceSystem = arrivedPacket.getSourceSystem();
-        if (isReferenceSystem(sourceSystem) && isReferenceSystem(destinationSystem)) {
-            // Reward coins for successful packet delivery from reference to reference
-            addCoins(1);
-            Logger.getInstance().info("Packet successfully delivered from reference to reference! +1 coin awarded.");
+            Logger.getInstance().info("Packet " + arrivedPacket.getPacket().getType() + " reached intermediate system or was system-spawned - no coins added.");
         }
     }
     
@@ -507,6 +499,44 @@ public class GameEngine implements Runnable {
         movingPackets.add(movingPacket);
     }
 
+    public void routeMovingPacket(MovingPacket movingPacket, System currentSystem) {
+        if (currentSystem instanceof ReferenceSystem) {
+            Logger.getInstance().info("Packet " + movingPacket.getPacket().getType() + " returned home.");
+            return;
+        }
+
+        List<Wire> outgoingWires = wires.stream()
+                .filter(wire -> wire.getStartPort().getParentSystem() == currentSystem)
+                .collect(Collectors.toList());
+
+        if (outgoingWires.isEmpty()) {
+            Logger.getInstance().info("Packet " + movingPacket.getPacket().getType() + " is stuck. No outgoing wires.");
+            return;
+        }
+
+        // Find compatible wires
+        List<Wire> compatibleWires = outgoingWires.stream()
+                .filter(wire -> isPortCompatible(wire.getStartPort().getType(), movingPacket.getPacket().getType()))
+                .collect(Collectors.toList());
+
+        Wire targetWire;
+        if (!compatibleWires.isEmpty()) {
+            targetWire = compatibleWires.get((int) (Math.random() * compatibleWires.size()));
+        } else {
+            targetWire = outgoingWires.get((int) (Math.random() * outgoingWires.size()));
+        }
+
+        // Create a new MovingPacket with the same packet but new wire
+        MovingPacket newMovingPacket = new MovingPacket(movingPacket.getPacket(), targetWire);
+        newMovingPacket.setPlayerSpawned(movingPacket.isPlayerSpawned());
+        
+        // Apply port compatibility effects
+        boolean isCompatible = isPortCompatible(targetWire.getStartPort().getType(), movingPacket.getPacket().getType());
+        newMovingPacket.applyPortCompatibilityEffect(targetWire.getStartPort().getType(), isCompatible);
+        
+        movingPackets.add(newMovingPacket);
+    }
+
     private PortType getPortTypeForPacket(PacketType packetType) {
         // Phase 1 packet types (backward compatibility)
         if (packetType == PacketType.SQUARE_MESSENGER) return PortType.SQUARE;
@@ -555,6 +585,10 @@ public class GameEngine implements Runnable {
     }
 
     public void spawnPacket(Packet packet, ReferenceSystem spawner) {
+        spawnPacket(packet, spawner, false); // Default to system-spawned
+    }
+    
+    public void spawnPacket(Packet packet, ReferenceSystem spawner, boolean playerSpawned) {
         List<Wire> availableWires = wires.stream()
                 .filter(wire -> wire.getStartPort().getParentSystem() == spawner)
                 .collect(Collectors.toList());
@@ -565,6 +599,9 @@ public class GameEngine implements Runnable {
             
             // Add spawn protection to prevent immediate destruction
             movingPacket.setSpawnProtection(true);
+            
+            // Mark if packet was spawned by player
+            movingPacket.setPlayerSpawned(playerSpawned);
             
             movingPackets.add(movingPacket);
             Logger.getInstance().info("Packet " + packet.getType() + " spawned with spawn protection. Total packets: " + movingPackets.size());
@@ -649,7 +686,7 @@ public class GameEngine implements Runnable {
         
         if (packetType != null) {
             Point pos = selectedSpawner.getPosition();
-            spawnPacket(new MessengerPacket(pos.x, pos.y, packetType), selectedSpawner);
+            spawnPacket(new MessengerPacket(pos.x, pos.y, packetType), selectedSpawner, true); // Mark as player-spawned
             lastSpawnTime = currentTime; // Update spawn time
             Logger.getInstance().info("=== PACKET SPAWNED: " + packetType + " ===");
         }

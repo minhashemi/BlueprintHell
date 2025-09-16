@@ -3,6 +3,7 @@ package dev.aminhashemi.blueprinthell.model.entities.systems;
 import dev.aminhashemi.blueprinthell.core.GameEngine;
 import dev.aminhashemi.blueprinthell.model.LevelData;
 import dev.aminhashemi.blueprinthell.model.entities.packets.Packet;
+import dev.aminhashemi.blueprinthell.model.MovingPacket;
 import dev.aminhashemi.blueprinthell.utils.Logger;
 
 import java.awt.*;
@@ -57,7 +58,6 @@ public class SpySystem extends System {
             case CAMOUFLAGE_ICON_LARGE:
                 // Confidential packets are destroyed
                 Logger.getInstance().info("Confidential packet destroyed by SpySystem");
-                engine.addCoins(3); // Reward for destroying confidential packet
                 return;
                 
             case PADLOCK_ICON:
@@ -69,6 +69,41 @@ public class SpySystem extends System {
             default:
                 // Regular packets are teleported to another SpySystem
                 teleportPacket(packet, engine);
+                break;
+        }
+    }
+    
+    @Override
+    public void receiveMovingPacket(MovingPacket movingPacket, GameEngine engine) {
+        Packet packet = movingPacket.getPacket();
+        Logger.getInstance().info("Packet " + packet.getType() + " entered SpySystem at (" + x + ", " + y + ")");
+        
+        // Check if system is active
+        if (!isActive) {
+            Logger.getInstance().info("SpySystem is inactive - routing packet normally");
+            super.receiveMovingPacket(movingPacket, engine);
+            return;
+        }
+
+        // Handle different packet types
+        switch (packet.getType()) {
+            case CAMOUFLAGE_ICON_SMALL:
+            case CAMOUFLAGE_ICON_LARGE:
+                // Confidential packets are destroyed
+                Logger.getInstance().info("Confidential packet destroyed by SpySystem");
+                // SpySystem no longer adds coins - coins are only added when packets reach the final reference system
+                Logger.getInstance().info("Confidential packet destroyed by SpySystem - no coins added here");
+                return;
+                
+            case PADLOCK_ICON:
+                // Protected packets are unaffected
+                Logger.getInstance().info("Protected packet unaffected by SpySystem - routing normally");
+                super.receiveMovingPacket(movingPacket, engine);
+                return;
+                
+            default:
+                // Regular packets are teleported to another SpySystem
+                teleportPacketWithMovingPacket(movingPacket, engine);
                 break;
         }
     }
@@ -113,14 +148,61 @@ public class SpySystem extends System {
     }
 
     /**
+     * Teleports a MovingPacket to another SpySystem in the network
+     */
+    private void teleportPacketWithMovingPacket(MovingPacket movingPacket, GameEngine engine) {
+        if (spyNetwork.size() <= 1) {
+            // No other SpySystems to teleport to
+            Logger.getInstance().info("No other SpySystems available - routing packet normally");
+            super.receiveMovingPacket(movingPacket, engine);
+            return;
+        }
+
+        // Find other active SpySystems
+        List<SpySystem> availableSpySystems = new ArrayList<>();
+        for (SpySystem spySystem : spyNetwork) {
+            if (spySystem != this && spySystem.isActive && !spySystem.getOutputPorts().isEmpty()) {
+                availableSpySystems.add(spySystem);
+            }
+        }
+
+        if (availableSpySystems.isEmpty()) {
+            Logger.getInstance().info("No active SpySystems with output ports available");
+            super.receiveMovingPacket(movingPacket, engine);
+            return;
+        }
+
+        // Select a random SpySystem to teleport to
+        SpySystem targetSpySystem = availableSpySystems.get(random.nextInt(availableSpySystems.size()));
+        
+        Logger.getInstance().info("Packet " + movingPacket.getPacket().getType() + " teleported from SpySystem (" + x + ", " + y + ") to (" + 
+                                targetSpySystem.getX() + ", " + targetSpySystem.getY() + ")");
+        
+        // Move packet to target SpySystem position
+        movingPacket.getPacket().setPosition(targetSpySystem.getX() + targetSpySystem.getWidth() / 2, 
+                                           targetSpySystem.getY() + targetSpySystem.getHeight() / 2);
+        
+        // Route the packet from the target SpySystem
+        targetSpySystem.routeMovingPacketFromSpySystem(movingPacket, engine);
+    }
+
+    /**
      * Routes a packet that was teleported to this SpySystem
      */
     public void routePacketFromSpySystem(Packet packet, GameEngine engine) {
-        // Add coins for successful spy network usage
-        engine.addCoins(2);
-        
         // Route the packet normally from this system
         super.receivePacket(packet, engine);
+    }
+    
+    /**
+     * Routes a MovingPacket that was teleported to this SpySystem
+     */
+    public void routeMovingPacketFromSpySystem(MovingPacket movingPacket, GameEngine engine) {
+        // SpySystem no longer adds coins - coins are only added when packets reach the final reference system
+        Logger.getInstance().info("Packet used spy network - no coins added here");
+        
+        // Route the packet normally from this system
+        super.receiveMovingPacket(movingPacket, engine);
     }
 
     /**
