@@ -59,10 +59,33 @@ public class BulkPacket extends Packet {
             currentSpeed = Math.max(1.0f, currentSpeed - 0.02f); // Decelerate on straight wires
         }
         
+        // LARGE bulk packets have center deviation behavior
+        if (bulkType == BulkType.LARGE) {
+            applyCenterDeviation();
+        }
+        
         // Bulk packets also have slight random movement to simulate bulk data transfer
         if (Math.random() < 0.1) { // 10% chance to add slight random movement
             dx = (Math.random() - 0.5) * 0.3;
             dy = (Math.random() - 0.5) * 0.3;
+        }
+    }
+    
+    /**
+     * Applies center deviation for LARGE bulk packets
+     * The center deviates from the wire as it travels
+     */
+    private void applyCenterDeviation() {
+        // Simulate center deviation by adding slight random offset
+        // This simulates the "center deviates from wire" behavior
+        if (Math.random() < 0.2) { // 20% chance to deviate
+            float deviationAmount = 0.5f; // Amount of deviation
+            dx += (Math.random() - 0.5) * deviationAmount;
+            dy += (Math.random() - 0.5) * deviationAmount;
+            
+            // Clamp deviation to reasonable bounds
+            dx = Math.max(-1.0f, Math.min(1.0f, dx));
+            dy = Math.max(-1.0f, Math.min(1.0f, dy));
         }
     }
 

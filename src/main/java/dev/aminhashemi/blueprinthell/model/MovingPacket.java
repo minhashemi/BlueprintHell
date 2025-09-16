@@ -11,6 +11,7 @@ import dev.aminhashemi.blueprinthell.model.world.Wire;
 import dev.aminhashemi.blueprinthell.utils.Logger;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MovingPacket {
@@ -31,6 +32,7 @@ public class MovingPacket {
     private float acceleration;
     private boolean spawnProtection = false; // Prevents immediate destruction
     private long spawnTime; // Spawn timestamp
+    private boolean playerSpawned = false; // Tracks if packet was spawned by player (space key)
     
     public MovingPacket(Packet packet, Wire wire) {
         this.packet = packet;
@@ -187,38 +189,42 @@ public class MovingPacket {
     public void applyPortCompatibilityEffect(PortType portType, boolean isCompatible) {
         switch (packet.getType()) {
             case GREEN_DIAMOND_SMALL:
-                if (!isCompatible) {
-                    currentSpeed = 0.5f; // Half speed from incompatible ports
+                // Size 2: Half speed from compatible ports, normal speed from incompatible ports
+                if (isCompatible) {
+                    currentSpeed = 0.5f; // Half speed from compatible ports
                     acceleration = 0.0f; // No acceleration
                 } else {
-                    currentSpeed = 1.0f; // Normal speed from compatible ports
+                    currentSpeed = 1.0f; // Normal speed from incompatible ports
                     acceleration = 0.0f; // No acceleration
                 }
                 break;
                 
             case GREEN_DIAMOND_LARGE:
-                if (!isCompatible) {
-                    currentSpeed = 1.0f; // Start at normal speed
-                    acceleration = 0.2f; // Accelerate through incompatible ports
-                } else {
+                // Size 3: Constant speed from compatible ports, accelerate through incompatible ports
+                if (isCompatible) {
                     currentSpeed = 1.0f; // Constant speed from compatible ports
                     acceleration = 0.0f; // No acceleration
+                } else {
+                    currentSpeed = 1.0f; // Start at normal speed
+                    acceleration = 0.2f; // Accelerate through incompatible ports
                 }
                 break;
                 
             case INFINITY_SYMBOL:
-                if (!isCompatible) {
-                    currentSpeed = 1.0f; // Start at normal speed
-                    acceleration = -0.1f; // Deceleration through incompatible ports
-                } else {
+                // Size 1: Constant acceleration from compatible ports, deceleration from incompatible ports
+                // Special: 2x speed when entering from incompatible port
+                if (isCompatible) {
                     currentSpeed = 1.0f; // Start at normal speed
                     acceleration = 0.1f; // Constant acceleration from compatible ports
+                } else {
+                    currentSpeed = 2.0f; // 2x speed from incompatible ports
+                    acceleration = -0.1f; // Deceleration through incompatible ports
                 }
                 break;
                 
             case CAMOUFLAGE_ICON_SMALL:
             case CAMOUFLAGE_ICON_LARGE:
-                // Confidential packets slow down near malicious systems
+                // Confidential packets: constant speed, but slow down near malicious/spy systems
                 if (portType == PortType.MALICIOUS || portType == PortType.SPY) {
                     currentSpeed = 0.5f; // Slow down to avoid detection
                     acceleration = 0.0f;
@@ -229,8 +235,8 @@ public class MovingPacket {
                 break;
                 
             case PADLOCK_ICON:
-                // Protected packets maintain normal speed but with random variation
-                currentSpeed = 1.0f;
+                // Protected packets: random movement patterns
+                currentSpeed = 0.8f + (float)(Math.random() * 0.4f); // Random speed between 0.8-1.2
                 acceleration = 0.0f;
                 break;
                 
@@ -253,8 +259,8 @@ public class MovingPacket {
     public void handleCollision() {
         switch (packet.getType()) {
             case INFINITY_SYMBOL:
-                // Return to source system on collision
-                // Reverse the path to return to source
+                // Return to source system on collision and try again
+                Logger.getInstance().info("INFINITY_SYMBOL packet collided - returning to source system");
                 reversePath();
                 break;
                 
@@ -279,9 +285,27 @@ public class MovingPacket {
      * Reverses the path to return to source (for INFINITY_SYMBOL packets)
      */
     private void reversePath() {
-        // Implementation for path reversal
-        // Requires complex path management
-        Logger.getInstance().info("INFINITY_SYMBOL packet returning to source after collision");
+        // Reverse the path by swapping start and end points
+        if (path.size() >= 2) {
+            // Create a new reversed path
+            List<Point> reversedPath = new ArrayList<>();
+            for (int i = path.size() - 1; i >= 0; i--) {
+                reversedPath.add(path.get(i));
+            }
+            
+            // Update the path and reset position
+            path.clear();
+            path.addAll(reversedPath);
+            currentSegmentIndex = 0;
+            progressOnSegment = 0.0;
+            
+            // Set position to the new start (original end)
+            if (!path.isEmpty()) {
+                packet.setPosition(path.get(0).x, path.get(0).y);
+            }
+            
+            Logger.getInstance().info("INFINITY_SYMBOL packet path reversed - returning to source system");
+        }
     }
     
     /**
@@ -550,5 +574,19 @@ public class MovingPacket {
     public void setSpawnProtection(boolean hasSpawnProtection, long spawnProtectionEndTime) {
         this.spawnProtection = hasSpawnProtection;
         this.spawnProtectionEndTime = spawnProtectionEndTime;
+    }
+    
+    /**
+     * Checks if this packet was spawned by the player (space key)
+     */
+    public boolean isPlayerSpawned() {
+        return playerSpawned;
+    }
+    
+    /**
+     * Sets whether this packet was spawned by the player (space key)
+     */
+    public void setPlayerSpawned(boolean playerSpawned) {
+        this.playerSpawned = playerSpawned;
     }
 }
