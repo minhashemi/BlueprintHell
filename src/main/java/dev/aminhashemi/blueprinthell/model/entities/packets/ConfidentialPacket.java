@@ -100,6 +100,33 @@ public class ConfidentialPacket extends Packet {
             currentSpeed = Math.max(0.2f, currentSpeed - 0.3f); // Significant slowdown
             Logger.getInstance().debug("ConfidentialPacket slowing down near spy system");
         }
+        
+        // Maintain distance from other packets (for LARGE confidential packets)
+        if (confidentialType == ConfidentialType.LARGE) {
+            maintainDistanceFromOtherPackets(engine);
+        }
+    }
+    
+    /**
+     * Maintains distance from other packets (for LARGE confidential packets)
+     */
+    private void maintainDistanceFromOtherPackets(GameEngine engine) {
+        // Simulate maintaining distance by adjusting speed
+        // In a full implementation, this would check actual packet positions
+        boolean tooCloseToOtherPackets = Math.random() < 0.3; // 30% chance of being too close
+        
+        if (tooCloseToOtherPackets) {
+            // Adjust position slightly to maintain distance
+            // This simulates the "move forward or backward" behavior
+            if (Math.random() < 0.5) {
+                // Move forward
+                currentSpeed = Math.min(currentSpeed + 0.1f, baseSpeed * 1.2f);
+            } else {
+                // Move backward (slow down)
+                currentSpeed = Math.max(currentSpeed - 0.1f, baseSpeed * 0.5f);
+            }
+            Logger.getInstance().debug("LARGE ConfidentialPacket adjusting distance from other packets");
+        }
     }
 
     @Override

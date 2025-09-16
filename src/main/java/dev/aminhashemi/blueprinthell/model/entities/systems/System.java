@@ -4,6 +4,7 @@ import dev.aminhashemi.blueprinthell.core.GameEngine;
 import dev.aminhashemi.blueprinthell.model.LevelData;
 import dev.aminhashemi.blueprinthell.model.entities.Entity;
 import dev.aminhashemi.blueprinthell.model.entities.packets.Packet;
+import dev.aminhashemi.blueprinthell.model.MovingPacket;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,11 @@ public abstract class System extends Entity {
         this.inputPorts = new ArrayList<>();
         this.outputPorts = new ArrayList<>();
         initializePorts(data);
+        
+        // Set system ID from level data
+        if (data.id != null && !data.id.isEmpty()) {
+            this.id = data.id;
+        }
     }
 
     private void initializePorts(LevelData.SystemData data) {
@@ -38,6 +44,11 @@ public abstract class System extends Entity {
 
     public void receivePacket(Packet packet, GameEngine engine) {
         engine.routePacket(packet, this);
+    }
+    
+    public void receiveMovingPacket(MovingPacket movingPacket, GameEngine engine) {
+        // Route the packet as a MovingPacket to preserve the playerSpawned flag
+        engine.routeMovingPacket(movingPacket, this);
     }
 
     // Abstract method for system-specific update logic

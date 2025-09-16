@@ -8,7 +8,7 @@ public enum PacketType {
     TRIANGLE_MESSENGER(Color.decode("#2ED573")), // Bright green
 
     // Phase 2 Packet Types
-    GREEN_DIAMOND_SMALL(Color.decode("#00FFFF"), 2, 0, 0),      // Pure cyan - Size 2, 0 coins
+    GREEN_DIAMOND_SMALL(Color.decode("#00FFFF"), 2, 0, 2),      // Pure cyan - Size 2, 2 coins
     GREEN_DIAMOND_LARGE(Color.decode("#00FF00"), 3, 0, 3),      // Pure lime green - Size 3, 3 coins
     INFINITY_SYMBOL(Color.decode("#FFFF00"), 1, 0, 1),          // Pure yellow - Size 1, 1 coin
     
