@@ -26,7 +26,12 @@ import dev.aminhashemi.blueprinthell.utils.SaveManager;
 import dev.aminhashemi.blueprinthell.utils.Config;
 import dev.aminhashemi.blueprinthell.model.SaveData;
 import dev.aminhashemi.blueprinthell.model.shop.ShopManager;
-import dev.aminhashemi.blueprinthell.model.shop.WireLengthUpgrade;
+import dev.aminhashemi.blueprinthell.model.shop.OAtar;
+import dev.aminhashemi.blueprinthell.model.shop.OAiryaman;
+import dev.aminhashemi.blueprinthell.model.shop.OAnahita;
+import dev.aminhashemi.blueprinthell.model.shop.ScrollOfAergia;
+import dev.aminhashemi.blueprinthell.model.shop.ScrollOfSisyphus;
+import dev.aminhashemi.blueprinthell.model.shop.ScrollOfEliphas;
 import dev.aminhashemi.blueprinthell.view.GamePanel;
 
 import java.awt.*;
@@ -78,7 +83,13 @@ public class GameEngine implements Runnable {
     private long lastUpdateTime;                 // Last update timestamp for FPS calculation
     private int totalWireLength = Config.TOTAL_WIRE_LENGTH; // Total available wire length
     private int usedWireLength = 0;              // Wire length already used
+    private double packetSpeedMultiplier = 1.0;  // Global packet speed multiplier
     private Map<Wire, Integer> wireLengths = new HashMap<>(); // Track individual wire lengths
+    
+    // Phase 1 temporary effects
+    private boolean impactWavesDisabled = false;        // O' Atar effect
+    private boolean packetCollisionsDisabled = false;   // O' Airyaman effect
+    private boolean packetNoiseZeroed = false;          // O' Anahita effect
     private int coins = 0;                       // Current coins - start at 0
     private long lastSpawnTime = 0;              // Prevent multiple spawns
     private static final long SPAWN_COOLDOWN = Config.PACKET_SPAWN_COOLDOWN; // 500ms between spawns
@@ -169,13 +180,75 @@ public class GameEngine implements Runnable {
         // Initialize shop manager
         shopManager = new ShopManager(getCoins());
         
-        // Add shop items (extensible design)
-        shopManager.addShopItem(new WireLengthUpgrade(() -> {
-            totalWireLength += Config.Shop.WIRE_LENGTH_UPGRADE_AMOUNT;
-            if (gamePanel != null) {
-                gamePanel.updateHUDData(getRemainingWireLength(), 0, 0, getCoins());
+        // Add Phase 1 shop items (extensible design)
+        shopManager.addShopItem(new OAtar(
+            () -> {
+                // Activate O' Atar - disable impact waves
+                impactWavesDisabled = true;
+                Logger.getInstance().info("O' Atar activated! Impact waves disabled");
+            },
+            () -> {
+                // Deactivate O' Atar - re-enable impact waves
+                impactWavesDisabled = false;
+                Logger.getInstance().info("O' Atar expired! Impact waves re-enabled");
             }
-        }));
+        ));
+        
+        shopManager.addShopItem(new OAiryaman(
+            () -> {
+                // Activate O' Airyaman - disable packet collisions
+                packetCollisionsDisabled = true;
+                Logger.getInstance().info("O' Airyaman activated! Packet collisions disabled");
+            },
+            () -> {
+                // Deactivate O' Airyaman - re-enable packet collisions
+                packetCollisionsDisabled = false;
+                Logger.getInstance().info("O' Airyaman expired! Packet collisions re-enabled");
+            }
+        ));
+        
+        shopManager.addShopItem(new OAnahita(
+            () -> {
+                // Activate O' Anahita - zero all packet noise
+                packetNoiseZeroed = true;
+                Logger.getInstance().info("O' Anahita activated! All packet noise set to zero");
+            }
+        ));
+        
+        // Add Phase 2 shop items
+        shopManager.addShopItem(new ScrollOfAergia(
+            () -> {
+                // Activate Scroll of Aergia - zero acceleration at selected point
+                Logger.getInstance().info("Scroll of Aergia activated! Select a point on a wire to stop acceleration");
+                // TODO: Implement point selection and acceleration stopping logic
+            },
+            () -> {
+                // Deactivate Scroll of Aergia - restore acceleration
+                Logger.getInstance().info("Scroll of Aergia expired! Acceleration restored");
+                // TODO: Implement acceleration restoration logic
+            }
+        ));
+        
+        shopManager.addShopItem(new ScrollOfSisyphus(
+            () -> {
+                // Activate Scroll of Sisyphus - move system
+                Logger.getInstance().info("Scroll of Sisyphus activated! Select a non-reference system to move");
+                // TODO: Implement system selection and movement logic
+            }
+        ));
+        
+        shopManager.addShopItem(new ScrollOfEliphas(
+            () -> {
+                // Activate Scroll of Eliphas - restore gravity at selected point
+                Logger.getInstance().info("Scroll of Eliphas activated! Select a point on a wire to restore gravity");
+                // TODO: Implement point selection and gravity restoration logic
+            },
+            () -> {
+                // Deactivate Scroll of Eliphas - stop gravity restoration
+                Logger.getInstance().info("Scroll of Eliphas expired! Gravity restoration stopped");
+                // TODO: Implement gravity restoration stop logic
+            }
+        ));
     }
 
     /**
@@ -789,9 +862,13 @@ public class GameEngine implements Runnable {
     public void toggleShop() {
         this.isShopOpen = !this.isShopOpen;
         if (isShopOpen) {
-            Logger.getInstance().info("Shop opened");
+            // Pause the game when shop opens
+            pauseGame();
+            Logger.getInstance().info("Shop opened - Game paused");
         } else {
-            Logger.getInstance().info("Shop closed");
+            // Resume the game when shop closes
+            resumeGame();
+            Logger.getInstance().info("Shop closed - Game resumed");
         }
     }
     
@@ -1347,6 +1424,23 @@ public class GameEngine implements Runnable {
      */
     public int getRemainingWireLength() {
         return Math.max(0, totalWireLength - usedWireLength);
+    }
+    
+    public double getPacketSpeedMultiplier() {
+        return packetSpeedMultiplier;
+    }
+    
+    // Phase 1 temporary effects getters
+    public boolean isImpactWavesDisabled() {
+        return impactWavesDisabled;
+    }
+    
+    public boolean isPacketCollisionsDisabled() {
+        return packetCollisionsDisabled;
+    }
+    
+    public boolean isPacketNoiseZeroed() {
+        return packetNoiseZeroed;
     }
     
     /**
@@ -1933,6 +2027,20 @@ public class GameEngine implements Runnable {
     // Getters for time travel state
     public boolean isTimeTravelMode() { return isTimeTravelMode; }
     public boolean isPaused() { return isPaused; }
+    
+    /**
+     * Pauses the game
+     */
+    public void pauseGame() {
+        isPaused = true;
+    }
+    
+    /**
+     * Resumes the game
+     */
+    public void resumeGame() {
+        isPaused = false;
+    }
     public long getCurrentGameTime() { return currentGameTime; }
     public int getTimeSnapshotsCount() { return timeSnapshots.size(); }
     public int getCurrentSnapshotIndex() { return currentSnapshotIndex; }
