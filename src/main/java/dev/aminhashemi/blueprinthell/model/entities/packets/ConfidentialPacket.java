@@ -3,6 +3,7 @@ package dev.aminhashemi.blueprinthell.model.entities.packets;
 import dev.aminhashemi.blueprinthell.core.GameEngine;
 import dev.aminhashemi.blueprinthell.model.entities.systems.System;
 import dev.aminhashemi.blueprinthell.utils.Logger;
+import dev.aminhashemi.blueprinthell.utils.Config;
 
 import java.awt.*;
 import java.util.List;
@@ -44,7 +45,7 @@ public class ConfidentialPacket extends Packet {
     private float currentSpeed = 1.0f;
     private boolean isSlowingDown = false;
     private long lastSpeedCheck = 0;
-    private static final long SPEED_CHECK_INTERVAL = 500; // Check every 500ms
+    private static final long SPEED_CHECK_INTERVAL = Config.CONFIDENTIAL_SPEED_CHECK_INTERVAL; // Check every 500ms
 
     public ConfidentialPacket(int x, int y, ConfidentialType confidentialType) {
         super(x, y, confidentialType.getSize() * 3, confidentialType.getSize() * 3); // Size affects visual size
@@ -65,9 +66,9 @@ public class ConfidentialPacket extends Packet {
         
         // Apply speed changes gradually
         if (isSlowingDown) {
-            currentSpeed = Math.max(0.3f, currentSpeed - 0.1f);
+            currentSpeed = Math.max(Config.CONFIDENTIAL_SLOWDOWN_FACTOR, currentSpeed - Config.CONFIDENTIAL_SPEED_RECOVERY_FACTOR);
         } else {
-            currentSpeed = Math.min(baseSpeed, currentSpeed + 0.1f);
+            currentSpeed = Math.min(baseSpeed, currentSpeed + Config.CONFIDENTIAL_SPEED_RECOVERY_FACTOR);
         }
     }
 
@@ -83,7 +84,7 @@ public class ConfidentialPacket extends Packet {
         // In a full implementation, this would check actual packet positions
         
         // Simulate system congestion detection
-        boolean systemHasOtherPackets = Math.random() < 0.4; // 40% chance of congestion
+        boolean systemHasOtherPackets = Math.random() < Config.GameBalance.CONFIDENTIAL_CONGESTION_CHANCE; // 40% chance of congestion
         
         if (systemHasOtherPackets) {
             isSlowingDown = true;
@@ -94,10 +95,10 @@ public class ConfidentialPacket extends Packet {
         
         // Also check for malicious systems nearby (spy systems)
         // Confidential packets are extra cautious near spy systems
-        boolean nearSpySystem = Math.random() < 0.2; // 20% chance of being near spy system
+        boolean nearSpySystem = Math.random() < Config.GameBalance.CONFIDENTIAL_SPY_PROXIMITY_CHANCE; // 20% chance of being near spy system
         if (nearSpySystem) {
             isSlowingDown = true;
-            currentSpeed = Math.max(0.2f, currentSpeed - 0.3f); // Significant slowdown
+            currentSpeed = Math.max(Config.CONFIDENTIAL_SPY_SLOWDOWN_FACTOR, currentSpeed - Config.CONFIDENTIAL_SPY_SPEED_REDUCTION); // Significant slowdown
             Logger.getInstance().debug("ConfidentialPacket slowing down near spy system");
         }
         
@@ -113,17 +114,17 @@ public class ConfidentialPacket extends Packet {
     private void maintainDistanceFromOtherPackets(GameEngine engine) {
         // Simulate maintaining distance by adjusting speed
         // In a full implementation, this would check actual packet positions
-        boolean tooCloseToOtherPackets = Math.random() < 0.3; // 30% chance of being too close
+        boolean tooCloseToOtherPackets = Math.random() < Config.GameBalance.CONFIDENTIAL_DISTANCE_VIOLATION_CHANCE; // 30% chance of being too close
         
         if (tooCloseToOtherPackets) {
             // Adjust position slightly to maintain distance
             // This simulates the "move forward or backward" behavior
             if (Math.random() < 0.5) {
                 // Move forward
-                currentSpeed = Math.min(currentSpeed + 0.1f, baseSpeed * 1.2f);
+                currentSpeed = Math.min(currentSpeed + Config.CONFIDENTIAL_DISTANCE_ADJUSTMENT, baseSpeed * Config.CONFIDENTIAL_MAX_SPEED_MULTIPLIER);
             } else {
                 // Move backward (slow down)
-                currentSpeed = Math.max(currentSpeed - 0.1f, baseSpeed * 0.5f);
+                currentSpeed = Math.max(currentSpeed - Config.CONFIDENTIAL_DISTANCE_ADJUSTMENT, baseSpeed * Config.CONFIDENTIAL_MIN_SPEED_MULTIPLIER);
             }
             Logger.getInstance().debug("LARGE ConfidentialPacket adjusting distance from other packets");
         }

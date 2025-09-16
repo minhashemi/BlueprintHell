@@ -22,6 +22,7 @@ import dev.aminhashemi.blueprinthell.utils.LevelLoader;
 import dev.aminhashemi.blueprinthell.utils.AudioManager;
 import dev.aminhashemi.blueprinthell.utils.Logger;
 import dev.aminhashemi.blueprinthell.utils.SaveManager;
+import dev.aminhashemi.blueprinthell.utils.Config;
 import dev.aminhashemi.blueprinthell.model.SaveData;
 import dev.aminhashemi.blueprinthell.view.GamePanel;
 
@@ -45,8 +46,8 @@ public class GameEngine implements Runnable {
     private final GamePanel gamePanel;
     private Thread gameThread;
     private volatile boolean running = false;
-    private final int FPS_SET = 120;
-    private final int UPS_SET = 200;
+    private final int FPS_SET = Config.TARGET_FPS;
+    private final int UPS_SET = Config.TARGET_UPS;
 
     private List<System> systems;
     private List<Wire> wires;
@@ -60,12 +61,12 @@ public class GameEngine implements Runnable {
     private Wire previewWire = null;
     private Point currentMousePos = new Point();
     private long lastUpdateTime;
-    private int totalWireLength = 8000; // Total available wire length
+    private int totalWireLength = Config.TOTAL_WIRE_LENGTH; // Total available wire length
     private int usedWireLength = 0; // Wire length already used
     private Map<Wire, Integer> wireLengths = new HashMap<>(); // Track individual wire lengths
     private int coins = 0; // Current coins - start at 0
     private long lastSpawnTime = 0; // Prevent multiple spawns
-    private static final long SPAWN_COOLDOWN = 500; // 500ms between spawns
+    private static final long SPAWN_COOLDOWN = Config.PACKET_SPAWN_COOLDOWN; // 500ms between spawns
     
     // ==================== TIME TRAVEL SYSTEM ====================
     private boolean isTimeTravelMode = false;
@@ -73,21 +74,21 @@ public class GameEngine implements Runnable {
     private long gameStartTime = 0;
     private long currentGameTime = 0;
     private long lastSnapshotTime = 0;
-    private int snapshotInterval = 16; // 60 FPS = 16ms intervals
-    private int timeTravelWindowSeconds = 5; // How many seconds back we can go
-    private int maxSnapshots = 300; // 60 FPS * 5 seconds = 300 snapshots
+    private int snapshotInterval = Config.SNAPSHOT_INTERVAL; // 60 FPS = 16ms intervals
+    private int timeTravelWindowSeconds = Config.TIME_TRAVEL_WINDOW_SECONDS; // How many seconds back we can go
+    private int maxSnapshots = Config.MAX_SNAPSHOTS; // 60 FPS * 5 seconds = 300 snapshots
     
     // In-memory snapshots for fast navigation
     private List<SaveData> timeSnapshots = new ArrayList<>();
     private int currentSnapshotIndex = -1;
-    private String snapshotsDirectory = "snapshots";
+    private String snapshotsDirectory = Config.SNAPSHOTS_DIRECTORY;
     private int snapshotCounter = 0;
     
     // Time travel controls
     private boolean timeTravelLeftPressed = false;
     private boolean timeTravelRightPressed = false;
     private long lastTimeTravelInput = 0;
-    private int timeTravelInputDelay = 100; // ms between time travel inputs
+    private int timeTravelInputDelay = Config.TIME_TRAVEL_INPUT_DELAY; // ms between time travel inputs
     
     public GameEngine(GamePanel gamePanel) {
         this.gamePanel = gamePanel;
@@ -801,13 +802,13 @@ public class GameEngine implements Runnable {
         // Allow adding arc points to existing wires regardless of wiring mode
         Wire wire = findWireAt(point);
         if (wire != null) {
-            // Check if we can add more arc points (limit is 3)
-            if (wire.getArcPoints().size() < 3) {
-                // Check if player has enough coins (1 coin per arc point)
-                if (coins >= 1) {
-                    // Deduct coin cost
-                    coins -= 1;
-                    Logger.getInstance().info("Arc point cost: -1 coin. Remaining coins: " + coins);
+        // Check if we can add more arc points (limit is 3)
+        if (wire.getArcPoints().size() < Config.MAX_ARC_POINTS_PER_WIRE) {
+            // Check if player has enough coins (1 coin per arc point)
+            if (coins >= Config.ARC_POINT_COST) {
+                // Deduct coin cost
+                coins -= Config.ARC_POINT_COST;
+                Logger.getInstance().info("Arc point cost: -" + Config.ARC_POINT_COST + " coin. Remaining coins: " + coins);
                     
                     // Add the arc point
                     wire.addArcPoint(point);
@@ -816,10 +817,10 @@ public class GameEngine implements Runnable {
                     Logger.getInstance().info("Arc point added to wire - updating length...");
                     updateWireLengthForWire(wire);
                 } else {
-                    Logger.getInstance().warning("Cannot add arc point - insufficient coins (need 1, have " + coins + ")");
+                    Logger.getInstance().warning("Cannot add arc point - insufficient coins (need " + Config.ARC_POINT_COST + ", have " + coins + ")");
                 }
             } else {
-                Logger.getInstance().info("Cannot add more arc points - limit reached (3)");
+                Logger.getInstance().info("Cannot add more arc points - limit reached (" + Config.MAX_ARC_POINTS_PER_WIRE + ")");
             }
         }
     }
