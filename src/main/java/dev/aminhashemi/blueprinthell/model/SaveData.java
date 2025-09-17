@@ -17,6 +17,29 @@ public class SaveData {
     public int totalWireLength;
     public boolean isWiringMode;
     
+    // Shop and effects state
+    public boolean impactWavesDisabled;
+    public boolean packetCollisionsDisabled;
+    public boolean packetNoiseZeroed;
+    public long gameStartTime;
+    public long currentGameTime;
+    
+    // Test system state
+    public boolean isTestRunning;
+    public int testPacketsReleased;
+    public int testPacketsReturned;
+    public long testStartTime;
+    public long lastPacketReleaseTime;
+    public boolean testCompleted;
+    public boolean gameWon;
+    public boolean gameLost;
+    
+    // Time travel state
+    public boolean isTimeTravelMode;
+    public boolean isPaused;
+    public int currentSnapshotIndex;
+    public int timeTravelWindowSeconds;
+    
     // Systems data
     public List<SystemSaveData> systems;
     

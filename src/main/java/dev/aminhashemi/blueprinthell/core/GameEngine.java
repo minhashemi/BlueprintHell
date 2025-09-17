@@ -324,6 +324,8 @@ public class GameEngine implements Runnable {
         
         if (isTimeTravelMode) {
             updateTimeTravel();
+            // Update HUD during time travel to show current state
+            updateHUD();
             return;
         }
         
@@ -333,6 +335,17 @@ public class GameEngine implements Runnable {
         // Update game time
         currentGameTime = java.lang.System.currentTimeMillis() - gameStartTime;
         
+        // Create snapshots for time travel BEFORE any state changes
+        if (currentGameTime - lastSnapshotTime >= snapshotInterval) {
+            // Debug: Check packet count before snapshot
+            int packetCount = movingPackets.size();
+            if (packetCount > 0) {
+                java.lang.System.out.println("Creating snapshot with " + packetCount + " packets, coins: " + coins);
+            }
+            createTimeSnapshot();
+            lastSnapshotTime = currentGameTime;
+        }
+
         // Update all systems (ReferenceSystem has special spawning logic)
         for (System system : systems) {
             if (system instanceof ReferenceSystem) {
@@ -341,24 +354,13 @@ public class GameEngine implements Runnable {
                 system.update(this);
             }
         }
-
+        
         // Update active packets
         for (MovingPacket movingPacket : new ArrayList<>(movingPackets)) {
             if (movingPacket == null || movingPacket.isLost()) {
                 continue;
             }
             movingPacket.update(this);
-        }
-        
-        // Create snapshots for time travel AFTER updating everything
-        if (currentGameTime - lastSnapshotTime >= snapshotInterval) {
-            // Debug: Check packet count before snapshot
-            int packetCount = movingPackets.size();
-            if (packetCount > 0) {
-                java.lang.System.out.println("Creating snapshot with " + packetCount + " packets");
-            }
-            createTimeSnapshot();
-            lastSnapshotTime = currentGameTime;
         }
         
         // Handle packet collisions and cleanup
@@ -572,8 +574,9 @@ public class GameEngine implements Runnable {
         // Only add coins when a player-spawned packet reaches the END reference system (the one with only inputs)
         if (arrivedPacket.isPlayerSpawned() && isReferenceSystem(destinationSystem) && destinationSystem.getOutputPorts().isEmpty()) {
             // Player-spawned packet reached the final reference system - add coins based on packet type
+            int coinsBefore = coins;
             addCoinsForPacketEntry(arrivedPacket.getPacket());
-            Logger.getInstance().info("Player-spawned packet " + arrivedPacket.getPacket().getType() + " reached END reference system! Coins added.");
+            Logger.getInstance().info("Player-spawned packet " + arrivedPacket.getPacket().getType() + " reached END reference system! Coins added: " + coinsBefore + " -> " + coins);
         } else {
             Logger.getInstance().info("Packet " + arrivedPacket.getPacket().getType() + " reached intermediate system or was system-spawned - no coins added.");
         }
@@ -1702,6 +1705,30 @@ public class GameEngine implements Runnable {
         draggedSystem = null;
         draggedArcPoint = null;
         currentMousePos = new Point(0, 0);
+        
+        // Reset shop and effects state
+        impactWavesDisabled = false;
+        packetCollisionsDisabled = false;
+        packetNoiseZeroed = false;
+        gameStartTime = java.lang.System.currentTimeMillis();
+        currentGameTime = 0;
+        
+        // Reset test system state
+        isTestRunning = false;
+        testPacketsReleased = 0;
+        testPacketsReturned = 0;
+        testStartTime = 0;
+        lastPacketReleaseTime = 0;
+        testCompleted = false;
+        gameWon = false;
+        gameLost = false;
+        
+        // Reset time travel state
+        isTimeTravelMode = false;
+        isPaused = false;
+        currentSnapshotIndex = -1;
+        timeTravelWindowSeconds = Config.TIME_TRAVEL_WINDOW_SECONDS;
+        
         Logger.getInstance().info("Game state cleared");
     }
     
@@ -1759,6 +1786,169 @@ public class GameEngine implements Runnable {
      */
     public void setWiringMode(boolean isWiringMode) {
         this.inWiringMode = isWiringMode;
+    }
+    
+    // ==================== ADDITIONAL GETTERS AND SETTERS FOR ENHANCED SAVE SYSTEM ====================
+    
+    /**
+     * Gets the game start time
+     */
+    public long getGameStartTime() {
+        return gameStartTime;
+    }
+    
+    /**
+     * Sets the game start time (used when loading)
+     */
+    public void setGameStartTime(long gameStartTime) {
+        this.gameStartTime = gameStartTime;
+    }
+    
+    /**
+     * Sets the current game time (used when loading)
+     */
+    public void setCurrentGameTime(long currentGameTime) {
+        this.currentGameTime = currentGameTime;
+    }
+    
+    /**
+     * Sets impact waves disabled state (used when loading)
+     */
+    public void setImpactWavesDisabled(boolean impactWavesDisabled) {
+        this.impactWavesDisabled = impactWavesDisabled;
+    }
+    
+    /**
+     * Sets packet collisions disabled state (used when loading)
+     */
+    public void setPacketCollisionsDisabled(boolean packetCollisionsDisabled) {
+        this.packetCollisionsDisabled = packetCollisionsDisabled;
+    }
+    
+    /**
+     * Sets packet noise zeroed state (used when loading)
+     */
+    public void setPacketNoiseZeroed(boolean packetNoiseZeroed) {
+        this.packetNoiseZeroed = packetNoiseZeroed;
+    }
+    
+    /**
+     * Gets test running state
+     */
+    public boolean isTestRunning() {
+        return isTestRunning;
+    }
+    
+    /**
+     * Sets test running state (used when loading)
+     */
+    public void setTestRunning(boolean isTestRunning) {
+        this.isTestRunning = isTestRunning;
+    }
+    
+    /**
+     * Gets test packets released count
+     */
+    public int getTestPacketsReleased() {
+        return testPacketsReleased;
+    }
+    
+    /**
+     * Sets test packets released count (used when loading)
+     */
+    public void setTestPacketsReleased(int testPacketsReleased) {
+        this.testPacketsReleased = testPacketsReleased;
+    }
+    
+    /**
+     * Gets test packets returned count
+     */
+    public int getTestPacketsReturned() {
+        return testPacketsReturned;
+    }
+    
+    /**
+     * Sets test packets returned count (used when loading)
+     */
+    public void setTestPacketsReturned(int testPacketsReturned) {
+        this.testPacketsReturned = testPacketsReturned;
+    }
+    
+    /**
+     * Gets test start time
+     */
+    public long getTestStartTime() {
+        return testStartTime;
+    }
+    
+    /**
+     * Sets test start time (used when loading)
+     */
+    public void setTestStartTime(long testStartTime) {
+        this.testStartTime = testStartTime;
+    }
+    
+    /**
+     * Gets last packet release time
+     */
+    public long getLastPacketReleaseTime() {
+        return lastPacketReleaseTime;
+    }
+    
+    /**
+     * Sets last packet release time (used when loading)
+     */
+    public void setLastPacketReleaseTime(long lastPacketReleaseTime) {
+        this.lastPacketReleaseTime = lastPacketReleaseTime;
+    }
+    
+    /**
+     * Sets test completed state (used when loading)
+     */
+    public void setTestCompleted(boolean testCompleted) {
+        this.testCompleted = testCompleted;
+    }
+    
+    /**
+     * Sets game won state (used when loading)
+     */
+    public void setGameWon(boolean gameWon) {
+        this.gameWon = gameWon;
+    }
+    
+    /**
+     * Sets game lost state (used when loading)
+     */
+    public void setGameLost(boolean gameLost) {
+        this.gameLost = gameLost;
+    }
+    
+    /**
+     * Sets time travel mode (used when loading)
+     */
+    public void setTimeTravelMode(boolean isTimeTravelMode) {
+        this.isTimeTravelMode = isTimeTravelMode;
+    }
+    
+    /**
+     * Sets paused state (used when loading)
+     */
+    public void setPaused(boolean isPaused) {
+        this.isPaused = isPaused;
+    }
+    
+    /**
+     * Sets current snapshot index (used when loading)
+     */
+    public void setCurrentSnapshotIndex(int currentSnapshotIndex) {
+        this.currentSnapshotIndex = currentSnapshotIndex;
+    }
+    
+    /**
+     * Sets time travel window seconds (used when loading)
+     */
+    public void setTimeTravelWindowSeconds(int timeTravelWindowSeconds) {
+        this.timeTravelWindowSeconds = timeTravelWindowSeconds;
     }
     
     // ==================== GETTERS FOR SAVE SYSTEM ====================
@@ -1936,11 +2126,13 @@ public class GameEngine implements Runnable {
         long currentTime = java.lang.System.currentTimeMillis();
         
         if (timeTravelLeftPressed && currentTime - lastTimeTravelInput >= timeTravelInputDelay) {
+            java.lang.System.out.println("DEBUG: Left arrow pressed in time travel mode");
             navigateTimeBackward();
             lastTimeTravelInput = currentTime;
         }
         
         if (timeTravelRightPressed && currentTime - lastTimeTravelInput >= timeTravelInputDelay) {
+            java.lang.System.out.println("DEBUG: Right arrow pressed in time travel mode");
             navigateTimeForward();
             lastTimeTravelInput = currentTime;
         }
@@ -2039,6 +2231,7 @@ public class GameEngine implements Runnable {
     }
     
     private void navigateTimeBackward() {
+        java.lang.System.out.println("DEBUG: navigateTimeBackward called. Current index: " + currentSnapshotIndex + ", Total snapshots: " + timeSnapshots.size());
         if (currentSnapshotIndex > 0) {
             currentSnapshotIndex--;
             restoreTimeSnapshot(currentSnapshotIndex);
@@ -2049,6 +2242,7 @@ public class GameEngine implements Runnable {
     }
     
     private void navigateTimeForward() {
+        java.lang.System.out.println("DEBUG: navigateTimeForward called. Current index: " + currentSnapshotIndex + ", Total snapshots: " + timeSnapshots.size());
         if (currentSnapshotIndex < timeSnapshots.size() - 1) {
             currentSnapshotIndex++;
             restoreTimeSnapshot(currentSnapshotIndex);
@@ -2060,15 +2254,43 @@ public class GameEngine implements Runnable {
     
     /**
      * Restores game state from in-memory snapshot using working restore logic
+     * Special version for time travel that preserves time travel state
      */
     private void restoreTimeSnapshot(int snapshotIndex) {
         if (snapshotIndex >= 0 && snapshotIndex < timeSnapshots.size()) {
             try {
                 SaveData snapshot = timeSnapshots.get(snapshotIndex);
                 int packetsBefore = movingPackets.size();
+                
+                // Store current time travel state before restoration
+                boolean wasInTimeTravelMode = isTimeTravelMode;
+                boolean wasPaused = isPaused;
+                int currentSnapshotIdx = currentSnapshotIndex;
+                int timeTravelWindow = timeTravelWindowSeconds;
+                
+                // Store the coin count from the snapshot before restoration
+                int snapshotCoins = snapshot.coins;
+                
+                // Restore the snapshot
                 SaveManager.restoreGameState(this, snapshot);
+                
+                // Restore time travel state (don't let the restoration override it)
+                isTimeTravelMode = wasInTimeTravelMode;
+                isPaused = wasPaused;
+                currentSnapshotIndex = currentSnapshotIdx;
+                timeTravelWindowSeconds = timeTravelWindow;
+                
                 int packetsAfter = movingPackets.size();
                 java.lang.System.out.println("Time snapshot restored: " + packetsAfter + " packets, " + systems.size() + " systems, " + wires.size() + " wires (was " + packetsBefore + ")");
+                java.lang.System.out.println("Coins restored: " + coins + " (snapshot had: " + snapshotCoins + ")");
+                
+                // Update HUD to reflect the restored state
+                updateHUD();
+                
+                // Force UI repaint to show the updated HUD
+                if (gamePanel != null) {
+                    gamePanel.repaint();
+                }
             } catch (Exception e) {
                 java.lang.System.out.println("Failed to restore time snapshot: " + e.getMessage());
                 e.printStackTrace();
@@ -2130,6 +2352,7 @@ public class GameEngine implements Runnable {
     
     
     public void enterTimeTravelMode() {
+        java.lang.System.out.println("DEBUG: enterTimeTravelMode called. Snapshots available: " + timeSnapshots.size());
         if (timeSnapshots.isEmpty()) {
             java.lang.System.out.println("No time snapshots available for time travel");
             return;
@@ -2142,6 +2365,7 @@ public class GameEngine implements Runnable {
         // Don't restore snapshot when entering - just show current state
         java.lang.System.out.println("Entered time travel mode. Use LEFT/RIGHT arrows to navigate time.");
         java.lang.System.out.println("Available snapshots: " + timeSnapshots.size() + ", Starting at: " + (currentSnapshotIndex + 1));
+        java.lang.System.out.println("DEBUG: Time travel mode set to: " + isTimeTravelMode + ", Paused: " + isPaused + ", Current index: " + currentSnapshotIndex);
     }
     
     public void exitTimeTravelMode() {
