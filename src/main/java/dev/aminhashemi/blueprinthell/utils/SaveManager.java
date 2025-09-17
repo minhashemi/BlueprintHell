@@ -112,6 +112,29 @@ public class SaveManager {
         saveData.totalWireLength = engine.getTotalWireLength();
         saveData.isWiringMode = engine.isWiringMode();
         
+        // Save shop and effects state
+        saveData.impactWavesDisabled = engine.isImpactWavesDisabled();
+        saveData.packetCollisionsDisabled = engine.isPacketCollisionsDisabled();
+        saveData.packetNoiseZeroed = engine.isPacketNoiseZeroed();
+        saveData.gameStartTime = engine.getGameStartTime();
+        saveData.currentGameTime = engine.getCurrentGameTime();
+        
+        // Save test system state
+        saveData.isTestRunning = engine.isTestRunning();
+        saveData.testPacketsReleased = engine.getTestPacketsReleased();
+        saveData.testPacketsReturned = engine.getTestPacketsReturned();
+        saveData.testStartTime = engine.getTestStartTime();
+        saveData.lastPacketReleaseTime = engine.getLastPacketReleaseTime();
+        saveData.testCompleted = engine.isTestCompleted();
+        saveData.gameWon = engine.isGameWon();
+        saveData.gameLost = engine.isGameLost();
+        
+        // Save time travel state
+        saveData.isTimeTravelMode = engine.isTimeTravelMode();
+        saveData.isPaused = engine.isPaused();
+        saveData.currentSnapshotIndex = engine.getCurrentSnapshotIndex();
+        saveData.timeTravelWindowSeconds = engine.getTimeTravelWindowSeconds();
+        
         // Save systems
         for (System system : engine.getSystems()) {
             if (system != null) {
@@ -275,6 +298,29 @@ public class SaveManager {
         engine.setUsedWireLength(saveData.usedWireLength);
         engine.setTotalWireLength(saveData.totalWireLength);
         engine.setWiringMode(saveData.isWiringMode);
+        
+        // Restore shop and effects state
+        engine.setImpactWavesDisabled(saveData.impactWavesDisabled);
+        engine.setPacketCollisionsDisabled(saveData.packetCollisionsDisabled);
+        engine.setPacketNoiseZeroed(saveData.packetNoiseZeroed);
+        engine.setGameStartTime(saveData.gameStartTime);
+        engine.setCurrentGameTime(saveData.currentGameTime);
+        
+        // Restore test system state
+        engine.setTestRunning(saveData.isTestRunning);
+        engine.setTestPacketsReleased(saveData.testPacketsReleased);
+        engine.setTestPacketsReturned(saveData.testPacketsReturned);
+        engine.setTestStartTime(saveData.testStartTime);
+        engine.setLastPacketReleaseTime(saveData.lastPacketReleaseTime);
+        engine.setTestCompleted(saveData.testCompleted);
+        engine.setGameWon(saveData.gameWon);
+        engine.setGameLost(saveData.gameLost);
+        
+        // Restore time travel state
+        engine.setTimeTravelMode(saveData.isTimeTravelMode);
+        engine.setPaused(saveData.isPaused);
+        engine.setCurrentSnapshotIndex(saveData.currentSnapshotIndex);
+        engine.setTimeTravelWindowSeconds(saveData.timeTravelWindowSeconds);
         
         // Create system map for wire restoration
         Map<String, System> systemMap = new HashMap<>();

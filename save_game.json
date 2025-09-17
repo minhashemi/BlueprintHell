@@ -1,8 +1,25 @@
 {
-  "coins": 0,
-  "usedWireLength": 796,
+  "coins": 100,
+  "usedWireLength": 0,
   "totalWireLength": 5000,
   "isWiringMode": false,
+  "impactWavesDisabled": true,
+  "packetCollisionsDisabled": true,
+  "packetNoiseZeroed": true,
+  "gameStartTime": 1758361889389,
+  "currentGameTime": 0,
+  "isTestRunning": true,
+  "testPacketsReleased": 5,
+  "testPacketsReturned": 3,
+  "testStartTime": 0,
+  "lastPacketReleaseTime": 0,
+  "testCompleted": false,
+  "gameWon": true,
+  "gameLost": false,
+  "isTimeTravelMode": true,
+  "isPaused": true,
+  "currentSnapshotIndex": -1,
+  "timeTravelWindowSeconds": 5,
   "systems": [
     {
       "type": "REFERENCE",
@@ -92,8 +109,8 @@
     },
     {
       "type": "VPN",
-      "x": 671,
-      "y": 149,
+      "x": 500,
+      "y": 300,
       "id": "vpn_sys",
       "inputPorts": [
         {
@@ -143,48 +160,7 @@
       "properties": {}
     }
   ],
-  "wires": [
-    {
-      "startPortId": "ref_sys_A_OUT_0",
-      "endPortId": "vpn_sys_IN_0",
-      "arcPoints": [],
-      "style": "POLYLINE",
-      "bulkPacketPasses": 0,
-      "isDestroyed": false
-    },
-    {
-      "startPortId": "vpn_sys_OUT_0",
-      "endPortId": "ref_sys_B_IN_0",
-      "arcPoints": [],
-      "style": "POLYLINE",
-      "bulkPacketPasses": 0,
-      "isDestroyed": false
-    }
-  ],
-  "movingPackets": [
-    {
-      "packet": {
-        "type": "SQUARE_MESSENGER",
-        "x": 442,
-        "y": 181,
-        "packetClass": "MessengerPacket",
-        "properties": {}
-      },
-      "sourceSystemId": "ref_sys_A",
-      "destinationSystemId": "vpn_sys",
-      "wireId": "ref_sys_A_OUT_0_vpn_sys_IN_0",
-      "progress": 0.5274002437334507,
-      "noiseLevel": 0.0,
-      "hasSpawnProtection": true,
-      "spawnProtectionEndTime": 0,
-      "currentSpeed": 1.0,
-      "acceleration": 0.0,
-      "isOnCurve": false,
-      "wirePassCount": 0
-    }
-  ],
-  "wireLengths": {
-    "ref_sys_A_OUT_0_vpn_sys_IN_0": 462,
-    "vpn_sys_OUT_0_ref_sys_B_IN_0": 334
-  }
+  "wires": [],
+  "movingPackets": [],
+  "wireLengths": {}
 }
