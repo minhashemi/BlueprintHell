@@ -38,6 +38,7 @@ public class MovingPacket {
     private boolean spawnProtection = false;  // Prevents immediate destruction after spawning
     private long spawnTime;                   // Timestamp when packet was created
     private boolean playerSpawned = false;    // Whether packet was spawned by player (space key)
+    private boolean testPacketReturned = false; // Whether this packet has been counted as returned in test
     
     /**
      * Constructs a moving packet with the specified packet and wire.
@@ -601,5 +602,19 @@ public class MovingPacket {
      */
     public void setPlayerSpawned(boolean playerSpawned) {
         this.playerSpawned = playerSpawned;
+    }
+    
+    /**
+     * Gets whether this packet has been counted as returned in test
+     */
+    public boolean isTestPacketReturned() {
+        return testPacketReturned;
+    }
+    
+    /**
+     * Sets whether this packet has been counted as returned in test
+     */
+    public void setTestPacketReturned(boolean testPacketReturned) {
+        this.testPacketReturned = testPacketReturned;
     }
 }
