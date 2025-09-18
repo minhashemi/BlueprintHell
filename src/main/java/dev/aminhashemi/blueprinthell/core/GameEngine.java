@@ -90,6 +90,16 @@ public class GameEngine implements Runnable {
     private boolean impactWavesDisabled = false;        // O' Atar effect
     private boolean packetCollisionsDisabled = false;   // O' Airyaman effect
     private boolean packetNoiseZeroed = false;          // O' Anahita effect
+    
+    // Game Test State
+    private boolean isTestRunning = false;              // Whether network test is running
+    private int testPacketsReleased = 0;                // Number of packets released during test
+    private int testPacketsReturned = 0;                // Number of packets that returned to reference systems
+    private long testStartTime = 0;                     // When the test started
+    private long lastPacketReleaseTime = 0;             // Last time a packet was released
+    private boolean testCompleted = false;              // Whether test has been completed
+    private boolean gameWon = false;                    // Whether player won the level
+    private boolean gameLost = false;                   // Whether player lost the level
     private int coins = 0;                       // Current coins - start at 0
     private long lastSpawnTime = 0;              // Prevent multiple spawns
     private static final long SPAWN_COOLDOWN = Config.PACKET_SPAWN_COOLDOWN; // 500ms between spawns
@@ -316,6 +326,9 @@ public class GameEngine implements Runnable {
             updateTimeTravel();
             return;
         }
+        
+        // Update test system
+        updateTestSystem();
         
         // Update game time
         currentGameTime = java.lang.System.currentTimeMillis() - gameStartTime;
@@ -1443,6 +1456,24 @@ public class GameEngine implements Runnable {
         return packetNoiseZeroed;
     }
     
+    // Test system getters
+    public boolean isTestCompleted() {
+        return testCompleted;
+    }
+    
+    public boolean isGameWon() {
+        return gameWon;
+    }
+    
+    public boolean isGameLost() {
+        return gameLost;
+    }
+    
+    public double getPacketLossPercentage() {
+        if (testPacketsReleased == 0) return 0.0;
+        return ((double)(testPacketsReleased - testPacketsReturned) / testPacketsReleased) * 100;
+    }
+    
     /**
      * Returns the total wire length used so far
      */
@@ -1772,6 +1803,130 @@ public class GameEngine implements Runnable {
      */
     public Map<Wire, Integer> getWireLengths() {
         return wireLengths;
+    }
+    
+    // ==================== TEST SYSTEM ====================
+    
+    private void updateTestSystem() {
+        if (!isTestRunning) {
+            return;
+        }
+        
+        long currentTime = java.lang.System.currentTimeMillis();
+        
+        // Check if test duration has expired
+        if (currentTime - testStartTime >= Config.GameConditions.TEST_DURATION) {
+            completeTest();
+            return;
+        }
+        
+        // Release packets at intervals
+        if (testPacketsReleased < Config.GameConditions.TEST_PACKET_COUNT) {
+            if (currentTime - lastPacketReleaseTime >= Config.GameConditions.PACKET_RELEASE_INTERVAL) {
+                releaseTestPacket();
+                lastPacketReleaseTime = currentTime;
+            }
+        }
+        
+        // Count returned packets
+        countReturnedPackets();
+    }
+    
+    private void releaseTestPacket() {
+        // Find a reference system to spawn from
+        for (System system : systems) {
+            if (system instanceof ReferenceSystem) {
+                ReferenceSystem refSystem = (ReferenceSystem) system;
+                // Spawn a test packet
+                Packet testPacket = new ProtectedPacket(refSystem.getX(), refSystem.getY(), PacketType.PADLOCK_ICON);
+                
+                // Find a wire connected to this reference system to create a moving packet
+                for (Wire wire : wires) {
+                    if (wire.getStartPort().getParentSystem() == refSystem) {
+                        MovingPacket movingPacket = new MovingPacket(testPacket, wire);
+                        movingPacket.setTestPacketReturned(false); // Mark as test packet
+                        movingPackets.add(movingPacket);
+                        testPacketsReleased++;
+                        Logger.getInstance().info("Test packet " + testPacketsReleased + " released from reference system");
+                        return;
+                    }
+                }
+                break;
+            }
+        }
+    }
+    
+    private void countReturnedPackets() {
+        // Count packets that have returned to reference systems without removing them
+        // This prevents interference with normal game packet processing
+        for (MovingPacket movingPacket : movingPackets) {
+            // Check if packet is near any reference system
+            for (System system : systems) {
+                if (system instanceof ReferenceSystem) {
+                    Point packetPos = movingPacket.getPacket().getPosition();
+                    double distance = Math.sqrt(
+                        Math.pow(packetPos.x - system.getX(), 2) + 
+                        Math.pow(packetPos.y - system.getY(), 2)
+                    );
+                    
+                    if (distance < 30) { // Within 30 pixels of reference system
+                        // Mark as returned without removing from list
+                        if (!movingPacket.isTestPacketReturned()) {
+                            movingPacket.setTestPacketReturned(true);
+                            testPacketsReturned++;
+                            Logger.getInstance().info("Test packet returned! Total returned: " + testPacketsReturned);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    
+    private void completeTest() {
+        isTestRunning = false;
+        testCompleted = true;
+        
+        // Calculate packet loss percentage
+        double packetLossPercentage = ((double)(testPacketsReleased - testPacketsReturned) / testPacketsReleased) * 100;
+        
+        if (packetLossPercentage < Config.GameConditions.MAX_PACKET_LOSS_PERCENTAGE) {
+            gameWon = true;
+            Logger.getInstance().info("🎉 LEVEL COMPLETED! Packet loss: " + String.format("%.1f", packetLossPercentage) + "% (Target: <" + Config.GameConditions.MAX_PACKET_LOSS_PERCENTAGE + "%)");
+        } else {
+            gameLost = true;
+            Logger.getInstance().info("💀 LEVEL FAILED! Packet loss: " + String.format("%.1f", packetLossPercentage) + "% (Target: <" + Config.GameConditions.MAX_PACKET_LOSS_PERCENTAGE + "%)");
+        }
+        
+        // Don't clear all packets - let normal game continue
+        // The test packets will naturally be removed when they reach their destinations
+    }
+    
+    public void startTest() {
+        if (isTestRunning) {
+            Logger.getInstance().info("Test is already running!");
+            return;
+        }
+        
+        // Reset test state
+        resetTestState();
+        
+        isTestRunning = true;
+        testStartTime = java.lang.System.currentTimeMillis();
+        lastPacketReleaseTime = testStartTime;
+        
+        Logger.getInstance().info("🚀 Starting network test! Releasing " + Config.GameConditions.TEST_PACKET_COUNT + " packets...");
+    }
+    
+    public void resetTestState() {
+        isTestRunning = false;
+        testCompleted = false;
+        gameWon = false;
+        gameLost = false;
+        testPacketsReleased = 0;
+        testPacketsReturned = 0;
+        testStartTime = 0;
+        lastPacketReleaseTime = 0;
     }
     
     // ==================== TIME TRAVEL SYSTEM ====================
