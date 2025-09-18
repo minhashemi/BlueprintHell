@@ -438,6 +438,8 @@ public class Config {
         public static final int SPAWN_PACKET_KEY = KeyEvent.VK_SPACE; // Space key to spawn packets
         public static final int TIME_LEFT_KEY = KeyEvent.VK_LEFT; // Left arrow for time travel
         public static final int TIME_RIGHT_KEY = KeyEvent.VK_RIGHT; // Right arrow for time travel
+        public static final int RUN_TEST_KEY = KeyEvent.VK_G; // G key to run network test
+        public static final int RESET_TEST_KEY = KeyEvent.VK_R; // R key to reset test state
     }
     
     // Shop Constants
@@ -478,5 +480,13 @@ public class Config {
         
         public static final int SCROLL_ELIPHAS_COST = 20; // 20 coins - restore gravity for 30 seconds
         public static final int SCROLL_ELIPHAS_DURATION = 30; // 30 seconds
+    }
+    
+    // Game Win/Lose Conditions
+    public static class GameConditions {
+        public static final int TEST_PACKET_COUNT = 10; // Number of packets to release for testing
+        public static final double MAX_PACKET_LOSS_PERCENTAGE = 50.0; // Maximum allowed packet loss percentage to win
+        public static final long PACKET_RELEASE_INTERVAL = 1000; // 1 second between packet releases
+        public static final long TEST_DURATION = 30000; // 30 seconds total test duration
     }
 }
