@@ -16,7 +16,7 @@ import java.util.List;
 public class LeaderboardPanel extends JPanel {
     
     private final GameFrame gameFrame;
-    private final LeaderboardData leaderboardData;
+    private LeaderboardData leaderboardData;
     private JTabbedPane tabbedPane;
     private JTable globalTable;
     private JTable levelTable;
@@ -24,10 +24,21 @@ public class LeaderboardPanel extends JPanel {
     
     public LeaderboardPanel(GameFrame gameFrame) {
         this.gameFrame = gameFrame;
-        this.leaderboardData = LeaderboardManager.loadLeaderboard();
+        this.leaderboardData = new LeaderboardData(); // Initialize with empty data
         initUI();
         updateTables();
         updatePlayerStats();
+        
+        // Load leaderboard data asynchronously
+        LeaderboardManager.loadLeaderboard().thenAccept(data -> {
+            if (data != null) {
+                this.leaderboardData = data;
+                SwingUtilities.invokeLater(() -> {
+                    updateTables();
+                    updatePlayerStats();
+                });
+            }
+        });
     }
     
     private void initUI() {

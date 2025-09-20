@@ -41,26 +41,8 @@ public class NetworkMain {
     private static void runServerMode() {
         System.out.println("Starting Blueprint Hell Server...");
         
-        // Start network manager
-        SimpleNetworkManager networkManager = new SimpleNetworkManager(true);
-        if (!networkManager.start()) {
-            System.err.println("Failed to start server");
-            return;
-        }
-        
-        // Start the game normally (server can have GUI for debugging)
-        SwingUtilities.invokeLater(() -> {
-            AudioManager.getInstance().playBackgroundMusic("theme.wav");
-            AudioManager.getInstance().setVolume(0.75f);
-            new GameFrame(); // Launch main game window
-        });
-        
-        // Keep server running
-        try {
-            Thread.currentThread().join();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        // Start the new game server
+        ServerMain.main(new String[]{});
     }
     
     private static void runClientMode() {
