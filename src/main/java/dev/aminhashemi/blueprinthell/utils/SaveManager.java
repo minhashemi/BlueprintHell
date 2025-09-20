@@ -61,6 +61,13 @@ public class SaveManager {
     }
     
     /**
+     * Converts JSON string back to SaveData
+     */
+    public static SaveData jsonToSaveData(String json) {
+        return gson.fromJson(json, SaveData.class);
+    }
+    
+    /**
      * Loads game state from a specific file
      */
     public static boolean loadGameFromFile(GameEngine engine, String filename) {
