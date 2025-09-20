@@ -32,6 +32,9 @@ public class Config {
     /** Cost to add an arc point to a wire (in coins) */
     public static final int ARC_POINT_COST = 1;
     
+    /** Cost to move a system (in coins) */
+    public static final int SYSTEM_MOVE_COST = 1;
+    
     /** Maximum number of arc points allowed per wire */
     public static final int MAX_ARC_POINTS_PER_WIRE = 3;
     

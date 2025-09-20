@@ -1,0 +1,58 @@
+{
+  "levelRecords": {
+    "Level 1": [
+      {
+        "playerName": "ana",
+        "completionTime": 40593,
+        "xpEarned": 103,
+        "levelNumber": 1,
+        "timestamp": 1758393590260,
+        "packetLossPercentage": 20.0,
+        "coinsEarned": 43
+      },
+      {
+        "playerName": "howdy",
+        "completionTime": 54767,
+        "xpEarned": 150,
+        "levelNumber": 1,
+        "timestamp": 1758394027064,
+        "packetLossPercentage": 0.0,
+        "coinsEarned": 50
+      }
+    ]
+  },
+  "globalRecords": [
+    {
+      "playerName": "ana",
+      "completionTime": 40593,
+      "xpEarned": 103,
+      "levelNumber": 1,
+      "timestamp": 1758393590260,
+      "packetLossPercentage": 20.0,
+      "coinsEarned": 43
+    },
+    {
+      "playerName": "howdy",
+      "completionTime": 54767,
+      "xpEarned": 150,
+      "levelNumber": 1,
+      "timestamp": 1758394027064,
+      "packetLossPercentage": 0.0,
+      "coinsEarned": 50
+    }
+  ],
+  "currentPlayerStats": {
+    "playerName": "howdy",
+    "totalXP": 253,
+    "totalCoins": 93,
+    "levelsCompleted": 2,
+    "bestTime": 40593,
+    "bestXP": 150,
+    "levelBestTimes": {
+      "1": 40593
+    },
+    "levelBestXP": {
+      "1": 150
+    }
+  }
+}
