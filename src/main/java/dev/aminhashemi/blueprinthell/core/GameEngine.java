@@ -143,7 +143,13 @@ public class GameEngine implements Runnable {
         wires = new ArrayList<>();
         movingPackets = new ArrayList<>();
         impactManager = new ImpactManager();
-        leaderboardData = LeaderboardManager.loadLeaderboard();
+        leaderboardData = new LeaderboardData(); // Initialize with empty data
+        // Load leaderboard data asynchronously
+        LeaderboardManager.loadLeaderboard().thenAccept(data -> {
+            if (data != null) {
+                this.leaderboardData = data;
+            }
+        });
         lastUpdateTime = java.lang.System.nanoTime();
         gameStartTime = java.lang.System.currentTimeMillis(); // Initialize game start time
         init();

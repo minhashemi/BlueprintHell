@@ -18,6 +18,15 @@
         "timestamp": 1758394027064,
         "packetLossPercentage": 0.0,
         "coinsEarned": 50
+      },
+      {
+        "playerName": "martin",
+        "completionTime": 60019,
+        "xpEarned": 68,
+        "levelNumber": 1,
+        "timestamp": 1758395081871,
+        "packetLossPercentage": 20.0,
+        "coinsEarned": 8
       }
     ]
   },
@@ -39,13 +48,22 @@
       "timestamp": 1758394027064,
       "packetLossPercentage": 0.0,
       "coinsEarned": 50
+    },
+    {
+      "playerName": "martin",
+      "completionTime": 60019,
+      "xpEarned": 68,
+      "levelNumber": 1,
+      "timestamp": 1758395081871,
+      "packetLossPercentage": 20.0,
+      "coinsEarned": 8
     }
   ],
   "currentPlayerStats": {
-    "playerName": "howdy",
-    "totalXP": 253,
-    "totalCoins": 93,
-    "levelsCompleted": 2,
+    "playerName": "martin",
+    "totalXP": 321,
+    "totalCoins": 101,
+    "levelsCompleted": 3,
     "bestTime": 40593,
     "bestXP": 150,
     "levelBestTimes": {
