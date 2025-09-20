@@ -33,6 +33,9 @@ import dev.aminhashemi.blueprinthell.model.shop.ScrollOfAergia;
 import dev.aminhashemi.blueprinthell.model.shop.ScrollOfSisyphus;
 import dev.aminhashemi.blueprinthell.model.shop.ScrollOfEliphas;
 import dev.aminhashemi.blueprinthell.view.GamePanel;
+import dev.aminhashemi.blueprinthell.model.LeaderboardData;
+import dev.aminhashemi.blueprinthell.utils.PlayerManager;
+import dev.aminhashemi.blueprinthell.utils.LeaderboardManager;
 
 import java.awt.*;
 import java.awt.geom.Line2D;
@@ -62,6 +65,8 @@ public class GameEngine implements Runnable {
     private volatile boolean running = false;    // Game loop control flag
     private final int FPS_SET = Config.TARGET_FPS;   // Target frames per second
     private final int UPS_SET = Config.TARGET_UPS;   // Target updates per second
+    private LeaderboardData leaderboardData;     // Leaderboard data for tracking records
+    private Object gameFrame;                    // Reference to game frame for UI updates
 
     // ==================== GAME ENTITIES ====================
     private List<System> systems;                // All network systems (Reference, VPN, Malicious, Spy)
@@ -85,6 +90,8 @@ public class GameEngine implements Runnable {
     private int usedWireLength = 0;              // Wire length already used
     private double packetSpeedMultiplier = 1.0;  // Global packet speed multiplier
     private Map<Wire, Integer> wireLengths = new HashMap<>(); // Track individual wire lengths
+    private int currentLevelNumber = 1;          // Current level number
+    private String currentLevelName = "Level 1"; // Current level name
     
     // Phase 1 temporary effects
     private boolean impactWavesDisabled = false;        // O' Atar effect
@@ -136,6 +143,7 @@ public class GameEngine implements Runnable {
         wires = new ArrayList<>();
         movingPackets = new ArrayList<>();
         impactManager = new ImpactManager();
+        leaderboardData = LeaderboardManager.loadLeaderboard();
         lastUpdateTime = java.lang.System.nanoTime();
         gameStartTime = java.lang.System.currentTimeMillis(); // Initialize game start time
         init();
@@ -409,6 +417,17 @@ public class GameEngine implements Runnable {
         
         // Remove destroyed wires and update wire length
         for (Wire wire : wiresToRemove) {
+            // Remove all packets that are on this destroyed wire
+            List<MovingPacket> packetsToRemove = new ArrayList<>();
+            for (MovingPacket packet : movingPackets) {
+                if (packet.getWire() == wire) {
+                    packetsToRemove.add(packet);
+                    Logger.getInstance().warning("Packet lost due to wire destruction: " + packet.getPacket().getType());
+                }
+            }
+            movingPackets.removeAll(packetsToRemove);
+            
+            // Remove the wire
             wires.remove(wire);
             // Remove from wire length tracking
             Integer wireLength = wireLengths.remove(wire);
@@ -571,14 +590,14 @@ public class GameEngine implements Runnable {
         
         destinationSystem.receiveMovingPacket(arrivedPacket, this);
         
-        // Only add coins when a player-spawned packet reaches the END reference system (the one with only inputs)
-        if (arrivedPacket.isPlayerSpawned() && isReferenceSystem(destinationSystem) && destinationSystem.getOutputPorts().isEmpty()) {
-            // Player-spawned packet reached the final reference system - add coins based on packet type
+        // Only add coins during test runs when a player-spawned packet reaches the END reference system
+        if (arrivedPacket.isPlayerSpawned() && isReferenceSystem(destinationSystem) && destinationSystem.getOutputPorts().isEmpty() && isTestRunning) {
+            // Player-spawned packet reached the final reference system during test - add coins based on packet type
             int coinsBefore = coins;
             addCoinsForPacketEntry(arrivedPacket.getPacket());
-            Logger.getInstance().info("Player-spawned packet " + arrivedPacket.getPacket().getType() + " reached END reference system! Coins added: " + coinsBefore + " -> " + coins);
+            Logger.getInstance().info("Test packet " + arrivedPacket.getPacket().getType() + " reached END reference system! Coins added: " + coinsBefore + " -> " + coins);
         } else {
-            Logger.getInstance().info("Packet " + arrivedPacket.getPacket().getType() + " reached intermediate system or was system-spawned - no coins added.");
+            Logger.getInstance().info("Packet " + arrivedPacket.getPacket().getType() + " reached system - no coins added (manual spawn or not test run).");
         }
     }
     
@@ -1090,6 +1109,9 @@ public class GameEngine implements Runnable {
             }
             previewWire = null;
         } else if (draggedSystem != null) {
+            // Deduct coin cost for moving the system
+            coins -= Config.SYSTEM_MOVE_COST;
+            Logger.getInstance().info("System moved - cost: -" + Config.SYSTEM_MOVE_COST + " coin. Remaining coins: " + coins);
             draggedSystem = null;
             dragOffset = null;
         } else if (draggedArcPoint != null) {
@@ -1129,9 +1151,16 @@ public class GameEngine implements Runnable {
         Collections.reverse(reversedSystems);
         for (System system : reversedSystems) {
             if (system.contains(point)) {
-                draggedSystem = system;
-                dragOffset = new Point(point.x - system.getX(), point.y - system.getY());
-                return;
+                // Check if player has enough coins to move the system
+                if (coins >= Config.SYSTEM_MOVE_COST) {
+                    draggedSystem = system;
+                    dragOffset = new Point(point.x - system.getX(), point.y - system.getY());
+                    Logger.getInstance().info("System drag started - " + Config.SYSTEM_MOVE_COST + " coin will be deducted on release");
+                    return;
+                } else {
+                    Logger.getInstance().warning("Cannot move system - insufficient coins (need " + Config.SYSTEM_MOVE_COST + ", have " + coins + ")");
+                    return;
+                }
             }
         }
     }
@@ -2027,22 +2056,68 @@ public class GameEngine implements Runnable {
         for (System system : systems) {
             if (system instanceof ReferenceSystem) {
                 ReferenceSystem refSystem = (ReferenceSystem) system;
-                // Spawn a test packet
-                Packet testPacket = new ProtectedPacket(refSystem.getX(), refSystem.getY(), PacketType.PADLOCK_ICON);
+                
+                // Create a random packet type for testing
+                Packet testPacket = createRandomTestPacket(refSystem.getX(), refSystem.getY());
                 
                 // Find a wire connected to this reference system to create a moving packet
                 for (Wire wire : wires) {
                     if (wire.getStartPort().getParentSystem() == refSystem) {
                         MovingPacket movingPacket = new MovingPacket(testPacket, wire);
+                        movingPacket.setPlayerSpawned(true); // Mark as player-spawned for test
                         movingPacket.setTestPacketReturned(false); // Mark as test packet
                         movingPackets.add(movingPacket);
                         testPacketsReleased++;
-                        Logger.getInstance().info("Test packet " + testPacketsReleased + " released from reference system");
+                        Logger.getInstance().info("Test packet " + testPacketsReleased + " (" + testPacket.getType() + ") released from reference system");
                         return;
                     }
                 }
                 break;
             }
+        }
+    }
+    
+    /**
+     * Creates a random test packet of various types
+     */
+    private Packet createRandomTestPacket(int x, int y) {
+        // Define all available packet types for testing
+        PacketType[] testPacketTypes = {
+            PacketType.SQUARE_MESSENGER,
+            PacketType.TRIANGLE_MESSENGER,
+            PacketType.GREEN_DIAMOND_SMALL,
+            PacketType.GREEN_DIAMOND_LARGE,
+            PacketType.INFINITY_SYMBOL,
+            PacketType.PADLOCK_ICON,
+            PacketType.CAMOUFLAGE_ICON_SMALL,
+            PacketType.CAMOUFLAGE_ICON_LARGE,
+            PacketType.BULK_PACKET_SMALL,
+            PacketType.BULK_PACKET_LARGE
+        };
+        
+        // Randomly select a packet type
+        PacketType selectedType = testPacketTypes[(int) (Math.random() * testPacketTypes.length)];
+        
+        // Create the appropriate packet based on type
+        switch (selectedType) {
+            case SQUARE_MESSENGER:
+            case TRIANGLE_MESSENGER:
+                return new MessengerPacket(x, y, selectedType);
+            case GREEN_DIAMOND_SMALL:
+            case GREEN_DIAMOND_LARGE:
+            case INFINITY_SYMBOL:
+            case PADLOCK_ICON:
+                return new ProtectedPacket(x, y, selectedType);
+            case CAMOUFLAGE_ICON_SMALL:
+                return new ConfidentialPacket(x, y, ConfidentialPacket.ConfidentialType.SMALL);
+            case CAMOUFLAGE_ICON_LARGE:
+                return new ConfidentialPacket(x, y, ConfidentialPacket.ConfidentialType.LARGE);
+            case BULK_PACKET_SMALL:
+                return new BulkPacket(x, y, BulkPacket.BulkType.SMALL);
+            case BULK_PACKET_LARGE:
+                return new BulkPacket(x, y, BulkPacket.BulkType.LARGE);
+            default:
+                return new MessengerPacket(x, y, PacketType.SQUARE_MESSENGER);
         }
     }
     
@@ -2083,6 +2158,9 @@ public class GameEngine implements Runnable {
         if (packetLossPercentage < Config.GameConditions.MAX_PACKET_LOSS_PERCENTAGE) {
             gameWon = true;
             Logger.getInstance().info("🎉 LEVEL COMPLETED! Packet loss: " + String.format("%.1f", packetLossPercentage) + "% (Target: <" + Config.GameConditions.MAX_PACKET_LOSS_PERCENTAGE + "%)");
+            
+            // Add leaderboard record for successful completion
+            addLeaderboardRecord(packetLossPercentage);
         } else {
             gameLost = true;
             Logger.getInstance().info("💀 LEVEL FAILED! Packet loss: " + String.format("%.1f", packetLossPercentage) + "% (Target: <" + Config.GameConditions.MAX_PACKET_LOSS_PERCENTAGE + "%)");
@@ -2117,6 +2195,78 @@ public class GameEngine implements Runnable {
         testPacketsReturned = 0;
         testStartTime = 0;
         lastPacketReleaseTime = 0;
+    }
+    
+    /**
+     * Adds a leaderboard record for the current game completion
+     */
+    private void addLeaderboardRecord(double packetLossPercentage) {
+        if (leaderboardData != null) {
+            long completionTime = currentGameTime;
+            int xpEarned = LeaderboardData.calculateXP(completionTime, packetLossPercentage, coins);
+            
+            String playerName = PlayerManager.getInstance().getPlayerName();
+            LeaderboardData.PlayerRecord record = new LeaderboardData.PlayerRecord(
+                playerName,
+                completionTime,
+                xpEarned,
+                currentLevelNumber,
+                packetLossPercentage,
+                coins
+            );
+            
+            leaderboardData.addRecord(currentLevelName, record);
+            leaderboardData.updatePlayerStats(playerName, currentLevelNumber, completionTime, xpEarned, coins);
+            
+            // Save to persistent storage
+            LeaderboardManager.saveLeaderboard(leaderboardData);
+            
+            Logger.getInstance().info("🎯 LEADERBOARD RECORD ADDED: " + currentLevelName + 
+                " - Player: " + playerName +
+                " - Time: " + record.getFormattedTime() + 
+                " - XP: " + xpEarned + 
+                " - Coins: " + coins +
+                " - Packet Loss: " + String.format("%.1f", packetLossPercentage) + "%");
+            
+            // Update the leaderboard panel if game frame is available
+            if (gameFrame != null) {
+                try {
+                    // Use reflection to call updateLeaderboard method
+                    java.lang.reflect.Method updateMethod = gameFrame.getClass().getMethod("updateLeaderboard");
+                    updateMethod.invoke(gameFrame);
+                } catch (Exception e) {
+                    Logger.getInstance().error("Failed to update leaderboard panel", e);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Gets the leaderboard data for external access
+     */
+    public LeaderboardData getLeaderboardData() {
+        return leaderboardData;
+    }
+    
+    /**
+     * Gets the current level number
+     */
+    public int getCurrentLevelNumber() {
+        return currentLevelNumber;
+    }
+    
+    /**
+     * Gets the current level name
+     */
+    public String getCurrentLevelName() {
+        return currentLevelName;
+    }
+    
+    /**
+     * Sets the game frame reference for UI updates
+     */
+    public void setGameFrame(Object gameFrame) {
+        this.gameFrame = gameFrame;
     }
     
     // ==================== TIME TRAVEL SYSTEM ====================
