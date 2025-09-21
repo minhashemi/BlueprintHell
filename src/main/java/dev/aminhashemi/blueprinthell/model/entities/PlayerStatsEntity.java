@@ -10,9 +10,9 @@ import java.util.Map;
  */
 @Entity
 @Table(name = "player_stats", indexes = {
-    @Index(name = "idx_player_name", columnList = "playerName"),
-    @Index(name = "idx_total_xp", columnList = "totalXP"),
-    @Index(name = "idx_levels_completed", columnList = "levelsCompleted")
+    @Index(name = "idx_player_name", columnList = "player_name"),
+    @Index(name = "idx_total_xp", columnList = "total_xp"),
+    @Index(name = "idx_levels_completed", columnList = "levels_completed")
 })
 public class PlayerStatsEntity {
     

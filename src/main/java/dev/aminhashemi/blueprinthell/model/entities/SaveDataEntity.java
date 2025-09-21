@@ -10,9 +10,9 @@ import java.util.Map;
  */
 @Entity
 @Table(name = "save_data", indexes = {
-    @Index(name = "idx_user_mac", columnList = "userMacAddress"),
-    @Index(name = "idx_level_name", columnList = "levelName"),
-    @Index(name = "idx_save_time", columnList = "saveTime")
+    @Index(name = "idx_user_mac", columnList = "user_mac_address"),
+    @Index(name = "idx_level_name", columnList = "level_name"),
+    @Index(name = "idx_save_time", columnList = "save_time")
 })
 public class SaveDataEntity {
     

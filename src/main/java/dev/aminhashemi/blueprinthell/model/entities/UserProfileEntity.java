@@ -10,9 +10,9 @@ import java.util.List;
  */
 @Entity
 @Table(name = "user_profiles", indexes = {
-    @Index(name = "idx_mac_address", columnList = "macAddress"),
+    @Index(name = "idx_mac_address", columnList = "mac_address"),
     @Index(name = "idx_username", columnList = "username"),
-    @Index(name = "idx_last_login", columnList = "lastLoginTime")
+    @Index(name = "idx_last_login", columnList = "last_login_time")
 })
 public class UserProfileEntity {
     

@@ -8,9 +8,9 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "leaderboard_records", indexes = {
-    @Index(name = "idx_level_name", columnList = "levelName"),
-    @Index(name = "idx_completion_time", columnList = "completionTime"),
-    @Index(name = "idx_player_name", columnList = "playerName"),
+    @Index(name = "idx_level_name", columnList = "level_name"),
+    @Index(name = "idx_completion_time", columnList = "completion_time"),
+    @Index(name = "idx_player_name", columnList = "player_name"),
     @Index(name = "idx_timestamp", columnList = "timestamp")
 })
 public class LeaderboardRecordEntity {

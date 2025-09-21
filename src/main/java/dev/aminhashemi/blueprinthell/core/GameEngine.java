@@ -36,6 +36,9 @@ import dev.aminhashemi.blueprinthell.view.GamePanel;
 import dev.aminhashemi.blueprinthell.model.LeaderboardData;
 import dev.aminhashemi.blueprinthell.utils.PlayerManager;
 import dev.aminhashemi.blueprinthell.utils.DatabaseLeaderboardManager;
+import dev.aminhashemi.blueprinthell.model.TestPacketType;
+import dev.aminhashemi.blueprinthell.model.TestConfiguration;
+import dev.aminhashemi.blueprinthell.view.TestResultDialog;
 
 import java.awt.*;
 import java.awt.geom.Line2D;
@@ -92,6 +95,8 @@ public class GameEngine implements Runnable {
     private Map<Wire, Integer> wireLengths = new HashMap<>(); // Track individual wire lengths
     private int currentLevelNumber = 1;          // Current level number
     private String currentLevelName = "Level 1"; // Current level name
+    private TestConfiguration testConfiguration; // Configuration for test packet spawning
+    private int maxLevelNumber = 3;              // Maximum level number
     
     // Phase 1 temporary effects
     private boolean impactWavesDisabled = false;        // O' Atar effect
@@ -101,12 +106,16 @@ public class GameEngine implements Runnable {
     // Game Test State
     private boolean isTestRunning = false;              // Whether network test is running
     private int testPacketsReleased = 0;                // Number of packets released during test
-    private int testPacketsReturned = 0;                // Number of packets that returned to reference systems
+    private int testPacketsReturned = 0;                // Number of packets that reached END reference system
+    private int testPacketsLost = 0;                    // Number of packets destroyed by noise/impact
     private long testStartTime = 0;                     // When the test started
     private long lastPacketReleaseTime = 0;             // Last time a packet was released
     private boolean testCompleted = false;              // Whether test has been completed
     private boolean gameWon = false;                    // Whether player won the level
     private boolean gameLost = false;                   // Whether player lost the level
+    
+    // Wire Selection State
+    private Wire selectedWire = null;                   // Currently selected wire for removal
     private int coins = 0;                       // Current coins - start at 0
     private long lastSpawnTime = 0;              // Prevent multiple spawns
     private static final long SPAWN_COOLDOWN = Config.PACKET_SPAWN_COOLDOWN; // 500ms between spawns
@@ -150,6 +159,10 @@ public class GameEngine implements Runnable {
                 this.leaderboardData = data;
             }
         });
+        
+        // Initialize test configuration
+        initializeTestConfiguration();
+        
         lastUpdateTime = java.lang.System.nanoTime();
         gameStartTime = java.lang.System.currentTimeMillis(); // Initialize game start time
         init();
@@ -400,6 +413,12 @@ public class GameEngine implements Runnable {
             
             if (packet.isLost()) {
                 packetsToRemove.add(packet);
+                
+                // Count test packet losses
+                if (isTestRunning && packet.isPlayerSpawned() && !packet.isTestPacketReturned()) {
+                    testPacketsLost++;
+                    Logger.getInstance().info("💥 Test packet destroyed! Total lost: " + testPacketsLost + "/" + testPacketsReleased);
+                }
             }
         }
         
@@ -449,6 +468,18 @@ public class GameEngine implements Runnable {
 
         for (Wire wire : new ArrayList<>(wires)) {
             if (wire != null) {
+                // Highlight selected wire
+                if (wire == selectedWire) {
+                    g.setColor(Color.YELLOW);
+                    g.setStroke(new BasicStroke(4));
+                    // Draw highlight behind the wire
+                    List<Point> points = wire.getAllPoints();
+                    for (int i = 0; i < points.size() - 1; i++) {
+                        Point p1 = points.get(i);
+                        Point p2 = points.get(i + 1);
+                        g.drawLine(p1.x, p1.y, p2.x, p2.y);
+                    }
+                }
                 wire.draw(g);
             }
         }
@@ -596,13 +627,23 @@ public class GameEngine implements Runnable {
         
         destinationSystem.receiveMovingPacket(arrivedPacket, this);
         
-        // Only add coins during test runs when a player-spawned packet reaches the END reference system
-        if (arrivedPacket.isPlayerSpawned() && isReferenceSystem(destinationSystem) && destinationSystem.getOutputPorts().isEmpty() && isTestRunning) {
-            // Player-spawned packet reached the final reference system during test - add coins based on packet type
-            int coinsBefore = coins;
-            addCoinsForPacketEntry(arrivedPacket.getPacket());
-            Logger.getInstance().info("Test packet " + arrivedPacket.getPacket().getType() + " reached END reference system! Coins added: " + coinsBefore + " -> " + coins);
-        } else {
+        // Count test packets that reach the END reference system (only inputs, no outputs)
+        if (isTestRunning && arrivedPacket.isPlayerSpawned() && !arrivedPacket.isTestPacketReturned()) {
+            // Check if this is an END reference system (has only inputs, no outputs)
+            if (isReferenceSystem(destinationSystem) && destinationSystem.getOutputPorts().isEmpty()) {
+                arrivedPacket.setTestPacketReturned(true);
+                testPacketsReturned++;
+                Logger.getInstance().info("✅ Test packet reached END reference system! Total returned: " + testPacketsReturned + "/" + testPacketsReleased);
+                
+                // Add coins for reaching the END system
+                int coinsBefore = coins;
+                addCoinsForPacketEntry(arrivedPacket.getPacket());
+                Logger.getInstance().info("Coins added: " + coinsBefore + " -> " + coins);
+            }
+        }
+        
+        // Log packet arrival (coins already added above for test packets)
+        if (!isTestRunning || !arrivedPacket.isPlayerSpawned()) {
             Logger.getInstance().info("Packet " + arrivedPacket.getPacket().getType() + " reached system - no coins added (manual spawn or not test run).");
         }
     }
@@ -1091,6 +1132,27 @@ public class GameEngine implements Runnable {
             }
         }
     }
+    
+    public void handleLeftMousePress(Point point, boolean ctrlPressed) {
+        if (ctrlPressed) {
+            // Ctrl+click to remove wire
+            Wire wireToRemove = findWireAt(point);
+            if (wireToRemove != null) {
+                removeWire(wireToRemove);
+                Logger.getInstance().info("Wire removed by Ctrl+click");
+            }
+        } else {
+            // Regular click - select wire if clicked on one
+            Wire clickedWire = findWireAt(point);
+            if (clickedWire != null) {
+                selectedWire = clickedWire;
+                Logger.getInstance().info("Wire selected for removal (press Delete to remove)");
+            } else {
+                selectedWire = null;
+            }
+            handleLeftMousePress(point);
+        }
+    }
 
     public void handleLeftMouseRelease(Point point) {
         if (previewWire != null) {
@@ -1222,6 +1284,35 @@ public class GameEngine implements Runnable {
             return closestWire;
         }
         return null;
+    }
+    
+    /**
+     * Removes a wire from the game
+     */
+    public void removeWire(Wire wire) {
+        if (wires.remove(wire)) {
+            // Get the stored wire length and refund some of it
+            Integer storedLength = wireLengths.get(wire);
+            if (storedLength != null) {
+                double refundAmount = storedLength * 0.8; // 80% refund
+                totalWireLength += refundAmount;
+                usedWireLength -= storedLength;
+                wireLengths.remove(wire);
+                Logger.getInstance().info("Wire removed - refunded " + String.format("%.1f", refundAmount) + "m wire length");
+            }
+        }
+    }
+    
+    /**
+     * Removes the currently selected wire
+     */
+    public void removeSelectedWire() {
+        if (selectedWire != null) {
+            removeWire(selectedWire);
+            selectedWire = null;
+        } else {
+            Logger.getInstance().info("No wire selected. Click on a wire first, then press Delete.");
+        }
     }
     
     /**
@@ -2039,13 +2130,7 @@ public class GameEngine implements Runnable {
         
         long currentTime = java.lang.System.currentTimeMillis();
         
-        // Check if test duration has expired
-        if (currentTime - testStartTime >= Config.GameConditions.TEST_DURATION) {
-            completeTest();
-            return;
-        }
-        
-        // Release packets at intervals
+        // Release packets at intervals until we've released all 10
         if (testPacketsReleased < Config.GameConditions.TEST_PACKET_COUNT) {
             if (currentTime - lastPacketReleaseTime >= Config.GameConditions.PACKET_RELEASE_INTERVAL) {
                 releaseTestPacket();
@@ -2053,8 +2138,15 @@ public class GameEngine implements Runnable {
             }
         }
         
-        // Count returned packets
-        countReturnedPackets();
+        // Check if all packets have been processed (reached destination OR destroyed)
+        // We don't need to count here - counting is done in handlePacketArrival and handlePacketDestruction
+        if (testPacketsReleased >= Config.GameConditions.TEST_PACKET_COUNT) {
+            // All packets have been released, check if they've all been processed
+            int totalProcessed = testPacketsReturned + testPacketsLost;
+            if (totalProcessed >= testPacketsReleased) {
+                completeTest();
+            }
+        }
     }
     
     private void releaseTestPacket() {
@@ -2063,8 +2155,8 @@ public class GameEngine implements Runnable {
             if (system instanceof ReferenceSystem) {
                 ReferenceSystem refSystem = (ReferenceSystem) system;
                 
-                // Create a random packet type for testing
-                Packet testPacket = createRandomTestPacket(refSystem.getX(), refSystem.getY());
+                // Create a packet using the test configuration
+                Packet testPacket = createConfiguredTestPacket(refSystem.getX(), refSystem.getY());
                 
                 // Find a wire connected to this reference system to create a moving packet
                 for (Wire wire : wires) {
@@ -2128,40 +2220,27 @@ public class GameEngine implements Runnable {
     }
     
     private void countReturnedPackets() {
-        // Count packets that have returned to reference systems without removing them
-        // This prevents interference with normal game packet processing
-        for (MovingPacket movingPacket : movingPackets) {
-            // Check if packet is near any reference system
-            for (System system : systems) {
-                if (system instanceof ReferenceSystem) {
-                    Point packetPos = movingPacket.getPacket().getPosition();
-                    double distance = Math.sqrt(
-                        Math.pow(packetPos.x - system.getX(), 2) + 
-                        Math.pow(packetPos.y - system.getY(), 2)
-                    );
-                    
-                    if (distance < 30) { // Within 30 pixels of reference system
-                        // Mark as returned without removing from list
-                        if (!movingPacket.isTestPacketReturned()) {
-                            movingPacket.setTestPacketReturned(true);
-                            testPacketsReturned++;
-                            Logger.getInstance().info("Test packet returned! Total returned: " + testPacketsReturned);
-                        }
-                        break;
-                    }
-                }
-            }
-        }
+        // Count packets that have actually reached their destination systems
+        // This is called from handlePacketArrival when packets reach systems
+        // No need to count here - the counting is done in handlePacketArrival
     }
     
     private void completeTest() {
         isTestRunning = false;
         testCompleted = true;
         
-        // Calculate packet loss percentage
-        double packetLossPercentage = ((double)(testPacketsReleased - testPacketsReturned) / testPacketsReleased) * 100;
+        // Calculate packet loss percentage based on lost packets vs total released
+        double packetLossPercentage = 0.0;
+        if (testPacketsReleased > 0) {
+            packetLossPercentage = ((double)testPacketsLost / testPacketsReleased) * 100;
+        }
         
-        if (packetLossPercentage < Config.GameConditions.MAX_PACKET_LOSS_PERCENTAGE) {
+        boolean won = packetLossPercentage < Config.GameConditions.MAX_PACKET_LOSS_PERCENTAGE;
+        
+        Logger.getInstance().info("🎯 TEST COMPLETED! Packets: " + testPacketsReleased + " released, " + 
+                                testPacketsReturned + " reached destination, " + testPacketsLost + " lost");
+        
+        if (won) {
             gameWon = true;
             Logger.getInstance().info("🎉 LEVEL COMPLETED! Packet loss: " + String.format("%.1f", packetLossPercentage) + "% (Target: <" + Config.GameConditions.MAX_PACKET_LOSS_PERCENTAGE + "%)");
             
@@ -2171,6 +2250,9 @@ public class GameEngine implements Runnable {
             gameLost = true;
             Logger.getInstance().info("💀 LEVEL FAILED! Packet loss: " + String.format("%.1f", packetLossPercentage) + "% (Target: <" + Config.GameConditions.MAX_PACKET_LOSS_PERCENTAGE + "%)");
         }
+        
+        // Show result dialog
+        showTestResultDialog(won, packetLossPercentage);
         
         // Don't clear all packets - let normal game continue
         // The test packets will naturally be removed when they reach their destinations
@@ -2199,8 +2281,225 @@ public class GameEngine implements Runnable {
         gameLost = false;
         testPacketsReleased = 0;
         testPacketsReturned = 0;
+        testPacketsLost = 0;
         testStartTime = 0;
         lastPacketReleaseTime = 0;
+    }
+    
+    /**
+     * Initializes the test configuration based on Config settings
+     */
+    private void initializeTestConfiguration() {
+        List<TestPacketType> enabledTypes = new ArrayList<>();
+        
+        if (Config.GameConditions.ENABLE_MESSENGER) enabledTypes.add(TestPacketType.MESSENGER);
+        if (Config.GameConditions.ENABLE_BULK) enabledTypes.add(TestPacketType.BULK);
+        if (Config.GameConditions.ENABLE_SPY) enabledTypes.add(TestPacketType.SPY);
+        if (Config.GameConditions.ENABLE_MALICIOUS) enabledTypes.add(TestPacketType.MALICIOUS);
+        if (Config.GameConditions.ENABLE_VPN) enabledTypes.add(TestPacketType.VPN);
+        
+        this.testConfiguration = new TestConfiguration(
+            Config.GameConditions.USE_EQUAL_PROBABILITY,
+            enabledTypes.toArray(new TestPacketType[0])
+        );
+        
+        Logger.getInstance().info("Test configuration initialized with " + enabledTypes.size() + " packet types");
+    }
+    
+    /**
+     * Creates a test packet using the configured packet types
+     */
+    private Packet createConfiguredTestPacket(int x, int y) {
+        TestPacketType selectedType = testConfiguration.getRandomPacketType();
+        PacketType packetType = selectedType.toPacketType();
+        
+        return new MessengerPacket(x, y, packetType);
+    }
+    
+    /**
+     * Shows the test result dialog and handles user choice
+     */
+    private void showTestResultDialog(boolean won, double packetLossPercentage) {
+        // Get the parent frame for the dialog
+        Frame parentFrame = null;
+        if (gamePanel != null && gamePanel.getParent() != null) {
+            Component parent = gamePanel.getParent();
+            while (parent != null && !(parent instanceof Frame)) {
+                parent = parent.getParent();
+            }
+            if (parent instanceof Frame) {
+                parentFrame = (Frame) parent;
+            }
+        }
+        
+        TestResultDialog.TestResult result = TestResultDialog.showDialog(
+            parentFrame, 
+            won, 
+            packetLossPercentage, 
+            testPacketsReleased, 
+            testPacketsReturned
+        );
+        
+        handleTestResult(result);
+    }
+    
+    /**
+     * Handles the user's choice from the test result dialog
+     */
+    private void handleTestResult(TestResultDialog.TestResult result) {
+        switch (result) {
+            case RESET_LEVEL:
+                resetCurrentLevel();
+                break;
+            case NEXT_LEVEL:
+                if (currentLevelNumber < maxLevelNumber) {
+                    loadNextLevel();
+                } else {
+                    Logger.getInstance().info("🎉 Congratulations! You've completed all levels!");
+                    // Could show a completion dialog here
+                }
+                break;
+            case CLOSE:
+                // Just close the dialog, continue with current level
+                break;
+        }
+    }
+    
+    /**
+     * Resets the current level to its initial state
+     */
+    private void resetCurrentLevel() {
+        Logger.getInstance().info("Resetting level " + currentLevelNumber + "...");
+        
+        // Reset test state
+        resetTestState();
+        
+        // Clear all packets
+        movingPackets.clear();
+        
+        // Reload the current level (this will set the correct initial coins)
+        loadLevel(currentLevelNumber);
+        
+        Logger.getInstance().info("Level " + currentLevelNumber + " reset successfully!");
+    }
+    
+    /**
+     * Loads the next level
+     */
+    private void loadNextLevel() {
+        if (currentLevelNumber < maxLevelNumber) {
+            currentLevelNumber++;
+            currentLevelName = "Level " + currentLevelNumber;
+            
+            Logger.getInstance().info("Loading " + currentLevelName + "...");
+            
+            // Reset test state
+            resetTestState();
+            
+            // Clear all packets
+            movingPackets.clear();
+            
+            // Load the new level (this will set the correct initial coins)
+            loadLevel(currentLevelNumber);
+            
+            Logger.getInstance().info(currentLevelName + " loaded successfully!");
+        }
+    }
+    
+    /**
+     * Loads a specific level by number
+     */
+    private void loadLevel(int levelNumber) {
+        try {
+            LevelData levelData = LevelLoader.loadLevel(levelNumber);
+            
+            if (levelData != null) {
+                // Clear existing systems and wires
+                systems.clear();
+                wires.clear();
+                movingPackets.clear();
+                
+                // Load the new level data
+                loadLevelFromData(levelData);
+                
+                Logger.getInstance().info("Level " + levelNumber + " loaded successfully!");
+            } else {
+                Logger.getInstance().error("Failed to load level " + levelNumber);
+            }
+        } catch (Exception e) {
+            Logger.getInstance().error("Error loading level " + levelNumber, e);
+        }
+    }
+    
+    /**
+     * Loads level data into the game engine
+     */
+    private void loadLevelFromData(LevelData levelData) {
+        if (levelData == null || levelData.systems == null) {
+            Logger.getInstance().error("Invalid level data provided");
+            return;
+        }
+
+        // Load systems
+        for (LevelData.SystemData sysData : levelData.systems) {
+            switch (sysData.type) {
+                case "REFERENCE":
+                    systems.add(new ReferenceSystem(sysData.position.x, sysData.position.y, sysData));
+                    break;
+                case "VPN":
+                    systems.add(new VPNSystem(sysData.position.x, sysData.position.y, sysData));
+                    break;
+                case "MALICIOUS":
+                    systems.add(new MaliciousSystem(sysData.position.x, sysData.position.y, sysData));
+                    break;
+                case "SPY":
+                    systems.add(new SpySystem(sysData.position.x, sysData.position.y, sysData));
+                    break;
+                default:
+                    Logger.getInstance().warning("Unknown system type: " + sysData.type);
+                    break;
+            }
+        }
+
+        // Load wires
+        loadWiresFromLevel(levelData);
+        
+        // Set initial coins and wire length from level data
+        if (levelData.playerStart != null) {
+            coins = levelData.playerStart.initialCoins;
+            totalWireLength = levelData.playerStart.initialWireLength;
+            Logger.getInstance().info("Level loaded with initial coins: " + coins + ", wire length: " + totalWireLength + "m");
+        }
+        
+        Logger.getInstance().info("Level data loaded: " + systems.size() + " systems, " + wires.size() + " wires");
+    }
+    
+    /**
+     * Gets the maximum level number
+     */
+    public int getMaxLevelNumber() {
+        return maxLevelNumber;
+    }
+    
+    /**
+     * Sets the maximum level number
+     */
+    public void setMaxLevelNumber(int maxLevelNumber) {
+        this.maxLevelNumber = maxLevelNumber;
+    }
+    
+    /**
+     * Gets the test configuration
+     */
+    public TestConfiguration getTestConfiguration() {
+        return testConfiguration;
+    }
+    
+    /**
+     * Sets the test configuration
+     */
+    public void setTestConfiguration(TestConfiguration testConfiguration) {
+        this.testConfiguration = testConfiguration;
     }
     
     /**
@@ -2224,8 +2523,14 @@ public class GameEngine implements Runnable {
             leaderboardData.addRecord(currentLevelName, record);
             leaderboardData.updatePlayerStats(playerName, currentLevelNumber, completionTime, xpEarned, coins);
             
-            // Save to persistent storage
-            DatabaseLeaderboardManager.saveLeaderboard(leaderboardData);
+            // Save to database in real-time
+            DatabaseLeaderboardManager.saveLeaderboard(leaderboardData).thenAccept(success -> {
+                if (success) {
+                    Logger.getInstance().info("✅ Leaderboard record saved to database in real-time");
+                } else {
+                    Logger.getInstance().error("❌ Failed to save leaderboard record to database");
+                }
+            });
             
             Logger.getInstance().info("🎯 LEADERBOARD RECORD ADDED: " + currentLevelName + 
                 " - Player: " + playerName +

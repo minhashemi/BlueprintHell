@@ -9,9 +9,9 @@ import java.util.List;
  */
 @Entity
 @Table(name = "wire_data", indexes = {
-    @Index(name = "idx_level_id", columnList = "levelId"),
-    @Index(name = "idx_start_system", columnList = "startSystemId"),
-    @Index(name = "idx_end_system", columnList = "endSystemId")
+    @Index(name = "idx_level_id", columnList = "level_id"),
+    @Index(name = "idx_start_system", columnList = "start_system_id"),
+    @Index(name = "idx_end_system", columnList = "end_system_id")
 })
 public class WireDataEntity {
     

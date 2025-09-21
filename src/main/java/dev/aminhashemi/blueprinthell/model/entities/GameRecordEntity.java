@@ -8,10 +8,10 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "game_records", indexes = {
-    @Index(name = "idx_user_mac", columnList = "userMacAddress"),
-    @Index(name = "idx_level_name", columnList = "levelName"),
+    @Index(name = "idx_user_mac", columnList = "user_mac_address"),
+    @Index(name = "idx_level_name", columnList = "level_name"),
     @Index(name = "idx_timestamp", columnList = "timestamp"),
-    @Index(name = "idx_completion_time", columnList = "completionTime")
+    @Index(name = "idx_completion_time", columnList = "completion_time")
 })
 public class GameRecordEntity {
     
