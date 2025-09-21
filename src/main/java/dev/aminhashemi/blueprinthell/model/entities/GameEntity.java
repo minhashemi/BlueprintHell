@@ -7,7 +7,7 @@ import java.awt.*;
  * Abstract base class for all game entities.
  * Provides common functionality for position, bounds checking, and rendering.
  */
-public abstract class Entity {
+public abstract class GameEntity {
 
     // ==================== POSITION AND DIMENSIONS ====================
     protected int x, y;           // Entity position
@@ -20,7 +20,7 @@ public abstract class Entity {
      * @param width Entity width
      * @param height Entity height
      */
-    public Entity(int x, int y, int width, int height) {
+    public GameEntity(int x, int y, int width, int height) {
         this.x = x;
         this.y = y;
         this.width = width;

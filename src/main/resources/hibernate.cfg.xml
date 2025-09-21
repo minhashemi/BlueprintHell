@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+    <session-factory>
+        <!-- Database connection settings will be loaded from properties file -->
+        <property name="hibernate.connection.driver_class">${hibernate.connection.driver_class}</property>
+        <property name="hibernate.connection.url">${hibernate.connection.url}</property>
+        <property name="hibernate.connection.username">${hibernate.connection.username}</property>
+        <property name="hibernate.connection.password">${hibernate.connection.password}</property>
+        
+        <!-- Connection pool settings -->
+        <property name="hibernate.connection.provider_class">org.hibernate.hikaricp.internal.HikariCPConnectionProvider</property>
+        <property name="hibernate.hikari.minimumIdle">${hibernate.hikari.minimumIdle}</property>
+        <property name="hibernate.hikari.maximumPoolSize">${hibernate.hikari.maximumPoolSize}</property>
+        <property name="hibernate.hikari.idleTimeout">${hibernate.hikari.idleTimeout}</property>
+        <property name="hibernate.hikari.maxLifetime">${hibernate.hikari.maxLifetime}</property>
+        <property name="hibernate.hikari.connectionTimeout">${hibernate.hikari.connectionTimeout}</property>
+        
+        <!-- SQL dialect -->
+        <property name="hibernate.dialect">${hibernate.dialect}</property>
+        
+        <!-- Echo all executed SQL to stdout -->
+        <property name="hibernate.show_sql">${hibernate.show_sql}</property>
+        <property name="hibernate.format_sql">${hibernate.format_sql}</property>
+        
+        <!-- Drop and re-create the database schema on startup -->
+        <property name="hibernate.hbm2ddl.auto">${hibernate.hbm2ddl.auto}</property>
+        
+        <!-- Enable second level cache -->
+        <property name="hibernate.cache.use_second_level_cache">${hibernate.cache.use_second_level_cache}</property>
+        <property name="hibernate.cache.use_query_cache">${hibernate.cache.use_query_cache}</property>
+        <property name="hibernate.cache.region.factory_class">org.hibernate.cache.jcache.JCacheRegionFactory</property>
+        
+        <!-- Batch processing -->
+        <property name="hibernate.jdbc.batch_size">${hibernate.jdbc.batch_size}</property>
+        <property name="hibernate.order_inserts">${hibernate.order_inserts}</property>
+        <property name="hibernate.order_updates">${hibernate.order_updates}</property>
+        <property name="hibernate.jdbc.batch_versioned_data">${hibernate.jdbc.batch_versioned_data}</property>
+        
+        <!-- Entity mappings -->
+        <mapping class="dev.aminhashemi.blueprinthell.model.entities.UserProfileEntity"/>
+        <mapping class="dev.aminhashemi.blueprinthell.model.entities.GameRecordEntity"/>
+        <mapping class="dev.aminhashemi.blueprinthell.model.entities.LeaderboardRecordEntity"/>
+        <mapping class="dev.aminhashemi.blueprinthell.model.entities.PlayerStatsEntity"/>
+        <mapping class="dev.aminhashemi.blueprinthell.model.entities.LevelDataEntity"/>
+        <mapping class="dev.aminhashemi.blueprinthell.model.entities.SystemDataEntity"/>
+        <mapping class="dev.aminhashemi.blueprinthell.model.entities.WireDataEntity"/>
+        <mapping class="dev.aminhashemi.blueprinthell.model.entities.PortDataEntity"/>
+        <mapping class="dev.aminhashemi.blueprinthell.model.entities.ShopItemEntity"/>
+        <mapping class="dev.aminhashemi.blueprinthell.model.entities.SaveDataEntity"/>
+        <mapping class="dev.aminhashemi.blueprinthell.model.entities.OfflineSyncEntity"/>
+        
+    </session-factory>
+</hibernate-configuration>

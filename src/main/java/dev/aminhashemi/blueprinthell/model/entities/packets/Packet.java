@@ -1,9 +1,9 @@
 package dev.aminhashemi.blueprinthell.model.entities.packets;
 
 import dev.aminhashemi.blueprinthell.core.GameEngine;
-import dev.aminhashemi.blueprinthell.model.entities.Entity;
+import dev.aminhashemi.blueprinthell.model.entities.GameEntity;
 
-public abstract class Packet extends Entity {
+public abstract class Packet extends GameEntity {
 
     protected double noise;
     protected double speed;

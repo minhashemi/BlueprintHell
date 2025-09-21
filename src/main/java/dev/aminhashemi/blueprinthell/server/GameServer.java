@@ -15,13 +15,13 @@ import java.util.concurrent.Executors;
  */
 public class GameServer {
     private static final int SERVER_PORT = 8888;
-    private ServerDataManager dataManager;
+    private DatabaseServerDataManager dataManager;
     private ServerSocket serverSocket;
     private ExecutorService clientThreadPool;
     private boolean running = false;
     
     public GameServer() {
-        this.dataManager = new ServerDataManager();
+        this.dataManager = new DatabaseServerDataManager();
         this.clientThreadPool = Executors.newFixedThreadPool(10);
     }
     
@@ -64,11 +64,11 @@ public class GameServer {
      */
     private static class ClientHandler implements Runnable {
         private Socket clientSocket;
-        private ServerDataManager dataManager;
+        private DatabaseServerDataManager dataManager;
         private BufferedReader reader;
         private PrintWriter writer;
         
-        public ClientHandler(Socket clientSocket, ServerDataManager dataManager) {
+        public ClientHandler(Socket clientSocket, DatabaseServerDataManager dataManager) {
             this.clientSocket = clientSocket;
             this.dataManager = dataManager;
         }
