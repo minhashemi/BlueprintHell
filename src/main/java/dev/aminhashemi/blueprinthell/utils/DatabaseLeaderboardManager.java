@@ -104,9 +104,12 @@ public class DatabaseLeaderboardManager {
                                 entity.getPacketLossPercentage(),
                                 entity.getCoinsEarned()
                             );
-                            data.addRecord(entity.getLevelName(), record);
+                            data.addLevelRecord(entity.getLevelName(), record);
                         }
                     }
+                    
+                    // Rebuild global records from all level records
+                    data.rebuildGlobalRecords();
                     
                     // Load current player stats (we'll use the first one found or create default)
                     // Note: This is a simplified approach - in a real app you'd track the current player

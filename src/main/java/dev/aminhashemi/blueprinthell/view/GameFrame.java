@@ -19,6 +19,7 @@ public class GameFrame extends JFrame {
     private final CardLayout cardLayout;    // Layout manager for panel switching
     private final JPanel mainPanel;        // Container for all panels
     private GameEngine gameEngine;         // Core game engine instance
+    private GamePanel gamePanel;           // Game panel reference
     private LeaderboardPanel leaderboardPanel; // Leaderboard panel reference
 
     // ==================== PANEL CONSTANTS ====================
@@ -41,7 +42,7 @@ public class GameFrame extends JFrame {
 
         // Create UI panels
         MainMenuPanel mainMenuPanel = new MainMenuPanel(this);
-        GamePanel gamePanel = new GamePanel();
+        this.gamePanel = new GamePanel();
         SettingsPanel settingsPanel = new SettingsPanel(this);
         this.leaderboardPanel = new LeaderboardPanel(this);
 
@@ -120,5 +121,13 @@ public class GameFrame extends JFrame {
                 leaderboardPanel.updatePlayerStats();
             }
         }
+    }
+    
+    /**
+     * Gets the game panel instance
+     * @return Game panel
+     */
+    public GamePanel getGamePanel() {
+        return gamePanel;
     }
 }
