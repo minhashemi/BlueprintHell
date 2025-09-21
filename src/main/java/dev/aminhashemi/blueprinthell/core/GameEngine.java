@@ -35,7 +35,7 @@ import dev.aminhashemi.blueprinthell.model.shop.ScrollOfEliphas;
 import dev.aminhashemi.blueprinthell.view.GamePanel;
 import dev.aminhashemi.blueprinthell.model.LeaderboardData;
 import dev.aminhashemi.blueprinthell.utils.PlayerManager;
-import dev.aminhashemi.blueprinthell.utils.LeaderboardManager;
+import dev.aminhashemi.blueprinthell.utils.DatabaseLeaderboardManager;
 
 import java.awt.*;
 import java.awt.geom.Line2D;
@@ -144,8 +144,8 @@ public class GameEngine implements Runnable {
         movingPackets = new ArrayList<>();
         impactManager = new ImpactManager();
         leaderboardData = new LeaderboardData(); // Initialize with empty data
-        // Load leaderboard data asynchronously
-        LeaderboardManager.loadLeaderboard().thenAccept(data -> {
+        // Load leaderboard data asynchronously from database
+        DatabaseLeaderboardManager.loadLeaderboard().thenAccept(data -> {
             if (data != null) {
                 this.leaderboardData = data;
             }
@@ -2225,7 +2225,7 @@ public class GameEngine implements Runnable {
             leaderboardData.updatePlayerStats(playerName, currentLevelNumber, completionTime, xpEarned, coins);
             
             // Save to persistent storage
-            LeaderboardManager.saveLeaderboard(leaderboardData);
+            DatabaseLeaderboardManager.saveLeaderboard(leaderboardData);
             
             Logger.getInstance().info("🎯 LEADERBOARD RECORD ADDED: " + currentLevelName + 
                 " - Player: " + playerName +

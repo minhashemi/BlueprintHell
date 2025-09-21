@@ -2,14 +2,14 @@ package dev.aminhashemi.blueprinthell.model.entities.systems;
 
 import dev.aminhashemi.blueprinthell.core.GameEngine;
 import dev.aminhashemi.blueprinthell.model.LevelData;
-import dev.aminhashemi.blueprinthell.model.entities.Entity;
+import dev.aminhashemi.blueprinthell.model.entities.GameEntity;
 import dev.aminhashemi.blueprinthell.model.entities.packets.Packet;
 import dev.aminhashemi.blueprinthell.model.MovingPacket;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class System extends Entity {
+public abstract class System extends GameEntity {
 
     protected List<Port> inputPorts;
     protected List<Port> outputPorts;
