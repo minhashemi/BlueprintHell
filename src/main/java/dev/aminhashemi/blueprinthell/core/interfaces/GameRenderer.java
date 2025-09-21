@@ -3,26 +3,50 @@ package dev.aminhashemi.blueprinthell.core.interfaces;
 import java.awt.Graphics2D;
 
 /**
- * Interface for game rendering following Single Responsibility Principle.
- * Handles all rendering operations for the game.
+ * Interface for game rendering operations.
+ * Follows Interface Segregation Principle by focusing only on rendering.
  */
 public interface GameRenderer {
     
     /**
-     * Renders the game to the provided graphics context.
-     * @param g2d Graphics2D context for rendering
+     * Renders the game state
+     * @param g2d Graphics2D context
      */
     void render(Graphics2D g2d);
     
     /**
-     * Renders the HUD (Heads-Up Display) to the provided graphics context.
-     * @param g2d Graphics2D context for rendering
+     * Renders the game background
+     * @param g2d Graphics2D context
      */
-    void renderHUD(Graphics2D g2d);
+    void renderBackground(Graphics2D g2d);
     
     /**
-     * Renders debug information to the provided graphics context.
-     * @param g2d Graphics2D context for rendering
+     * Renders all systems
+     * @param g2d Graphics2D context
      */
-    void renderDebug(Graphics2D g2d);
+    void renderSystems(Graphics2D g2d);
+    
+    /**
+     * Renders all wires
+     * @param g2d Graphics2D context
+     */
+    void renderWires(Graphics2D g2d);
+    
+    /**
+     * Renders all moving packets
+     * @param g2d Graphics2D context
+     */
+    void renderPackets(Graphics2D g2d);
+    
+    /**
+     * Renders the UI overlay
+     * @param g2d Graphics2D context
+     */
+    void renderUI(Graphics2D g2d);
+    
+    /**
+     * Renders the shop overlay
+     * @param g2d Graphics2D context
+     */
+    void renderShop(Graphics2D g2d);
 }

@@ -110,6 +110,38 @@ public class LeaderboardData {
     }
     
     /**
+     * Add a record to level only (for loading from database)
+     */
+    public void addLevelRecord(String levelName, PlayerRecord record) {
+        levelRecords.computeIfAbsent(levelName, k -> new ArrayList<>()).add(record);
+        
+        // Sort records by completion time (fastest first)
+        levelRecords.get(levelName).sort(PlayerRecord::compareTo);
+        
+        // Keep only top 10 records per level
+        if (levelRecords.get(levelName).size() > 10) {
+            List<PlayerRecord> topRecords = levelRecords.get(levelName).subList(0, 10);
+            levelRecords.put(levelName, new ArrayList<>(topRecords));
+        }
+    }
+    
+    /**
+     * Rebuild global records from all level records
+     */
+    public void rebuildGlobalRecords() {
+        globalRecords.clear();
+        for (List<PlayerRecord> levelRecordList : levelRecords.values()) {
+            globalRecords.addAll(levelRecordList);
+        }
+        globalRecords.sort(PlayerRecord::compareTo);
+        
+        // Keep only top 50 global records
+        if (globalRecords.size() > 50) {
+            globalRecords = globalRecords.subList(0, 50);
+        }
+    }
+    
+    /**
      * Update current player's statistics
      */
     public void updatePlayerStats(String playerName, int levelNumber, long completionTime, 

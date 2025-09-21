@@ -4,21 +4,24 @@ import dev.aminhashemi.blueprinthell.network.NetworkProtocol;
 import dev.aminhashemi.blueprinthell.model.UserProfile;
 import dev.aminhashemi.blueprinthell.model.LeaderboardData;
 import dev.aminhashemi.blueprinthell.utils.Logger;
+import dev.aminhashemi.blueprinthell.core.constants.GameConstants;
 
 import java.io.*;
 import java.net.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Game server for handling client connections and data management
+ * Updated to work with unified main architecture
  */
 public class GameServer {
-    private static final int SERVER_PORT = 8888;
+    private static final int SERVER_PORT = GameConstants.DEFAULT_SERVER_PORT;
     private DatabaseServerDataManager dataManager;
     private ServerSocket serverSocket;
     private ExecutorService clientThreadPool;
-    private boolean running = false;
+    private final AtomicBoolean running = new AtomicBoolean(false);
     
     public GameServer() {
         this.dataManager = new DatabaseServerDataManager();
@@ -31,15 +34,27 @@ public class GameServer {
     public void start() {
         try {
             serverSocket = new ServerSocket(SERVER_PORT);
-            running = true;
+            running.set(true);
             Logger.getInstance().info("Game server started on port " + SERVER_PORT);
             
-            while (running) {
-                Socket clientSocket = serverSocket.accept();
-                clientThreadPool.submit(new ClientHandler(clientSocket, dataManager));
-            }
+            // Start server in background thread
+            Thread serverThread = new Thread(() -> {
+                try {
+                    while (running.get()) {
+                        Socket clientSocket = serverSocket.accept();
+                        clientThreadPool.submit(new ClientHandler(clientSocket, dataManager));
+                    }
+                } catch (IOException e) {
+                    if (running.get()) {
+                        Logger.getInstance().error("Server error", e);
+                    }
+                }
+            });
+            serverThread.setDaemon(true);
+            serverThread.start();
+            
         } catch (IOException e) {
-            Logger.getInstance().error("Server error", e);
+            Logger.getInstance().error("Failed to start server", e);
         }
     }
     
@@ -47,7 +62,7 @@ public class GameServer {
      * Stop the server
      */
     public void stop() {
-        running = false;
+        running.set(false);
         try {
             if (serverSocket != null) {
                 serverSocket.close();
@@ -57,6 +72,14 @@ public class GameServer {
         } catch (IOException e) {
             Logger.getInstance().error("Error stopping server", e);
         }
+    }
+    
+    /**
+     * Check if server is running
+     * @return True if server is running
+     */
+    public boolean isRunning() {
+        return running.get() && serverSocket != null && !serverSocket.isClosed();
     }
     
     /**
