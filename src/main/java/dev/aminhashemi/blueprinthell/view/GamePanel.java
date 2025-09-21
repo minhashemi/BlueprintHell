@@ -122,8 +122,16 @@ public class GamePanel extends JPanel {
                         }
                         break;
                     case KeyEvent.VK_DELETE:
+                    case KeyEvent.VK_BACK_SPACE:
                         if (gameEngine != null && !gameEngine.isShopOpen()) {
+                            Logger.getInstance().info("Delete/Backspace key pressed - removing selected wire");
                             gameEngine.removeSelectedWire();
+                        }
+                        break;
+                    default:
+                        // Debug: Log unhandled key codes for troubleshooting
+                        if (e.getKeyCode() >= 8 && e.getKeyCode() <= 127) { // Printable ASCII range
+                            Logger.getInstance().info("Unhandled key pressed: " + e.getKeyCode() + " (" + e.getKeyChar() + ")");
                         }
                         break;
                 }
