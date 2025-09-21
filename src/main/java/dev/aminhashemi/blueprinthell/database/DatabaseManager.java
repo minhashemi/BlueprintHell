@@ -3,6 +3,8 @@ package dev.aminhashemi.blueprinthell.database;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import dev.aminhashemi.blueprinthell.utils.Logger;
+import dev.aminhashemi.blueprinthell.core.exception.GlobalExceptionManager;
+import dev.aminhashemi.blueprinthell.core.exception.ExceptionResponse;
 
 /**
  * Singleton database manager for Hibernate session factory
@@ -82,8 +84,10 @@ public class DatabaseManager {
                 
                 Logger.getInstance().info("Database initialized successfully with " + configManager.getDatabaseType() + " database");
         } catch (Exception e) {
-            Logger.getInstance().error("Failed to initialize database", e);
-            throw new RuntimeException("Database initialization failed", e);
+            // Use Global Exception Handling
+            ExceptionResponse response = GlobalExceptionManager.handleException(e);
+            Logger.getInstance().error("Database initialization failed: " + response.getMessage(), e);
+            throw new RuntimeException("Database initialization failed: " + response.getMessage(), e);
         }
     }
     
@@ -128,7 +132,9 @@ public class DatabaseManager {
                 return session.isConnected();
             }
         } catch (Exception e) {
-            Logger.getInstance().error("Database connection test failed", e);
+            // Use Global Exception Handling
+            ExceptionResponse response = GlobalExceptionManager.handleException(e);
+            Logger.getInstance().error("Database connection test failed: " + response.getMessage(), e);
             return false;
         }
     }

@@ -5,6 +5,7 @@ import dev.aminhashemi.blueprinthell.network.NetworkManager;
 import dev.aminhashemi.blueprinthell.view.GameFrame;
 import dev.aminhashemi.blueprinthell.core.constants.GameConstants;
 import dev.aminhashemi.blueprinthell.utils.Logger;
+import dev.aminhashemi.blueprinthell.core.exception.GlobalExceptionManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -27,6 +28,10 @@ public class Main {
     public static void main(String[] args) {
         System.out.println("🎮 BlueprintHell Client Starting...");
         System.out.println("=" + "=".repeat(40));
+        
+        // Initialize Global Exception Handling
+        GlobalExceptionManager.initialize();
+        System.out.println("✅ Global Exception Handling initialized");
         
         try {
             // Initialize game frame

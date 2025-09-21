@@ -238,9 +238,8 @@ This architecture demonstrates:
 - Network programming
 - Game development concepts
 
-## 📖 References
 
-- [Clean Code by Robert Martin](https://www.oreilly.com/library/view/clean-code/9780136083238/)
-- [Design Patterns by Gang of Four](https://www.oreilly.com/library/view/design-patterns-elements/0201633612/)
-- [SOLID Principles](https://en.wikipedia.org/wiki/SOLID)
-- [Java Best Practices](https://www.oracle.com/java/technologies/javase/codeconventions-contents.html)
+---
+
+# exception handling command
+`mvn exec:java -Dexec.mainClass="dev.aminhashemi.blueprinthell.test.GlobalExceptionHandlingTest"`

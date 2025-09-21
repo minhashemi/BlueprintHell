@@ -2,6 +2,8 @@ package dev.aminhashemi.blueprinthell.network;
 
 import dev.aminhashemi.blueprinthell.utils.Logger;
 import dev.aminhashemi.blueprinthell.core.constants.GameConstants;
+import dev.aminhashemi.blueprinthell.core.exception.GlobalExceptionManager;
+import dev.aminhashemi.blueprinthell.core.exception.ExceptionResponse;
 
 import java.io.*;
 import java.net.*;
@@ -44,7 +46,8 @@ public class NetworkManager {
             return true;
             
         } catch (IOException e) {
-            Logger.getInstance().error("Failed to connect to server: " + e.getMessage());
+            ExceptionResponse response = GlobalExceptionManager.handleException(e);
+            Logger.getInstance().error("Failed to connect to server: " + response.getMessage());
             connected.set(false);
             return false;
         }
@@ -69,7 +72,8 @@ public class NetworkManager {
             return true;
             
         } catch (IOException e) {
-            Logger.getInstance().error("Failed to start server: " + e.getMessage());
+            ExceptionResponse response = GlobalExceptionManager.handleException(e);
+            Logger.getInstance().error("Failed to start server: " + response.getMessage());
             return false;
         }
     }
@@ -146,7 +150,8 @@ public class NetworkManager {
             Logger.getInstance().info("Disconnected from network");
             
         } catch (IOException e) {
-            Logger.getInstance().error("Error during disconnect: " + e.getMessage());
+            ExceptionResponse response = GlobalExceptionManager.handleException(e);
+            Logger.getInstance().error("Error during disconnect: " + response.getMessage());
         }
     }
     
@@ -162,7 +167,8 @@ public class NetworkManager {
                 }
             } catch (IOException e) {
                 if (running.get()) {
-                    Logger.getInstance().error("Error reading from server: " + e.getMessage());
+                    ExceptionResponse response = GlobalExceptionManager.handleException(e);
+                    Logger.getInstance().error("Error reading from server: " + response.getMessage());
                     connected.set(false);
                 }
             }
@@ -183,7 +189,8 @@ public class NetworkManager {
                 }
             } catch (IOException e) {
                 if (running.get()) {
-                    Logger.getInstance().error("Error accepting connections: " + e.getMessage());
+                    ExceptionResponse response = GlobalExceptionManager.handleException(e);
+                    Logger.getInstance().error("Error accepting connections: " + response.getMessage());
                 }
             }
         });
@@ -230,7 +237,8 @@ public class NetworkManager {
             handleClientCommunication(clientSocket);
             
         } catch (Exception e) {
-            Logger.getInstance().error("Error handling new client: " + e.getMessage());
+            ExceptionResponse response = GlobalExceptionManager.handleException(e);
+            Logger.getInstance().error("Error handling new client: " + response.getMessage());
         }
     }
     
@@ -250,12 +258,14 @@ public class NetworkManager {
                 }
                 
             } catch (IOException e) {
-                Logger.getInstance().error("Error communicating with client: " + e.getMessage());
+                ExceptionResponse response = GlobalExceptionManager.handleException(e);
+                Logger.getInstance().error("Error communicating with client: " + response.getMessage());
             } finally {
                 try {
                     clientSocket.close();
                 } catch (IOException e) {
-                    Logger.getInstance().error("Error closing client socket: " + e.getMessage());
+                    ExceptionResponse response = GlobalExceptionManager.handleException(e);
+                    Logger.getInstance().error("Error closing client socket: " + response.getMessage());
                 }
             }
         });
@@ -331,7 +341,8 @@ public class NetworkManager {
                 }
             }
         } catch (Exception e) {
-            Logger.getInstance().warning("Could not get MAC address: " + e.getMessage());
+            ExceptionResponse response = GlobalExceptionManager.handleException(e);
+            Logger.getInstance().warning("Could not get MAC address: " + response.getMessage());
         }
         return "Unknown";
     }

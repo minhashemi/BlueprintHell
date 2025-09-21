@@ -38,7 +38,7 @@ build/
 
 
 ### snapshots ###
-snapshots/
+/snapshots/
 
 # log file
 *.log
