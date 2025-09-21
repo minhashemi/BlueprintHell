@@ -42,3 +42,5 @@ snapshots/
 
 # log file
 *.log
+
+/database
