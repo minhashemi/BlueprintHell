@@ -490,6 +490,14 @@ public class Config {
         public static final int TEST_PACKET_COUNT = 10; // Number of packets to release for testing
         public static final double MAX_PACKET_LOSS_PERCENTAGE = 50.0; // Maximum allowed packet loss percentage to win
         public static final long PACKET_RELEASE_INTERVAL = 1000; // 1 second between packet releases
-        public static final long TEST_DURATION = 30000; // 30 seconds total test duration
+        public static final long TEST_DURATION = 15000; // 15 seconds total test duration (reduced for faster completion)
+        
+        // Test Configuration
+        public static final boolean USE_EQUAL_PROBABILITY = false; // Use equal probability for all packet types
+        public static final boolean ENABLE_MESSENGER = true;
+        public static final boolean ENABLE_BULK = true;
+        public static final boolean ENABLE_SPY = true;
+        public static final boolean ENABLE_MALICIOUS = true;
+        public static final boolean ENABLE_VPN = true;
     }
 }

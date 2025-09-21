@@ -7,7 +7,7 @@ import jakarta.persistence.*;
  */
 @Entity
 @Table(name = "port_data", indexes = {
-    @Index(name = "idx_system_id", columnList = "systemId"),
+    @Index(name = "idx_system_id", columnList = "system_id"),
     @Index(name = "idx_port_type", columnList = "type")
 })
 public class PortDataEntity {

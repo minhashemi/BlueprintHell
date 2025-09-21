@@ -9,8 +9,8 @@ import java.util.List;
  */
 @Entity
 @Table(name = "system_data", indexes = {
-    @Index(name = "idx_level_id", columnList = "levelId"),
-    @Index(name = "idx_system_id", columnList = "systemId"),
+    @Index(name = "idx_level_id", columnList = "level_id"),
+    @Index(name = "idx_system_id", columnList = "system_id"),
     @Index(name = "idx_system_type", columnList = "type")
 })
 public class SystemDataEntity {

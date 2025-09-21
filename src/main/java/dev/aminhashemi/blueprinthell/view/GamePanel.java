@@ -121,6 +121,11 @@ public class GamePanel extends JPanel {
                             Logger.getInstance().info("Test state reset! You can now use normal game functions.");
                         }
                         break;
+                    case KeyEvent.VK_DELETE:
+                        if (gameEngine != null && !gameEngine.isShopOpen()) {
+                            gameEngine.removeSelectedWire();
+                        }
+                        break;
                 }
             }
         });
@@ -146,7 +151,7 @@ public class GamePanel extends JPanel {
         drawHUD(g2d);
         
         // Draw win/lose overlay
-        drawWinLoseOverlay(g2d);
+        // Old overlay removed - using new TestResultDialog instead
         
         // Auto-hide HUD after timeout
         if (System.currentTimeMillis() - hudToggleTime > HUD_DISPLAY_DURATION && hudToggleTime > 0) {
@@ -242,63 +247,7 @@ public class GamePanel extends JPanel {
         repaint();
     }
     
-    /**
-     * Draws win/lose overlay when test is completed
-     */
-    private void drawWinLoseOverlay(Graphics2D g2d) {
-        if (gameEngine == null) return;
-        
-        // Check if test is completed
-        if (gameEngine.isTestCompleted()) {
-            // Semi-transparent overlay
-            g2d.setColor(new Color(0, 0, 0, 150));
-            g2d.fillRect(0, 0, getWidth(), getHeight());
-            
-            // Win/Lose message
-            String message;
-            Color messageColor;
-            
-            if (gameEngine.isGameWon()) {
-                message = "🎉 LEVEL COMPLETED! 🎉";
-                messageColor = Color.GREEN;
-            } else if (gameEngine.isGameLost()) {
-                message = "💀 LEVEL FAILED! 💀";
-                messageColor = Color.RED;
-            } else {
-                return; // Test not completed yet
-            }
-            
-            // Draw message
-            g2d.setColor(messageColor);
-            g2d.setFont(new Font("Arial", Font.BOLD, 48));
-            FontMetrics fm = g2d.getFontMetrics();
-            int messageWidth = fm.stringWidth(message);
-            int messageHeight = fm.getHeight();
-            int x = (getWidth() - messageWidth) / 2;
-            int y = (getHeight() - messageHeight) / 2;
-            
-            g2d.drawString(message, x, y);
-            
-            // Draw packet loss info
-            String lossInfo = "Packet Loss: " + String.format("%.1f", gameEngine.getPacketLossPercentage()) + "%";
-            g2d.setFont(new Font("Arial", Font.PLAIN, 24));
-            fm = g2d.getFontMetrics();
-            int infoWidth = fm.stringWidth(lossInfo);
-            int infoX = (getWidth() - infoWidth) / 2;
-            int infoY = y + messageHeight + 30;
-            g2d.drawString(lossInfo, infoX, infoY);
-            
-            // Draw instructions
-            String instructions = "Press R to restart or M for menu";
-            g2d.setFont(new Font("Arial", Font.PLAIN, 18));
-            fm = g2d.getFontMetrics();
-            int instWidth = fm.stringWidth(instructions);
-            int instX = (getWidth() - instWidth) / 2;
-            int instY = infoY + 40;
-            g2d.setColor(Color.WHITE);
-            g2d.drawString(instructions, instX, instY);
-        }
-    }
+    // Old overlay method removed - using new TestResultDialog instead
     
     // Active Network Capabilities Methods (Phase 2 Requirement)
     

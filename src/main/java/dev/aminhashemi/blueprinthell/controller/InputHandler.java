@@ -24,7 +24,8 @@ public class InputHandler extends MouseAdapter {
     @Override
     public void mousePressed(MouseEvent e) {
         if (SwingUtilities.isLeftMouseButton(e)) {
-            gameEngine.handleLeftMousePress(e.getPoint());
+            boolean ctrlPressed = e.isControlDown() || e.isMetaDown(); // Support both Ctrl and Cmd
+            gameEngine.handleLeftMousePress(e.getPoint(), ctrlPressed);
         } else if (SwingUtilities.isRightMouseButton(e)) {
             gameEngine.handleRightMousePress(e.getPoint());
         }

@@ -8,9 +8,9 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "offline_sync", indexes = {
-    @Index(name = "idx_user_mac", columnList = "userMacAddress"),
-    @Index(name = "idx_sync_status", columnList = "syncStatus"),
-    @Index(name = "idx_created_time", columnList = "createdTime")
+    @Index(name = "idx_user_mac", columnList = "user_mac_address"),
+    @Index(name = "idx_sync_status", columnList = "sync_status"),
+    @Index(name = "idx_created_time", columnList = "created_time")
 })
 public class OfflineSyncEntity {
     

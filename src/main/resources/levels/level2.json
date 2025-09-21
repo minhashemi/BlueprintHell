@@ -1,15 +1,15 @@
 {
   "levelNumber": 2,
-  "levelName": "Phase 2 Packet Diversity Test",
+  "levelName": "Advanced Network Security Challenge",
   "playerStart": {
-    "initialCoins": 20,
-    "initialWireLength": 5000
+    "initialCoins": 30,
+    "initialWireLength": 6000
   },
   "systems": [
     {
-      "id": "ref_sys_A",
+      "id": "ref_sys_start",
       "type": "REFERENCE",
-      "position": { "x": 100, "y": 200 },
+      "position": { "x": 50, "y": 150 },
       "inputPorts": [
       ],
       "outputPorts": [
@@ -18,52 +18,159 @@
         { "type": "DIAMOND" },
         { "type": "INFINITY" },
         { "type": "PADLOCK" },
-        { "type": "CAMOUFLAGE" }
+        { "type": "CAMOUFLAGE" },
+        { "type": "VPN" },
+        { "type": "MALICIOUS" },
+        { "type": "SPY" }
       ],
       "packetGeneration": {
         "packetType": "MIXED",
-        "count": 15,
-        "frequency": 2.0
+        "count": 20,
+        "frequency": 1.5
       }
     },
     {
-      "id": "ref_sys_B",
+      "id": "ref_sys_end",
       "type": "REFERENCE",
-      "position": { "x": 950, "y": 450 },
+      "position": { "x": 1000, "y": 500 },
       "inputPorts": [
         { "type": "SQUARE" },
         { "type": "TRIANGLE" },
         { "type": "DIAMOND" },
         { "type": "INFINITY" },
         { "type": "PADLOCK" },
-        { "type": "CAMOUFLAGE" }
+        { "type": "CAMOUFLAGE" },
+        { "type": "VPN" },
+        { "type": "MALICIOUS" },
+        { "type": "SPY" }
       ],
       "outputPorts": [
       ]
     },
     {
-      "id": "vpn_sys",
+      "id": "vpn_secure",
       "type": "VPN",
-      "position": { "x": 500, "y": 300 },
+      "position": { "x": 200, "y": 200 },
       "inputPorts": [
         { "type": "PADLOCK" },
-        { "type": "CAMOUFLAGE" }
+        { "type": "CAMOUFLAGE" },
+        { "type": "VPN" }
       ],
       "outputPorts": [
         { "type": "PADLOCK" },
-        { "type": "CAMOUFLAGE" }
+        { "type": "CAMOUFLAGE" },
+        { "type": "VPN" }
       ]
     },
     {
-      "id": "malicious_sys",
+      "id": "malicious_1",
       "type": "MALICIOUS",
-      "position": { "x": 300, "y": 400 },
+      "position": { "x": 400, "y": 300 },
       "inputPorts": [
-        { "type": "CAMOUFLAGE" }
+        { "type": "CAMOUFLAGE" },
+        { "type": "MALICIOUS" }
       ],
       "outputPorts": [
-        { "type": "CAMOUFLAGE" }
+        { "type": "CAMOUFLAGE" },
+        { "type": "MALICIOUS" }
       ]
+    },
+    {
+      "id": "spy_system",
+      "type": "SPY",
+      "position": { "x": 600, "y": 250 },
+      "inputPorts": [
+        { "type": "SPY" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" }
+      ],
+      "outputPorts": [
+        { "type": "SPY" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" }
+      ]
+    },
+    {
+      "id": "malicious_2",
+      "type": "MALICIOUS",
+      "position": { "x": 800, "y": 400 },
+      "inputPorts": [
+        { "type": "MALICIOUS" },
+        { "type": "SPY" }
+      ],
+      "outputPorts": [
+        { "type": "MALICIOUS" },
+        { "type": "SPY" }
+      ]
+    },
+    {
+      "id": "vpn_final",
+      "type": "VPN",
+      "position": { "x": 700, "y": 450 },
+      "inputPorts": [
+        { "type": "VPN" },
+        { "type": "PADLOCK" }
+      ],
+      "outputPorts": [
+        { "type": "VPN" },
+        { "type": "PADLOCK" }
+      ]
+    }
+  ],
+  "wires": [
+    {
+      "startSystemId": "ref_sys_start",
+      "startPortIndex": 0,
+      "endSystemId": "vpn_secure",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "ref_sys_start",
+      "startPortIndex": 1,
+      "endSystemId": "malicious_1",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "ref_sys_start",
+      "startPortIndex": 2,
+      "endSystemId": "spy_system",
+      "endPortIndex": 1
+    },
+    {
+      "startSystemId": "vpn_secure",
+      "startPortIndex": 0,
+      "endSystemId": "malicious_1",
+      "endPortIndex": 1
+    },
+    {
+      "startSystemId": "malicious_1",
+      "startPortIndex": 0,
+      "endSystemId": "spy_system",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "spy_system",
+      "startPortIndex": 0,
+      "endSystemId": "malicious_2",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "malicious_2",
+      "startPortIndex": 0,
+      "endSystemId": "vpn_final",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "vpn_final",
+      "startPortIndex": 0,
+      "endSystemId": "ref_sys_end",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "vpn_final",
+      "startPortIndex": 1,
+      "endSystemId": "ref_sys_end",
+      "endPortIndex": 1
     }
   ]
 }
