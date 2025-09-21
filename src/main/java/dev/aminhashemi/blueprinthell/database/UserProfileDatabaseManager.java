@@ -5,6 +5,8 @@ import dev.aminhashemi.blueprinthell.model.entities.GameRecordEntity;
 import dev.aminhashemi.blueprinthell.model.entities.PlayerStatsEntity;
 import dev.aminhashemi.blueprinthell.model.UserProfile;
 import dev.aminhashemi.blueprinthell.utils.Logger;
+import dev.aminhashemi.blueprinthell.core.exception.GlobalExceptionManager;
+import dev.aminhashemi.blueprinthell.core.exception.ExceptionResponse;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -44,7 +46,8 @@ public class UserProfileDatabaseManager {
                 return profile;
             } catch (Exception e) {
                 tx.rollback();
-                logger.error("Failed to get user profile", e);
+                ExceptionResponse response = GlobalExceptionManager.handleException(e);
+                logger.error("Failed to get user profile: " + response.getMessage(), e);
                 throw e;
             }
         }
@@ -63,7 +66,8 @@ public class UserProfileDatabaseManager {
                 logger.info("Updated user profile: " + profile.getUsername());
             } catch (Exception e) {
                 tx.rollback();
-                logger.error("Failed to update user profile", e);
+                ExceptionResponse response = GlobalExceptionManager.handleException(e);
+                logger.error("Failed to update user profile: " + response.getMessage(), e);
                 throw e;
             }
         }
@@ -87,7 +91,8 @@ public class UserProfileDatabaseManager {
                 logger.info("Added game record for user: " + macAddress);
             } catch (Exception e) {
                 tx.rollback();
-                logger.error("Failed to add game record", e);
+                ExceptionResponse response = GlobalExceptionManager.handleException(e);
+                logger.error("Failed to add game record: " + response.getMessage(), e);
                 throw e;
             }
         }
@@ -106,7 +111,8 @@ public class UserProfileDatabaseManager {
             query.setMaxResults(limit);
             return query.list();
         } catch (Exception e) {
-            logger.error("Failed to get user game history", e);
+            ExceptionResponse response = GlobalExceptionManager.handleException(e);
+            logger.error("Failed to get user game history: " + response.getMessage(), e);
             throw e;
         }
     }
@@ -135,7 +141,8 @@ public class UserProfileDatabaseManager {
                 return stats;
             } catch (Exception e) {
                 tx.rollback();
-                logger.error("Failed to get player stats", e);
+                ExceptionResponse response = GlobalExceptionManager.handleException(e);
+                logger.error("Failed to get player stats: " + response.getMessage(), e);
                 throw e;
             }
         }
@@ -154,7 +161,8 @@ public class UserProfileDatabaseManager {
                 logger.info("Updated player stats for: " + stats.getPlayerName());
             } catch (Exception e) {
                 tx.rollback();
-                logger.error("Failed to update player stats", e);
+                ExceptionResponse response = GlobalExceptionManager.handleException(e);
+                logger.error("Failed to update player stats: " + response.getMessage(), e);
                 throw e;
             }
         }
@@ -168,7 +176,8 @@ public class UserProfileDatabaseManager {
             Query<UserProfileEntity> query = session.createQuery("FROM UserProfileEntity", UserProfileEntity.class);
             return query.list();
         } catch (Exception e) {
-            logger.error("Failed to get all user profiles", e);
+            ExceptionResponse response = GlobalExceptionManager.handleException(e);
+            logger.error("Failed to get all user profiles: " + response.getMessage(), e);
             throw e;
         }
     }
@@ -184,7 +193,8 @@ public class UserProfileDatabaseManager {
             );
             return query.list();
         } catch (Exception e) {
-            logger.error("Failed to get online users", e);
+            ExceptionResponse response = GlobalExceptionManager.handleException(e);
+            logger.error("Failed to get online users: " + response.getMessage(), e);
             throw e;
         }
     }
@@ -207,7 +217,8 @@ public class UserProfileDatabaseManager {
                 tx.commit();
             } catch (Exception e) {
                 tx.rollback();
-                logger.error("Failed to set user online status", e);
+                ExceptionResponse response = GlobalExceptionManager.handleException(e);
+                logger.error("Failed to set user online status: " + response.getMessage(), e);
                 throw e;
             }
         }
