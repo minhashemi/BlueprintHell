@@ -65,7 +65,7 @@ public class SpySystem extends System {
                 return;
                 
             case PADLOCK_ICON:
-                // Protected packets are unaffected
+                // Protected packets are unaffected by SpySystems
                 Logger.getInstance().info("Protected packet unaffected by SpySystem - routing normally");
                 super.receivePacket(packet, engine);
                 return;
@@ -100,25 +100,10 @@ public class SpySystem extends System {
                 return;
                 
             case PADLOCK_ICON:
-                // Protected packets are converted back to original type
-                if (packet instanceof ProtectedPacket) {
-                    ProtectedPacket protectedPacket = (ProtectedPacket) packet;
-                    Logger.getInstance().info("Protected packet converted back to original type " + protectedPacket.getOriginalType() + " by SpySystem");
-                    
-                    // Convert back to original packet type
-                    Packet originalPacket = createOriginalPacket(protectedPacket);
-                    MovingPacket originalMovingPacket = new MovingPacket(originalPacket, movingPacket.getWire());
-                    originalMovingPacket.setPlayerSpawned(movingPacket.isPlayerSpawned());
-                    
-                    // Route normally (SpySystem doesn't destroy regular packets, just teleports them)
-                    super.receiveMovingPacket(originalMovingPacket, engine);
-                    return;
-                } else {
-                    // Fallback for non-ProtectedPacket PADLOCK_ICON packets
-                    Logger.getInstance().info("PADLOCK_ICON packet unaffected by SpySystem - routing normally");
-                    super.receiveMovingPacket(movingPacket, engine);
-                    return;
-                }
+                // Protected packets are unaffected by SpySystems
+                Logger.getInstance().info("Protected packet unaffected by SpySystem - routing normally");
+                super.receiveMovingPacket(movingPacket, engine);
+                return;
                 
             default:
                 // Regular packets are teleported to another SpySystem

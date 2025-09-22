@@ -5,11 +5,17 @@ import java.awt.*;
 
 public class MessengerPacket extends Packet {
 
-    private final PacketType type;
+    private PacketType type;
+    private Color customColor;
+    private int customSize;
+    private int customCoinReward;
 
     public MessengerPacket(int x, int y, PacketType type) {
         super(x, y, 12, 12);
         this.type = type;
+        this.customColor = null;
+        this.customSize = -1;
+        this.customCoinReward = -1;
     }
 
     @Override
@@ -19,7 +25,8 @@ public class MessengerPacket extends Packet {
 
     @Override
     public void draw(Graphics2D g) {
-        g.setColor(type.getColor());
+        Color drawColor = (customColor != null) ? customColor : type.getColor();
+        g.setColor(drawColor);
 
         switch (type) {
             case SQUARE_MESSENGER:
@@ -78,5 +85,40 @@ public class MessengerPacket extends Packet {
     @Override
     public PacketType getType() {
         return this.type;
+    }
+    
+    // Custom property methods for bit packets
+    public void setSize(int size) {
+        this.customSize = size;
+        this.width = size;
+        this.height = size;
+    }
+    
+    public int getSize() {
+        return (customSize != -1) ? customSize : type.getSize();
+    }
+    
+    public void setColor(Color color) {
+        this.customColor = color;
+    }
+    
+    public Color getColor() {
+        return (customColor != null) ? customColor : type.getColor();
+    }
+    
+    public void setCoinReward(int coinReward) {
+        this.customCoinReward = coinReward;
+    }
+    
+    public int getCoinReward() {
+        return (customCoinReward != -1) ? customCoinReward : type.getCoinReward();
+    }
+    
+    public void setCurrentSpeed(float speed) {
+        this.speed = speed;
+    }
+    
+    public float getCurrentSpeed() {
+        return (float) this.speed;
     }
 }

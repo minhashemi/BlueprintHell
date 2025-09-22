@@ -4,6 +4,9 @@ import dev.aminhashemi.blueprinthell.core.GameEngine;
 import dev.aminhashemi.blueprinthell.model.entities.GameEntity;
 import dev.aminhashemi.blueprinthell.utils.Config;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public abstract class Packet extends GameEntity {
 
     protected double noise;
@@ -11,6 +14,7 @@ public abstract class Packet extends GameEntity {
     protected double dx, dy;
     protected long creationTime;
     protected boolean isTimedOut;
+    protected Map<String, String> metadata; // For storing additional packet information
 
     public Packet(int x, int y, int width, int height) {
         super(x, y, width, height);
@@ -20,6 +24,7 @@ public abstract class Packet extends GameEntity {
         this.dy = 0;
         this.creationTime = System.currentTimeMillis();
         this.isTimedOut = false;
+        this.metadata = new HashMap<>();
     }
 
     @Override
@@ -40,6 +45,21 @@ public abstract class Packet extends GameEntity {
     public void setCreationTime(long creationTime) { this.creationTime = creationTime; }
     public boolean isTimedOut() { return isTimedOut; }
     public void setTimedOut(boolean timedOut) { this.isTimedOut = timedOut; }
+    
+    // Metadata methods
+    public void setMetadata(String key, String value) { 
+        metadata.put(key, value); 
+    }
+    public String getMetadata(String key) { 
+        return metadata.get(key); 
+    }
+    public boolean hasMetadata(String key) { 
+        return metadata.containsKey(key); 
+    }
+    
+    public float getCurrentSpeed() {
+        return (float) this.speed;
+    }
     
     /**
      * Checks if this packet has timed out based on its creation time

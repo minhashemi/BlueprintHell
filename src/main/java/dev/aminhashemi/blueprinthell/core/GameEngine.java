@@ -2079,6 +2079,13 @@ public class GameEngine implements Runnable {
     }
     
     /**
+     * Removes a moving packet from the game
+     */
+    public void removeMovingPacket(MovingPacket movingPacket) {
+        movingPackets.remove(movingPacket);
+    }
+    
+    /**
      * Sets the wire lengths map (used when loading)
      */
     public void setWireLengths(Map<Wire, Integer> wireLengths) {
@@ -2311,6 +2318,20 @@ public class GameEngine implements Runnable {
      */
     public List<MovingPacket> getMovingPackets() {
         return movingPackets;
+    }
+    
+    /**
+     * Replaces a moving packet with another one
+     * Used by AntiTrojan systems to convert trojan packets to messenger packets
+     */
+    public void replaceMovingPacket(MovingPacket oldPacket, MovingPacket newPacket) {
+        int index = movingPackets.indexOf(oldPacket);
+        if (index != -1) {
+            movingPackets.set(index, newPacket);
+            Logger.getInstance().info("Replaced moving packet: " + oldPacket.getPacket().getType() + " -> " + newPacket.getPacket().getType());
+        } else {
+            Logger.getInstance().warning("Could not find moving packet to replace");
+        }
     }
     
     /**
