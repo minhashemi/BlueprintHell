@@ -424,6 +424,43 @@ public class MovingPacket {
         if (distance > 0) {
             float waveIntensity = intensity / (float)(distance * distance);
             increaseNoise(waveIntensity);
+            
+            // Apply deviation effect based on impact intensity
+            // Strong impacts can push packets off their wire path
+            if (waveIntensity > 5.0f) { // Threshold for deviation
+                applyDeviationEffect(impactPoint, waveIntensity);
+            }
+        }
+    }
+    
+    /**
+     * Applies deviation effect to push packet away from wire path
+     * This implements the impact wave deviation from the documentation
+     */
+    private void applyDeviationEffect(Point impactPoint, float intensity) {
+        // Calculate direction away from impact point
+        Point packetPos = packet.getPosition();
+        double dx = packetPos.x - impactPoint.x;
+        double dy = packetPos.y - impactPoint.y;
+        double distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance > 0) {
+            // Normalize direction vector
+            dx /= distance;
+            dy /= distance;
+            
+            // Apply deviation based on intensity
+            float deviationAmount = Math.min(intensity * 0.5f, 10.0f); // Cap at 10 pixels
+            
+            // Add deviation to packet's position
+            packet.setPosition(packet.getX() + (int)(dx * deviationAmount), 
+                             packet.getY() + (int)(dy * deviationAmount));
+            
+            // Add some random deviation to make it more realistic
+            double randomAngle = Math.random() * Math.PI * 2;
+            double randomDeviation = Math.random() * deviationAmount * 0.3;
+            packet.setPosition(packet.getX() + (int)(Math.cos(randomAngle) * randomDeviation),
+                             packet.getY() + (int)(Math.sin(randomAngle) * randomDeviation));
         }
     }
     

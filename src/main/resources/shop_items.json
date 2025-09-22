@@ -6,7 +6,7 @@
     "effectType": "DISABLE_IMPACT_WAVES"
   },
   {
-    "name": "O’ Airyaman",
+    "name": "O' Airyaman",
     "price": 4,
     "description": "Disables packet collisions in the network for 5 seconds.",
     "effectType": "DISABLE_COLLISIONS"
@@ -16,5 +16,27 @@
     "price": 5,
     "description": "Resets noise on all packets currently in the network.",
     "effectType": "RESET_NOISE"
+  },
+  {
+    "name": "Scroll of Aergia",
+    "price": 10,
+    "description": "Stops packet acceleration for 20 seconds at selected point.",
+    "effectType": "STOP_ACCELERATION",
+    "duration": 20000,
+    "cooldown": 30000
+  },
+  {
+    "name": "Scroll of Sisyphus",
+    "price": 15,
+    "description": "Moves a non-reference system within specified radius.",
+    "effectType": "MOVE_SYSTEM",
+    "radius": 100
+  },
+  {
+    "name": "Scroll of Eliphas",
+    "price": 20,
+    "description": "Centers packets on wire for 30 seconds at selected point.",
+    "effectType": "CENTER_PACKETS",
+    "duration": 30000
   }
 ]

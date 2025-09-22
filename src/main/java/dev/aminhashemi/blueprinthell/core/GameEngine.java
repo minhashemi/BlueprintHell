@@ -110,6 +110,7 @@ public class GameEngine implements Runnable {
     private int testPacketsReleased = 0;                // Number of packets released during test
     private int testPacketsReturned = 0;                // Number of packets that reached END reference system
     private int testPacketsLost = 0;                    // Number of packets destroyed by noise/impact
+    private int testPacketsInStorage = 0;               // Number of test packets currently in storage
     private long testStartTime = 0;                     // When the test started
     private long lastPacketReleaseTime = 0;             // Last time a packet was released
     private boolean testCompleted = false;              // Whether test has been completed
@@ -401,10 +402,13 @@ public class GameEngine implements Runnable {
         // Handle wire degradation and cleanup
         cleanupDestroyedWires();
         
+        // Process stored packets - try to release them when ports become available
+        processStoredPackets();
+        
         updateHUD();
     }
 
-    /** Removes packets lost due to high noise levels */
+    /** Removes packets lost due to high noise levels, wire deviation, or impact damage */
     private void cleanupLostPackets() {
         List<MovingPacket> packetsToRemove = new ArrayList<>();
         
@@ -413,13 +417,36 @@ public class GameEngine implements Runnable {
                 continue; // Skip protected packets
             }
             
-            if (packet.isLost()) {
+            boolean packetLost = false;
+            String lossReason = "";
+            
+            // Check for noise-based destruction (noise > packet size)
+            if (packet.getPacket().getNoise() > packet.getPacket().getType().getSize()) {
+                packetLost = true;
+                lossReason = "noise (" + String.format("%.1f", packet.getPacket().getNoise()) + " > " + packet.getPacket().getType().getSize() + ")";
+            }
+            // Check for wire deviation (packet too far from wire)
+            else if (isPacketDeviatedFromWire(packet)) {
+                packetLost = true;
+                lossReason = "wire deviation";
+            }
+            // Check for timeout
+            else if (packet.getPacket().checkTimeout()) {
+                packetLost = true;
+                lossReason = "timeout";
+            }
+            // Check for existing lost status
+            else if (packet.isLost()) {
+                packetLost = true;
+                lossReason = "general loss";
+            }
+            
+            if (packetLost) {
                 packetsToRemove.add(packet);
                 
-                // Count test packet losses
+                // Log test packet destruction (but don't count as "lost" for scoring)
                 if (isTestRunning && packet.isPlayerSpawned() && !packet.isTestPacketReturned()) {
-                    testPacketsLost++;
-                    Logger.getInstance().info("💥 Test packet destroyed! Total lost: " + testPacketsLost + "/" + testPacketsReleased);
+                    Logger.getInstance().info("💥 Test packet destroyed due to " + lossReason + "! (Not counted as lost for scoring)");
                 }
             }
         }
@@ -429,6 +456,69 @@ public class GameEngine implements Runnable {
             movingPackets.remove(packet);
             AudioManager.getInstance().playSound("boom.wav");
         }
+    }
+    
+    /**
+     * Checks if a packet has deviated too far from its wire path
+     * This implements the wire deviation loss condition from the documentation
+     */
+    private boolean isPacketDeviatedFromWire(MovingPacket packet) {
+        Wire wire = packet.getWire();
+        if (wire == null) return false;
+        
+        // Calculate distance from packet to wire path
+        List<Point> wirePath = wire.getAllPoints();
+        if (wirePath.size() < 2) return false;
+        
+        Point packetPos = new Point(packet.getPacket().getX(), packet.getPacket().getY());
+        double minDistance = Double.MAX_VALUE;
+        
+        // Find minimum distance to any segment of the wire
+        for (int i = 0; i < wirePath.size() - 1; i++) {
+            Point start = wirePath.get(i);
+            Point end = wirePath.get(i + 1);
+            double distance = pointToLineDistance(packetPos, start, end);
+            minDistance = Math.min(minDistance, distance);
+        }
+        
+        // If packet is too far from wire (more than 20 pixels), it's lost
+        return minDistance > 20.0;
+    }
+    
+    /**
+     * Calculates distance from a point to a line segment
+     */
+    private double pointToLineDistance(Point point, Point lineStart, Point lineEnd) {
+        double A = point.x - lineStart.x;
+        double B = point.y - lineStart.y;
+        double C = lineEnd.x - lineStart.x;
+        double D = lineEnd.y - lineStart.y;
+        
+        double dot = A * C + B * D;
+        double lenSq = C * C + D * D;
+        
+        if (lenSq == 0) {
+            // Line segment is actually a point
+            return Math.sqrt(A * A + B * B);
+        }
+        
+        double param = dot / lenSq;
+        
+        double xx, yy;
+        if (param < 0) {
+            xx = lineStart.x;
+            yy = lineStart.y;
+        } else if (param > 1) {
+            xx = lineEnd.x;
+            yy = lineEnd.y;
+        } else {
+            xx = lineStart.x + param * C;
+            yy = lineStart.y + param * D;
+        }
+        
+        double dx = point.x - xx;
+        double dy = point.y - yy;
+        return Math.sqrt(dx * dx + dy * dy);
     }
     
     /** Removes destroyed wires and updates wire length tracking */
@@ -703,7 +793,7 @@ public class GameEngine implements Runnable {
                 Logger.getInstance().info("Packet " + packet.getType() + " stored in system " + currentSystem.getId() + " (no available ports)");
             } else {
                 Logger.getInstance().info("Packet " + packet.getType() + " lost - system storage full and no available ports");
-                testPacketsLost++;
+                // Note: Packet loss is now calculated as (released - returned), not by counting destroyed packets
             }
             return;
         }
@@ -761,18 +851,73 @@ public class GameEngine implements Runnable {
      * Checks if a system can store more packets (capacity check)
      */
     private boolean canStorePacketInSystem(System system) {
-        // For now, we'll use a simple approach - check if system has storage capacity
-        // This could be enhanced to track actual stored packets per system
-        return true; // Assume systems can always store packets for now
+        return system.hasStorageCapacity();
     }
     
     /**
      * Stores a packet in a system when no output ports are available
      */
     private void storePacketInSystem(Packet packet, System system) {
-        // For now, we'll just log this - in a full implementation, 
-        // you'd want to track stored packets per system and release them when ports become available
-        Logger.getInstance().info("Packet " + packet.getType() + " stored in system " + system.getId());
+        if (system.storePacket(packet)) {
+            // Track test packets in storage
+            if (isTestRunning) {
+                testPacketsInStorage++;
+            }
+            Logger.getInstance().info("Packet " + packet.getType() + " stored in system " + system.getId() + 
+                                    " (storage: " + system.getStoredPacketCount() + "/" + System.MAX_STORAGE_CAPACITY + 
+                                    ", test packets in storage: " + testPacketsInStorage + ")");
+        } else {
+            Logger.getInstance().warning("Failed to store packet " + packet.getType() + " in system " + system.getId() + " - storage full!");
+        }
+    }
+    
+    /**
+     * Processes stored packets in all systems - tries to release them when ports become available
+     */
+    private void processStoredPackets() {
+        for (System system : systems) {
+            // Try to release stored packets while there are stored packets and available ports
+            while (system.getStoredPacketCount() > 0) {
+                Packet storedPacket = system.removeStoredPacket();
+                if (storedPacket == null) break;
+                
+                // Try to route the stored packet
+                List<Wire> outgoingWires = wires.stream()
+                        .filter(wire -> wire.getStartPort().getParentSystem() == system)
+                        .collect(Collectors.toList());
+                
+                if (outgoingWires.isEmpty()) {
+                    // No outgoing wires - put packet back in storage
+                    system.storePacket(storedPacket);
+                    break;
+                }
+                
+                // Try to find an available port
+                Wire targetWire = selectOutputPort(storedPacket, outgoingWires);
+                if (targetWire == null) {
+                    // No available ports - put packet back in storage
+                    system.storePacket(storedPacket);
+                    break;
+                }
+                
+                // Successfully found a port - create moving packet
+                MovingPacket movingPacket = new MovingPacket(storedPacket, targetWire);
+                
+                // Apply port compatibility effects
+                boolean isCompatible = isPortCompatible(targetWire.getStartPort().getType(), storedPacket.getType());
+                movingPacket.applyPortCompatibilityEffect(targetWire.getStartPort().getType(), isCompatible);
+                
+                movingPackets.add(movingPacket);
+                
+                // Track test packets released from storage
+                if (isTestRunning) {
+                    testPacketsInStorage--;
+                }
+                
+                Logger.getInstance().info("Stored packet " + storedPacket.getType() + " released from system " + system.getId() + 
+                                        " (test packets in storage: " + testPacketsInStorage + ")");
+            }
+        }
     }
 
     public void routeMovingPacket(MovingPacket movingPacket, System currentSystem) {
@@ -800,7 +945,7 @@ public class GameEngine implements Runnable {
                 Logger.getInstance().info("Packet " + movingPacket.getPacket().getType() + " stored in system " + currentSystem.getId() + " (no available ports)");
             } else {
                 Logger.getInstance().info("Packet " + movingPacket.getPacket().getType() + " lost - system storage full and no available ports");
-                testPacketsLost++;
+                // Note: Packet loss is now calculated as (released - returned), not by counting destroyed packets
             }
             return;
         }
@@ -1379,38 +1524,6 @@ public class GameEngine implements Runnable {
         }
     }
     
-    /**
-     * Calculates the distance from a point to a line segment
-     */
-    private double pointToLineDistance(Point point, Point lineStart, Point lineEnd) {
-        double A = point.x - lineStart.x;
-        double B = point.y - lineStart.y;
-        double C = lineEnd.x - lineStart.x;
-        double D = lineEnd.y - lineStart.y;
-
-        double dot = A * C + B * D;
-        double lenSq = C * C + D * D;
-        
-        if (lenSq == 0) return point.distance(lineStart);
-        
-        double param = dot / lenSq;
-        
-        double xx, yy;
-        if (param < 0) {
-            xx = lineStart.x;
-            yy = lineStart.y;
-        } else if (param > 1) {
-            xx = lineEnd.x;
-            yy = lineEnd.y;
-        } else {
-            xx = lineStart.x + param * C;
-            yy = lineStart.y + param * D;
-        }
-        
-        double dx = point.x - xx;
-        double dy = point.y - yy;
-        return Math.sqrt(dx * dx + dy * dy);
-    }
 
     /**
      * Clears all active impacts.
@@ -1585,62 +1698,15 @@ public class GameEngine implements Runnable {
             // Update HUD data
             gamePanel.updateHUDData(remainingWireLength, temporalProgress, packetLoss, currentCoins);
             
-            // Check for real-time game over condition
-            checkGameOverCondition();
+            // Game over check removed - only check win/lose at end of test
         }
     }
     
-    /**
-     * Checks if game over condition is met (packet loss > 50%) and triggers game over
-     */
-    private void checkGameOverCondition() {
-        if (testPacketsReleased > 0) {
-            double packetLossPercentage = getPacketLossPercentage();
-            if (packetLossPercentage >= Config.GameConditions.MAX_PACKET_LOSS_PERCENTAGE && !gameLost && !gameWon) {
-                Logger.getInstance().info("💀 GAME OVER! Packet loss exceeded 50%: " + String.format("%.1f", packetLossPercentage) + "%");
-                triggerGameOver();
-            }
-        }
-    }
+    // Real-time game over check removed - win/lose only checked at end of test
     
-    /**
-     * Triggers game over state and shows game over dialog
-     */
-    private void triggerGameOver() {
-        gameLost = true;
-        testCompleted = true;
-        
-        double packetLossPercentage = getPacketLossPercentage();
-        int healthyPackets = testPacketsReturned; // Packets that successfully reached destination
-        
-        Logger.getInstance().info("🎯 GAME OVER! Packets: " + testPacketsReleased + " released, " + 
-                                healthyPackets + " healthy, " + testPacketsLost + " lost");
-        
-        // Show game over dialog
-        showGameOverDialog(packetLossPercentage, healthyPackets);
-    }
+    // triggerGameOver() method removed - win/lose handled in completeTest()
     
-    /**
-     * Shows game over dialog with healthy packets count and packet loss percentage
-     */
-    private void showGameOverDialog(double packetLossPercentage, int healthyPackets) {
-        javax.swing.SwingUtilities.invokeLater(() -> {
-            TestResultDialog.TestResult result = TestResultDialog.showDialog(
-                null, 
-                false, // won = false (game over)
-                packetLossPercentage, 
-                testPacketsReleased, 
-                healthyPackets
-            );
-            
-            if (result == TestResultDialog.TestResult.RESET_LEVEL) {
-                resetCurrentLevel();
-            } else if (result == TestResultDialog.TestResult.CLOSE) {
-                // Close dialog - for now just log, as gameStateManager is not available in this context
-                Logger.getInstance().info("Game over dialog closed");
-            }
-        });
-    }
+    // showGameOverDialog() method removed - win/lose handled in completeTest()
     
     /**
      * Returns the count of lost packets
@@ -1719,9 +1785,9 @@ public class GameEngine implements Runnable {
     
     public double getPacketLossPercentage() {
         if (testPacketsReleased == 0) return 0.0;
-        // Calculate packet loss based on total planned packets for the test, not just released so far
-        int totalPlannedPackets = Config.GameConditions.TEST_PACKET_COUNT;
-        return ((double)testPacketsLost / totalPlannedPackets) * 100;
+        // Calculate packet loss: packets that didn't reach END system
+        int actualPacketsLost = testPacketsReleased - testPacketsReturned;
+        return (actualPacketsLost / (double)testPacketsReleased) * 100;
     }
     
     /**
@@ -2259,33 +2325,42 @@ public class GameEngine implements Runnable {
             }
         }
         
+        // Check if test duration has elapsed (15 seconds) - safety timeout
+        long testElapsedTime = currentTime - testStartTime;
+        if (testElapsedTime >= Config.GameConditions.TEST_DURATION) {
+            Logger.getInstance().info("⏰ Test duration elapsed (" + testElapsedTime + "ms), completing test...");
+            completeTest();
+            return;
+        }
+        
         // Check if all packets have been processed (reached destination OR destroyed)
-        // We don't need to count here - counting is done in handlePacketArrival and handlePacketDestruction
+        // Only check this if all packets have been released
         if (testPacketsReleased >= Config.GameConditions.TEST_PACKET_COUNT) {
             // All packets have been released, check if they've all been processed
-            int totalProcessed = testPacketsReturned + testPacketsLost;
+            // Count packets that are still moving (not returned yet)
+            int testPacketsStillMoving = 0;
+            for (MovingPacket packet : movingPackets) {
+                if (packet.isPlayerSpawned() && !packet.isTestPacketReturned()) {
+                    testPacketsStillMoving++;
+                }
+            }
+            
+            // Use the tracked test packets in storage count
+            
             Logger.getInstance().info("🔍 Test status check: Released=" + testPacketsReleased + 
                                     ", Returned=" + testPacketsReturned + 
-                                    ", Lost=" + testPacketsLost + 
-                                    ", TotalProcessed=" + totalProcessed + 
-                                    ", MovingPackets=" + movingPackets.size());
+                                    ", StillMoving=" + testPacketsStillMoving + 
+                                    ", InStorage=" + testPacketsInStorage + 
+                                    ", MovingPackets=" + movingPackets.size() + 
+                                    ", TimeElapsed=" + testElapsedTime + "ms");
             
-            if (totalProcessed >= testPacketsReleased) {
-                Logger.getInstance().info("✅ All packets processed, completing test...");
+            // Test completes when:
+            // 1. No test packets are moving AND
+            // 2. No test packets are in storage AND  
+            // 3. At least 2 seconds have passed (to allow for processing)
+            if (testPacketsStillMoving == 0 && testPacketsInStorage == 0 && testElapsedTime > 2000) {
+                Logger.getInstance().info("✅ All test packets processed (no moving, no storage), completing test...");
                 completeTest();
-            } else {
-                // Additional check: if no packets are moving anymore, consider test complete
-                boolean anyTestPacketsMoving = false;
-                for (MovingPacket packet : movingPackets) {
-                    if (packet.isPlayerSpawned() && !packet.isTestPacketReturned()) {
-                        anyTestPacketsMoving = true;
-                        break;
-                    }
-                }
-                if (!anyTestPacketsMoving) {
-                    Logger.getInstance().info("✅ No test packets moving, completing test...");
-                    completeTest();
-                }
             }
         }
     }
@@ -2370,13 +2445,14 @@ public class GameEngine implements Runnable {
         isTestRunning = false;
         testCompleted = true;
         
-        // Calculate packet loss percentage based on total planned packets for the test
-        double packetLossPercentage = getPacketLossPercentage();
+        // Calculate ACTUAL packet loss: packets that didn't reach END system
+        int actualPacketsLost = testPacketsReleased - testPacketsReturned;
+        double packetLossPercentage = (actualPacketsLost / (double)testPacketsReleased) * 100.0;
         
         boolean won = packetLossPercentage < Config.GameConditions.MAX_PACKET_LOSS_PERCENTAGE;
         
         Logger.getInstance().info("🎯 TEST COMPLETED! Packets: " + testPacketsReleased + " released, " + 
-                                testPacketsReturned + " reached destination, " + testPacketsLost + " lost");
+                                testPacketsReturned + " reached destination, " + actualPacketsLost + " lost");
         
         if (won) {
             gameWon = true;
@@ -2389,7 +2465,7 @@ public class GameEngine implements Runnable {
             Logger.getInstance().info("💀 LEVEL FAILED! Packet loss: " + String.format("%.1f", packetLossPercentage) + "% (Target: <" + Config.GameConditions.MAX_PACKET_LOSS_PERCENTAGE + "%)");
         }
         
-        // Show result dialog
+        // Show result dialog with correct counts
         showTestResultDialog(won, packetLossPercentage);
         
         // Don't clear all packets - let normal game continue
@@ -2420,6 +2496,7 @@ public class GameEngine implements Runnable {
         testPacketsReleased = 0;
         testPacketsReturned = 0;
         testPacketsLost = 0;
+        testPacketsInStorage = 0;
         testStartTime = 0;
         lastPacketReleaseTime = 0;
     }
