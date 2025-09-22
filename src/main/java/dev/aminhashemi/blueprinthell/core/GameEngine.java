@@ -1510,15 +1510,15 @@ public class GameEngine implements Runnable {
     /**
      * Returns the count of active systems in the network
      */
-    public int getActiveSystemCount() {
-        int count = 0;
-        for (System system : systems) {
-            if (system != null) {
-                count++;
-            }
-        }
-        return count;
-    }
+    // public int getActiveSystemCount() {
+    //     int count = 0;
+    //     for (System system : systems) {
+    //         if (system != null) {
+    //             count++;
+    //         }
+    //     }
+    //     return count;
+    // }
     
     /**
      * Returns the current network status
