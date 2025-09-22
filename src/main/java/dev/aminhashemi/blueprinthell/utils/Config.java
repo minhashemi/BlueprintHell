@@ -489,7 +489,13 @@ public class Config {
     public static class GameConditions {
         public static final int TEST_PACKET_COUNT = 10; // Number of packets to release for testing
         public static final double MAX_PACKET_LOSS_PERCENTAGE = 50.0; // Maximum allowed packet loss percentage to win
-        public static final long PACKET_RELEASE_INTERVAL = 1000; // 1 second between packet releases
+        
+        // PACKET RELEASE TIMING - Adjust this to control how fast packets are released during tests
+        // Lower values = faster release = more simultaneous packets = better impact visibility
+        // Higher values = slower release = packets get away more easily
+        // Recommended values: 50-100ms for fast/chaotic, 200-500ms for balanced, 1000ms+ for slow/easy
+        public static final long PACKET_RELEASE_INTERVAL = 120; // 200ms between packet releases
+        
         public static final long TEST_DURATION = 15000; // 15 seconds total test duration (reduced for faster completion)
         
         // Test Configuration

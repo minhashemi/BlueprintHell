@@ -221,10 +221,10 @@ public class GamePanel extends JPanel {
         g.drawString("Network Status:", hudX + 15, textY);
         textY += Config.HUD_TEXT_SPACING;
         
-        g.setFont(new Font(Config.Fonts.DEFAULT_FONT_FAMILY, Font.PLAIN, Config.Fonts.HUD_SMALL_TEXT_SIZE));
-        g.setColor(Config.HUD_ACTIVE_SYSTEMS_COLOR);
-        g.drawString("Active Systems: " + getActiveSystemCount(), hudX + 15, textY);
-        textY += lineHeight;
+//        g.setFont(new Font(Config.Fonts.DEFAULT_FONT_FAMILY, Font.PLAIN, Config.Fonts.HUD_SMALL_TEXT_SIZE));
+//        g.setColor(Config.HUD_ACTIVE_SYSTEMS_COLOR);
+//        g.drawString("Active Systems: " + getActiveSystemCount(), hudX + 15, textY);
+//        textY += lineHeight;
         
         g.setColor(Config.HUD_WIRE_CONNECTIONS_COLOR);
         g.drawString("Wire Connections: " + getWireConnectionCount(), hudX + 15, textY);
@@ -262,12 +262,12 @@ public class GamePanel extends JPanel {
     /**
      * Returns the count of active systems in the network
      */
-    private int getActiveSystemCount() {
-        if (gameEngine != null) {
-            return gameEngine.getActiveSystemCount();
-        }
-        return 0;
-    }
+//    private int getActiveSystemCount() {
+//        if (gameEngine != null) {
+//            return gameEngine.getActiveSystemCount();
+//        }
+//        return 0;
+//    }
     
     /**
      * Returns the current network status

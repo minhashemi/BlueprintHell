@@ -2264,8 +2264,28 @@ public class GameEngine implements Runnable {
         if (testPacketsReleased >= Config.GameConditions.TEST_PACKET_COUNT) {
             // All packets have been released, check if they've all been processed
             int totalProcessed = testPacketsReturned + testPacketsLost;
+            Logger.getInstance().info("🔍 Test status check: Released=" + testPacketsReleased + 
+                                    ", Returned=" + testPacketsReturned + 
+                                    ", Lost=" + testPacketsLost + 
+                                    ", TotalProcessed=" + totalProcessed + 
+                                    ", MovingPackets=" + movingPackets.size());
+            
             if (totalProcessed >= testPacketsReleased) {
+                Logger.getInstance().info("✅ All packets processed, completing test...");
                 completeTest();
+            } else {
+                // Additional check: if no packets are moving anymore, consider test complete
+                boolean anyTestPacketsMoving = false;
+                for (MovingPacket packet : movingPackets) {
+                    if (packet.isPlayerSpawned() && !packet.isTestPacketReturned()) {
+                        anyTestPacketsMoving = true;
+                        break;
+                    }
+                }
+                if (!anyTestPacketsMoving) {
+                    Logger.getInstance().info("✅ No test packets moving, completing test...");
+                    completeTest();
+                }
             }
         }
     }
