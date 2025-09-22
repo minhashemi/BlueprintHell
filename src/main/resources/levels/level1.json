@@ -10,15 +10,13 @@
       "id": "ref_sys_A",
       "type": "REFERENCE",
       "position": { "x": 100, "y": 200 },
-      "inputPorts": [
-      ],
+      "inputPorts": [],
       "outputPorts": [
         { "type": "SQUARE" },
         { "type": "TRIANGLE" },
         { "type": "DIAMOND" },
         { "type": "INFINITY" },
-        { "type": "PADLOCK" },
-        { "type": "CAMOUFLAGE" }
+        { "type": "PADLOCK" }
       ],
       "packetGeneration": {
         "packetType": "MIXED",
@@ -35,35 +33,27 @@
         { "type": "TRIANGLE" },
         { "type": "DIAMOND" },
         { "type": "INFINITY" },
-        { "type": "PADLOCK" },
-        { "type": "CAMOUFLAGE" }
+        { "type": "PADLOCK" }
       ],
-      "outputPorts": [
-      ]
+      "outputPorts": []
     },
     {
       "id": "vpn_sys",
       "type": "VPN",
-      "position": { "x": 500, "y": 300 },
+      "position": { "x": 300, "y": 300 },
       "inputPorts": [
-        { "type": "PADLOCK" },
-        { "type": "CAMOUFLAGE" }
+        { "type": "PADLOCK" }
       ],
       "outputPorts": [
-        { "type": "PADLOCK" },
-        { "type": "CAMOUFLAGE" }
+        { "type": "PADLOCK" }
       ]
     },
     {
       "id": "malicious_sys",
       "type": "MALICIOUS",
-      "position": { "x": 300, "y": 400 },
-      "inputPorts": [
-        { "type": "CAMOUFLAGE" }
-      ],
-      "outputPorts": [
-        { "type": "CAMOUFLAGE" }
-      ]
+      "position": { "x": 500, "y": 400 },
+      "inputPorts": [],
+      "outputPorts": []
     }
   ]
 }

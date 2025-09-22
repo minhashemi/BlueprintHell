@@ -64,13 +64,6 @@ public class Port {
                 g.fillRect(pos.x + 2, pos.y + 4, PORT_SIZE - 4, PORT_SIZE - 4);
                 g.fillRect(pos.x + 3, pos.y + 2, PORT_SIZE - 6, 3);
                 break;
-            case CAMOUFLAGE:
-                // Draw camouflage pattern
-                g.fillOval(pos.x + 1, pos.y + 1, PORT_SIZE - 2, PORT_SIZE - 2);
-                g.setColor(Color.WHITE);
-                g.fillOval(pos.x + 3, pos.y + 3, 4, 4);
-                g.setColor(type.getColor());
-                break;
             case VPN:
                 // Draw VPN symbol
                 Polygon shield = new Polygon();

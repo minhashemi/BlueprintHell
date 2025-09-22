@@ -25,7 +25,8 @@ public class ProtectedPacket extends Packet {
     private static final long VISIBILITY_TOGGLE_INTERVAL = Config.VISIBILITY_TOGGLE_INTERVAL; // 2 seconds
 
     public ProtectedPacket(int x, int y, PacketType originalType) {
-        super(x, y, Config.PROTECTED_PACKET_SIZE, Config.PROTECTED_PACKET_SIZE); // Twice the size of normal packets
+        // Size is 2x the original packet size
+        super(x, y, originalType.getSize() * 2, originalType.getSize() * 2);
         this.originalType = originalType;
         this.protectedType = PacketType.PADLOCK_ICON; // Always appears as protected
     }
@@ -100,6 +101,14 @@ public class ProtectedPacket extends Packet {
         // Draw size indicator (showing it's larger)
         g.setColor(Config.WIRING_MODE_COLOR);
         g.drawRect(x, y, width, height);
+        
+        // DEBUG: Yellow rectangle around protected packets for visual identification
+        
+        g.setColor(Color.YELLOW);
+        g.setStroke(new BasicStroke(2.0f)); // 2-pixel thick border
+        g.drawRect(x - 2, y - 2, width + 4, height + 4); // Slightly larger rectangle
+        g.setStroke(new BasicStroke(1.0f)); // Reset stroke
+        
     }
 
     @Override

@@ -12,7 +12,6 @@ public enum PortType {
     DIAMOND(Config.PortColors.DIAMOND_COLOR),       // Pure cyan
     INFINITY(Config.PortColors.INFINITY_COLOR),      // Pure yellow
     PADLOCK(Config.PortColors.PADLOCK_COLOR),       // Hot pink
-    CAMOUFLAGE(Config.PortColors.CAMOUFLAGE_COLOR),    // Pure gold
     VPN(Config.PortColors.VPN_COLOR),           // Pure magenta
     MALICIOUS(Config.PortColors.MALICIOUS_COLOR),     // Bright crimson
     SPY(Config.PortColors.SPY_COLOR);           // Bright orange-red

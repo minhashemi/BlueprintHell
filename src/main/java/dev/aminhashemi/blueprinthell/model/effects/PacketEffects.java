@@ -63,13 +63,6 @@ public class PacketEffects {
                     increaseNoise(0.1f);
                 }
                 break;
-                
-            case CAMOUFLAGE_ICON_SMALL, CAMOUFLAGE_ICON_LARGE:
-                // Confidential packets are very sensitive
-                if (!isCompatible) {
-                    increaseNoise(0.4f);
-                }
-                break;
         }
     }
     

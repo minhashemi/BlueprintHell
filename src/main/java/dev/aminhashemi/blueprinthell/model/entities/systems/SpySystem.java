@@ -3,6 +3,9 @@ package dev.aminhashemi.blueprinthell.model.entities.systems;
 import dev.aminhashemi.blueprinthell.core.GameEngine;
 import dev.aminhashemi.blueprinthell.model.LevelData;
 import dev.aminhashemi.blueprinthell.model.entities.packets.Packet;
+import dev.aminhashemi.blueprinthell.model.entities.packets.PacketType;
+import dev.aminhashemi.blueprinthell.model.entities.packets.ProtectedPacket;
+import dev.aminhashemi.blueprinthell.model.entities.packets.MessengerPacket;
 import dev.aminhashemi.blueprinthell.model.MovingPacket;
 import dev.aminhashemi.blueprinthell.utils.Logger;
 import dev.aminhashemi.blueprinthell.utils.Config;
@@ -97,15 +100,49 @@ public class SpySystem extends System {
                 return;
                 
             case PADLOCK_ICON:
-                // Protected packets are unaffected
-                Logger.getInstance().info("Protected packet unaffected by SpySystem - routing normally");
-                super.receiveMovingPacket(movingPacket, engine);
-                return;
+                // Protected packets are converted back to original type
+                if (packet instanceof ProtectedPacket) {
+                    ProtectedPacket protectedPacket = (ProtectedPacket) packet;
+                    Logger.getInstance().info("Protected packet converted back to original type " + protectedPacket.getOriginalType() + " by SpySystem");
+                    
+                    // Convert back to original packet type
+                    Packet originalPacket = createOriginalPacket(protectedPacket);
+                    MovingPacket originalMovingPacket = new MovingPacket(originalPacket, movingPacket.getWire());
+                    originalMovingPacket.setPlayerSpawned(movingPacket.isPlayerSpawned());
+                    
+                    // Route normally (SpySystem doesn't destroy regular packets, just teleports them)
+                    super.receiveMovingPacket(originalMovingPacket, engine);
+                    return;
+                } else {
+                    // Fallback for non-ProtectedPacket PADLOCK_ICON packets
+                    Logger.getInstance().info("PADLOCK_ICON packet unaffected by SpySystem - routing normally");
+                    super.receiveMovingPacket(movingPacket, engine);
+                    return;
+                }
                 
             default:
                 // Regular packets are teleported to another SpySystem
                 teleportPacketWithMovingPacket(movingPacket, engine);
                 break;
+        }
+    }
+
+    /**
+     * Creates the original packet from a protected packet
+     */
+    private Packet createOriginalPacket(ProtectedPacket protectedPacket) {
+        PacketType originalType = protectedPacket.getOriginalType();
+        
+        // Create the original packet based on its type
+        switch (originalType) {
+            case SQUARE_MESSENGER:
+            case TRIANGLE_MESSENGER:
+                return new MessengerPacket(protectedPacket.getX(), protectedPacket.getY(), originalType);
+            case INFINITY_SYMBOL:
+                return new MessengerPacket(protectedPacket.getX(), protectedPacket.getY(), originalType);
+            default:
+                // Fallback to messenger packet
+                return new MessengerPacket(protectedPacket.getX(), protectedPacket.getY(), PacketType.SQUARE_MESSENGER);
         }
     }
 
