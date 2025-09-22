@@ -494,7 +494,7 @@ public class Config {
         // Lower values = faster release = more simultaneous packets = better impact visibility
         // Higher values = slower release = packets get away more easily
         // Recommended values: 50-100ms for fast/chaotic, 200-500ms for balanced, 1000ms+ for slow/easy
-        public static final long PACKET_RELEASE_INTERVAL = 120; // 200ms between packet releases
+        public static final long PACKET_RELEASE_INTERVAL = 200; // 200ms between packet releases
         
         public static final long TEST_DURATION = 15000; // 15 seconds total test duration (reduced for faster completion)
         
@@ -506,4 +506,13 @@ public class Config {
         public static final boolean ENABLE_MALICIOUS = true;
         public static final boolean ENABLE_VPN = true;
     }
+    
+    // ==================== PACKET TIMEOUT SETTINGS ====================
+    public static final long PACKET_TIMEOUT_DURATION = 30000; // 30 seconds timeout for packets
+    
+    // ==================== SHOP ITEM SETTINGS ====================
+    public static final long SCROLL_OF_AERGIA_DURATION = 20000; // 20 seconds
+    public static final long SCROLL_OF_AERGIA_COOLDOWN = 30000; // 30 seconds cooldown
+    public static final int SCROLL_OF_SISYPHUS_RADIUS = 100; // Movement radius
+    public static final long SCROLL_OF_ELIPHAS_DURATION = 30000; // 30 seconds
 }

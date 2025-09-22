@@ -2,12 +2,15 @@ package dev.aminhashemi.blueprinthell.model.entities.packets;
 
 import dev.aminhashemi.blueprinthell.core.GameEngine;
 import dev.aminhashemi.blueprinthell.model.entities.GameEntity;
+import dev.aminhashemi.blueprinthell.utils.Config;
 
 public abstract class Packet extends GameEntity {
 
     protected double noise;
     protected double speed;
     protected double dx, dy;
+    protected long creationTime;
+    protected boolean isTimedOut;
 
     public Packet(int x, int y, int width, int height) {
         super(x, y, width, height);
@@ -15,6 +18,8 @@ public abstract class Packet extends GameEntity {
         this.speed = 0;
         this.dx = 0;
         this.dy = 0;
+        this.creationTime = System.currentTimeMillis();
+        this.isTimedOut = false;
     }
 
     @Override
@@ -30,4 +35,35 @@ public abstract class Packet extends GameEntity {
     public void setDx(double dx) { this.dx = dx; }
     public double getDy() { return dy; }
     public void setDy(double dy) { this.dy = dy; }
+    
+    public long getCreationTime() { return creationTime; }
+    public void setCreationTime(long creationTime) { this.creationTime = creationTime; }
+    public boolean isTimedOut() { return isTimedOut; }
+    public void setTimedOut(boolean timedOut) { this.isTimedOut = timedOut; }
+    
+    /**
+     * Checks if this packet has timed out based on its creation time
+     * @return true if packet has exceeded the timeout duration
+     */
+    public boolean checkTimeout() {
+        if (isTimedOut) return true;
+        
+        long currentTime = System.currentTimeMillis();
+        long timeAlive = currentTime - creationTime;
+        
+        if (timeAlive > Config.PACKET_TIMEOUT_DURATION) {
+            isTimedOut = true;
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Resets the packet timeout (useful when packet enters a system)
+     */
+    public void resetTimeout() {
+        this.creationTime = System.currentTimeMillis();
+        this.isTimedOut = false;
+    }
 }
