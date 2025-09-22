@@ -1611,7 +1611,7 @@ public class GameEngine implements Runnable {
         testCompleted = true;
         
         double packetLossPercentage = getPacketLossPercentage();
-        int healthyPackets = testPacketsReleased - testPacketsLost;
+        int healthyPackets = testPacketsReturned; // Packets that successfully reached destination
         
         Logger.getInstance().info("🎯 GAME OVER! Packets: " + testPacketsReleased + " released, " + 
                                 healthyPackets + " healthy, " + testPacketsLost + " lost");
@@ -1719,7 +1719,9 @@ public class GameEngine implements Runnable {
     
     public double getPacketLossPercentage() {
         if (testPacketsReleased == 0) return 0.0;
-        return ((double)(testPacketsReleased - testPacketsReturned) / testPacketsReleased) * 100;
+        // Calculate packet loss based on total planned packets for the test, not just released so far
+        int totalPlannedPackets = Config.GameConditions.TEST_PACKET_COUNT;
+        return ((double)testPacketsLost / totalPlannedPackets) * 100;
     }
     
     /**
@@ -2348,11 +2350,8 @@ public class GameEngine implements Runnable {
         isTestRunning = false;
         testCompleted = true;
         
-        // Calculate packet loss percentage based on lost packets vs total released
-        double packetLossPercentage = 0.0;
-        if (testPacketsReleased > 0) {
-            packetLossPercentage = ((double)testPacketsLost / testPacketsReleased) * 100;
-        }
+        // Calculate packet loss percentage based on total planned packets for the test
+        double packetLossPercentage = getPacketLossPercentage();
         
         boolean won = packetLossPercentage < Config.GameConditions.MAX_PACKET_LOSS_PERCENTAGE;
         
