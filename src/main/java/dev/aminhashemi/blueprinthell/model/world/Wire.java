@@ -218,6 +218,13 @@ public class Wire {
     }
     
     /**
+     * Marks the wire for destruction
+     */
+    public void markForDestruction() {
+        isDestroyed = true;
+    }
+    
+    /**
      * Gets the remaining bulk packet passes before destruction
      */
     public int getRemainingPasses() {

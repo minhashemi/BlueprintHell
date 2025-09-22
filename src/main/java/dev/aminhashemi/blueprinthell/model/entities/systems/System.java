@@ -201,6 +201,14 @@ public abstract class System extends GameEntity {
     }
     
     /**
+     * Clears all stored packets from the system
+     * Used when bulk packets enter the system
+     */
+    public void clearStoredPackets() {
+        storedPackets.clear();
+    }
+    
+    /**
      * Checks if the system has storage capacity available
      * @return true if storage is not full
      */
@@ -216,10 +224,5 @@ public abstract class System extends GameEntity {
         return new ArrayList<>(storedPackets);
     }
     
-    /**
-     * Clears all stored packets (useful for system reset)
-     */
-    public void clearStoredPackets() {
-        storedPackets.clear();
-    }
+
 }

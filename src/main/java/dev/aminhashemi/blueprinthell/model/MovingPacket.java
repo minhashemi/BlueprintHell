@@ -188,6 +188,10 @@ public class MovingPacket {
             case CAMOUFLAGE_ICON_LARGE:
                 baseSpeed = 1.0f; // Constant speed
                 break;
+            case BULK_PACKET_SMALL:
+            case BULK_PACKET_LARGE:
+                baseSpeed = 1.0f; // Constant speed on straight wires, acceleration on curves
+                break;
             default:
                 baseSpeed = 1.0f; // Phase 1 packets
         }
@@ -260,6 +264,13 @@ public class MovingPacket {
             case CAMOUFLAGE_ICON_LARGE:
                 // Confidential packets: no port compatibility effects - they don't have corresponding ports
                 // Speed is managed by the ConfidentialPacket's own update logic
+                // Do not modify currentSpeed or acceleration here
+                break;
+                
+            case BULK_PACKET_SMALL:
+            case BULK_PACKET_LARGE:
+                // Bulk packets: no port compatibility effects - they don't have corresponding ports
+                // Speed is managed by the BulkPacket's own update logic
                 // Do not modify currentSpeed or acceleration here
                 break;
                 

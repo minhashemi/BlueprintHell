@@ -2,19 +2,27 @@ package dev.aminhashemi.blueprinthell.model.entities.packets;
 
 import dev.aminhashemi.blueprinthell.core.GameEngine;
 import dev.aminhashemi.blueprinthell.model.world.Wire;
+import dev.aminhashemi.blueprinthell.model.entities.systems.System;
+import dev.aminhashemi.blueprinthell.model.entities.systems.Port;
 import dev.aminhashemi.blueprinthell.utils.Logger;
 import dev.aminhashemi.blueprinthell.utils.Config;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * BulkPacket - A large packet that carries bulk data
  * 
- * Behavior:
- * - Size: 8 units (SMALL) or 10 units (LARGE)
- * - Coin Reward: 8 coins (SMALL) or 10 coins (LARGE)
- * - Movement: Constant speed on straight wires, acceleration on curves
+ * SMALL Bulk Packet (Size 8, 8 coins):
+ * - Movement: Constant speed on straight wires, constant acceleration on curves
+ * - Wire Damage: Each wire can only handle 3 bulk packet passes before destruction
+ * - System Impact: Destroys all packets in systems it enters
+ * - Port Randomization: Randomly changes ports when entering systems
+ * 
+ * LARGE Bulk Packet (Size 10, 10 coins):
+ * - Movement: Constant speed on all wires
+ * - Center Deviation: Center deviates from wire by specific amount after traveling specific distance
  * - Wire Damage: Each wire can only handle 3 bulk packet passes before destruction
  * - System Impact: Destroys all packets in systems it enters
  * - Port Randomization: Randomly changes ports when entering systems
@@ -43,26 +51,43 @@ public class BulkPacket extends Packet {
     private boolean isOnCurve = false;
     private int wirePassCount = 0;
     private static final int MAX_WIRE_PASSES = Config.MAX_BULK_PACKET_PASSES;
+    
+    // Center deviation tracking for LARGE bulk packets
+    private float distanceTraveled = 0.0f;
+    private float lastDeviationDistance = 0.0f;
+    private static final float DEVIATION_INTERVAL = 50.0f; // Distance between deviations
+    private static final float DEVIATION_AMOUNT = 2.0f; // Amount of deviation
 
     public BulkPacket(int x, int y, BulkType bulkType) {
         super(x, y, bulkType.getSize() * 4, bulkType.getSize() * 4); // Larger visual size
         this.bulkType = bulkType;
-        this.type = PacketType.GREEN_DIAMOND_LARGE; // Use existing type for now
+        this.type = bulkType == BulkType.SMALL ? PacketType.BULK_PACKET_SMALL : PacketType.BULK_PACKET_LARGE;
     }
 
     @Override
     public void update(GameEngine engine) {
-        // Bulk packets have different movement behavior
-        // Constant speed on straight wires, acceleration on curves
-        if (isOnCurve) {
-            currentSpeed = Math.min(Config.BULK_MAX_SPEED, currentSpeed + Config.BULK_CURVE_ACCELERATION); // Accelerate on curves
+        // Different movement behavior for SMALL vs LARGE bulk packets
+        if (bulkType == BulkType.SMALL) {
+            // SMALL bulk packets: Constant speed on straight wires, constant acceleration on curves
+            if (isOnCurve) {
+                // Constant acceleration on curves
+                currentSpeed = Math.min(Config.BULK_MAX_SPEED, currentSpeed + Config.BULK_CURVE_ACCELERATION);
+            } else {
+                // Constant speed on straight wires
+                currentSpeed = Config.BULK_MIN_SPEED; // Maintain constant speed
+            }
         } else {
-            currentSpeed = Math.max(Config.BULK_MIN_SPEED, currentSpeed - Config.BULK_STRAIGHT_DECELERATION); // Decelerate on straight wires
-        }
-        
-        // LARGE bulk packets have center deviation behavior
-        if (bulkType == BulkType.LARGE) {
-            applyCenterDeviation();
+            // LARGE bulk packets: Constant speed on all wires
+            currentSpeed = Config.BULK_MIN_SPEED; // Constant speed on all wires
+            
+            // Update distance traveled for center deviation
+            distanceTraveled += currentSpeed;
+            
+            // Apply center deviation after traveling specific distance
+            if (distanceTraveled - lastDeviationDistance >= DEVIATION_INTERVAL) {
+                applyCenterDeviation();
+                lastDeviationDistance = distanceTraveled;
+            }
         }
         
         // Bulk packets also have slight random movement to simulate bulk data transfer
@@ -74,53 +99,83 @@ public class BulkPacket extends Packet {
     
     /**
      * Applies center deviation for LARGE bulk packets
-     * The center deviates from the wire as it travels
+     * The center deviates from the wire by a specific amount after traveling a certain distance
      */
     private void applyCenterDeviation() {
-        // Simulate center deviation by adding slight random offset
-        // This simulates the "center deviates from wire" behavior
-        if (Math.random() < Config.BULK_DEVIATION_CHANCE) { // 20% chance to deviate
-            float deviationAmount = Config.BULK_DEVIATION_AMOUNT; // Amount of deviation
-            dx += (Math.random() - 0.5) * deviationAmount;
-            dy += (Math.random() - 0.5) * deviationAmount;
-            
-            // Clamp deviation to reasonable bounds
-            dx = Math.max(-Config.BULK_DEVIATION_BOUNDS, Math.min(Config.BULK_DEVIATION_BOUNDS, dx));
-            dy = Math.max(-Config.BULK_DEVIATION_BOUNDS, Math.min(Config.BULK_DEVIATION_BOUNDS, dy));
-        }
+        // LARGE bulk packets: Center deviates by specific amount after traveling specific distance
+        // This is similar to Impact effect on other packets
+        Logger.getInstance().debug("LARGE BulkPacket applying center deviation after traveling " + distanceTraveled + " units");
+        
+        // Apply deviation in a random direction
+        double angle = Math.random() * 2 * Math.PI; // Random angle
+        float deviationX = (float)(Math.cos(angle) * DEVIATION_AMOUNT);
+        float deviationY = (float)(Math.sin(angle) * DEVIATION_AMOUNT);
+        
+        // Apply the deviation
+        dx += deviationX;
+        dy += deviationY;
+        
+        // Clamp deviation to reasonable bounds
+        dx = Math.max(-Config.BULK_DEVIATION_BOUNDS, Math.min(Config.BULK_DEVIATION_BOUNDS, dx));
+        dy = Math.max(-Config.BULK_DEVIATION_BOUNDS, Math.min(Config.BULK_DEVIATION_BOUNDS, dy));
     }
 
     /**
      * Called when the packet enters a system
      * Destroys all other packets in the system
      */
-    public void onSystemEntry(GameEngine engine) {
-        Logger.getInstance().info("BulkPacket entered system - destroying other packets");
-        // This would be implemented to destroy other packets in the system
-        // For now, we'll just log the action
+    public void onSystemEntry(GameEngine engine, System system) {
+        Logger.getInstance().info("BulkPacket entered system - destroying all stored packets");
+        
+        // Destroy all stored packets in the system
+        if (system.getStoredPacketCount() > 0) {
+            Logger.getInstance().info("Destroying " + system.getStoredPacketCount() + " stored packets in system");
+            system.clearStoredPackets();
+        }
     }
 
     /**
      * Called when the packet passes through a wire
      * Increments the wire's usage count
      */
-    public void onWirePass(Wire wire) {
+    public void onWirePass(Wire wire, GameEngine engine) {
         wirePassCount++;
         Logger.getInstance().info("BulkPacket passed through wire. Pass count: " + wirePassCount);
+        
+        // Reset distance tracking for LARGE bulk packets when entering new wire
+        if (bulkType == BulkType.LARGE) {
+            distanceTraveled = 0.0f;
+            lastDeviationDistance = 0.0f;
+        }
         
         // Check if wire should be destroyed
         if (wirePassCount >= MAX_WIRE_PASSES) {
             Logger.getInstance().warning("Wire has reached maximum bulk packet passes and should be destroyed");
-            // Wire destruction would be handled by the GameEngine
+            // Mark wire for destruction
+            wire.markForDestruction();
+            // Notify GameEngine to remove the wire
+            engine.removeWire(wire);
         }
     }
 
     /**
      * Randomizes the port when entering a system
+     * Bulk packets transform the port they enter through to a random other port
      */
-    public void randomizePort() {
-        // This would be called by the system to randomize the port
-        Logger.getInstance().info("BulkPacket randomizing port selection");
+    public void randomizePort(System system) {
+        Logger.getInstance().info("BulkPacket randomizing port in system");
+        
+        // Get all available ports in the system
+        List<Port> allPorts = new ArrayList<>();
+        allPorts.addAll(system.getInputPorts());
+        allPorts.addAll(system.getOutputPorts());
+        
+        if (allPorts.size() > 1) {
+            // Randomly select a different port to transform to
+            Port randomPort = allPorts.get((int)(Math.random() * allPorts.size()));
+            Logger.getInstance().info("BulkPacket transformed port to: " + randomPort.getType());
+            // The actual port transformation would be handled by the system
+        }
     }
 
     @Override
