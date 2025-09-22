@@ -38,7 +38,7 @@ public final class GameConstants {
     // ==================== TEST SETTINGS ====================
     public static final int TEST_PACKET_COUNT = 10;
     public static final double MAX_PACKET_LOSS_PERCENTAGE = 50.0;
-    public static final int PACKET_RELEASE_INTERVAL = 500;
+    public static final int PACKET_RELEASE_INTERVAL = 200; // Note: This is overridden by Config.GameConditions.PACKET_RELEASE_INTERVAL
     public static final int TEST_DURATION = 15000;
     
     // ==================== UI SETTINGS ====================
