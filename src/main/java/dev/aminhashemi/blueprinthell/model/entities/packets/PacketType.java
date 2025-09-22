@@ -5,8 +5,8 @@ import dev.aminhashemi.blueprinthell.utils.Config;
 
 public enum PacketType {
     // Phase 1 Packet Types
-    SQUARE_MESSENGER(Config.Phase1Packets.SQUARE_MESSENGER_COLOR), // Bright red
-    TRIANGLE_MESSENGER(Config.Phase1Packets.TRIANGLE_MESSENGER_COLOR), // Bright green
+    SQUARE_MESSENGER(Config.Phase1Packets.SQUARE_MESSENGER_COLOR, Config.Phase1Packets.SQUARE_MESSENGER_SIZE, 0, Config.Phase1Packets.SQUARE_MESSENGER_COINS), // Bright red - Size 2, 2 coins
+    TRIANGLE_MESSENGER(Config.Phase1Packets.TRIANGLE_MESSENGER_COLOR, Config.Phase1Packets.TRIANGLE_MESSENGER_SIZE, 0, Config.Phase1Packets.TRIANGLE_MESSENGER_COINS), // Bright green - Size 3, 3 coins
 
     // Phase 2 Packet Types
     GREEN_DIAMOND_SMALL(Config.Phase2Packets.GREEN_DIAMOND_SMALL_COLOR, Config.Phase2Packets.GREEN_DIAMOND_SMALL_SIZE, 0, Config.Phase2Packets.GREEN_DIAMOND_SMALL_COINS),      // Pure cyan - Size 2, 2 coins

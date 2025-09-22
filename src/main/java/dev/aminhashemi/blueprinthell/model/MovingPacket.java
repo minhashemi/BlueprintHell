@@ -4,6 +4,7 @@ import dev.aminhashemi.blueprinthell.core.GameEngine;
 import dev.aminhashemi.blueprinthell.model.entities.systems.PortType;
 import dev.aminhashemi.blueprinthell.model.entities.systems.System;
 import dev.aminhashemi.blueprinthell.model.entities.packets.Packet;
+import dev.aminhashemi.blueprinthell.model.entities.packets.PacketType;
 import dev.aminhashemi.blueprinthell.model.entities.packets.ProtectedPacket;
 import dev.aminhashemi.blueprinthell.model.entities.packets.ConfidentialPacket;
 import dev.aminhashemi.blueprinthell.model.entities.packets.BulkPacket;
@@ -199,6 +200,28 @@ public class MovingPacket {
      */
     public void applyPortCompatibilityEffect(PortType portType, boolean isCompatible) {
         switch (packet.getType()) {
+            case SQUARE_MESSENGER:
+                // Size 2: Half speed from compatible ports, 2x speed from incompatible ports
+                if (isCompatible) {
+                    currentSpeed = 0.5f; // Half speed from compatible ports
+                    acceleration = 0.0f; // No acceleration
+                } else {
+                    currentSpeed = 2.0f; // 2x speed from incompatible ports
+                    acceleration = 0.0f; // No acceleration
+                }
+                break;
+                
+            case TRIANGLE_MESSENGER:
+                // Size 3: Constant speed from compatible ports, 2x speed + acceleration through incompatible ports
+                if (isCompatible) {
+                    currentSpeed = 1.0f; // Constant speed from compatible ports
+                    acceleration = 0.0f; // No acceleration
+                } else {
+                    currentSpeed = 2.0f; // 2x speed from incompatible ports
+                    acceleration = 0.2f; // Accelerate through incompatible ports
+                }
+                break;
+                
             case GREEN_DIAMOND_SMALL:
                 // Size 2: Half speed from compatible ports, normal speed from incompatible ports
                 if (isCompatible) {
@@ -235,20 +258,61 @@ public class MovingPacket {
                 
             case CAMOUFLAGE_ICON_SMALL:
             case CAMOUFLAGE_ICON_LARGE:
-                // Confidential packets: constant speed, but slow down near malicious/spy systems
-                if (portType == PortType.MALICIOUS || portType == PortType.SPY) {
-                    currentSpeed = 0.5f; // Slow down to avoid detection
-                    acceleration = 0.0f;
-                } else {
-                    currentSpeed = 1.0f; // Normal speed
-                    acceleration = 0.0f;
-                }
+                // Confidential packets: no port compatibility effects - they don't have corresponding ports
+                // Speed is managed by the ConfidentialPacket's own update logic
+                // Do not modify currentSpeed or acceleration here
                 break;
                 
             case PADLOCK_ICON:
-                // Protected packets: random movement patterns
-                currentSpeed = 0.8f + (float)(Math.random() * 0.4f); // Random speed between 0.8-1.2
-                acceleration = 0.0f;
+                // Protected packets: random movement behavior from messenger packet types
+                if (packet instanceof ProtectedPacket) {
+                    // Randomly choose movement behavior from one of the messenger packet types
+                    PacketType[] messengerTypes = {PacketType.SQUARE_MESSENGER, PacketType.TRIANGLE_MESSENGER, PacketType.INFINITY_SYMBOL};
+                    PacketType randomMessengerType = messengerTypes[(int)(Math.random() * messengerTypes.length)];
+                    
+                    // Apply the random messenger packet behavior
+                    switch (randomMessengerType) {
+                        case SQUARE_MESSENGER:
+                            // Half speed from compatible ports, 2x speed from incompatible ports
+                            if (isCompatible) {
+                                currentSpeed = 0.5f;
+                                acceleration = 0.0f;
+                            } else {
+                                currentSpeed = 2.0f;
+                                acceleration = 0.0f;
+                            }
+                            break;
+                        case TRIANGLE_MESSENGER:
+                            // Constant speed from compatible ports, 2x speed + acceleration from incompatible ports
+                            if (isCompatible) {
+                                currentSpeed = 1.0f;
+                                acceleration = 0.0f;
+                            } else {
+                                currentSpeed = 2.0f;
+                                acceleration = 0.2f;
+                            }
+                            break;
+                        case INFINITY_SYMBOL:
+                            // Constant acceleration from compatible ports, 2x speed + deceleration from incompatible ports
+                            if (isCompatible) {
+                                currentSpeed = 1.0f;
+                                acceleration = 0.1f;
+                            } else {
+                                currentSpeed = 2.0f;
+                                acceleration = -0.1f;
+                            }
+                            break;
+                        default:
+                            // Fallback to normal speed
+                            currentSpeed = 1.0f;
+                            acceleration = 0.0f;
+                            break;
+                    }
+                } else {
+                    // Fallback for non-ProtectedPacket PADLOCK_ICON packets
+                    currentSpeed = 0.8f + (float)(Math.random() * 0.4f);
+                    acceleration = 0.0f;
+                }
                 break;
                 
             default:

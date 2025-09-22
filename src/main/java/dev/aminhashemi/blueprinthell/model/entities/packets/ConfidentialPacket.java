@@ -2,6 +2,7 @@ package dev.aminhashemi.blueprinthell.model.entities.packets;
 
 import dev.aminhashemi.blueprinthell.core.GameEngine;
 import dev.aminhashemi.blueprinthell.model.entities.systems.System;
+import dev.aminhashemi.blueprinthell.model.MovingPacket;
 import dev.aminhashemi.blueprinthell.utils.Logger;
 import dev.aminhashemi.blueprinthell.utils.Config;
 
@@ -74,21 +75,17 @@ public class ConfidentialPacket extends Packet {
 
     /**
      * Checks for other packets in systems and adjusts speed accordingly
+     * Implements the requirement: "if such a packet is on the way to a network system 
+     * and another packet is stored in this system, it reduces its speed to a certain limit 
+     * so as not to be present at the same time as another packet in this system"
      */
     private void checkForNearbyPackets(GameEngine engine) {
-        // Check if there are other packets in the same system
-        // This simulates the requirement that confidential packets slow down
-        // when other packets are in the same system
+        // Check if there are other packets stored in systems we're approaching
+        boolean systemHasStoredPackets = checkForStoredPacketsInTargetSystems(engine);
         
-        // For demonstration, we'll use a more realistic simulation
-        // In a full implementation, this would check actual packet positions
-        
-        // Simulate system congestion detection
-        boolean systemHasOtherPackets = Math.random() < Config.GameBalance.CONFIDENTIAL_CONGESTION_CHANCE; // 40% chance of congestion
-        
-        if (systemHasOtherPackets) {
+        if (systemHasStoredPackets) {
             isSlowingDown = true;
-            Logger.getInstance().debug("ConfidentialPacket slowing down due to system congestion");
+            Logger.getInstance().debug("ConfidentialPacket slowing down - target system has stored packets");
         } else {
             isSlowingDown = false;
         }
@@ -102,31 +99,82 @@ public class ConfidentialPacket extends Packet {
             Logger.getInstance().debug("ConfidentialPacket slowing down near spy system");
         }
         
-        // Maintain distance from other packets (for LARGE confidential packets)
+        // For LARGE confidential packets, maintain distance from other packets
         if (confidentialType == ConfidentialType.LARGE) {
             maintainDistanceFromOtherPackets(engine);
         }
     }
     
     /**
+     * Checks if target systems have stored packets
+     * This implements the core requirement for camouflage packets
+     */
+    private boolean checkForStoredPacketsInTargetSystems(GameEngine engine) {
+        // Get all systems in the game
+        List<System> allSystems = engine.getSystems();
+        
+        // Check each system for stored packets
+        for (System system : allSystems) {
+            if (system.getStoredPacketCount() > 0) {
+                // If any system has stored packets, we should slow down
+                // This implements the requirement: "if such a packet is on the way to a network system 
+                // and another packet is stored in this system, it reduces its speed to a certain limit 
+                // so as not to be present at the same time as another packet in this system"
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
      * Maintains distance from other packets (for LARGE confidential packets)
+     * Implements: "This packet tries to maintain a specific distance from all other packets 
+     * on network wires by moving forward or backward on network connections"
      */
     private void maintainDistanceFromOtherPackets(GameEngine engine) {
-        // Simulate maintaining distance by adjusting speed
-        // In a full implementation, this would check actual packet positions
-        boolean tooCloseToOtherPackets = Math.random() < Config.GameBalance.CONFIDENTIAL_DISTANCE_VIOLATION_CHANCE; // 30% chance of being too close
+        // Get all moving packets on the network
+        List<MovingPacket> allMovingPackets = engine.getMovingPackets();
         
-        if (tooCloseToOtherPackets) {
-            // Adjust position slightly to maintain distance
-            // This simulates the "move forward or backward" behavior
-            if (Math.random() < 0.5) {
-                // Move forward
-                currentSpeed = Math.min(currentSpeed + Config.CONFIDENTIAL_DISTANCE_ADJUSTMENT, baseSpeed * Config.CONFIDENTIAL_MAX_SPEED_MULTIPLIER);
-            } else {
-                // Move backward (slow down)
-                currentSpeed = Math.max(currentSpeed - Config.CONFIDENTIAL_DISTANCE_ADJUSTMENT, baseSpeed * Config.CONFIDENTIAL_MIN_SPEED_MULTIPLIER);
+        // Check distance to other packets
+        boolean needsDistanceAdjustment = false;
+        double minDistance = Double.MAX_VALUE;
+        
+        for (MovingPacket otherPacket : allMovingPackets) {
+            if (otherPacket.getPacket() == this) continue; // Skip self
+            
+            // Calculate distance to other packet
+            double distance = Math.sqrt(
+                Math.pow(this.getX() - otherPacket.getPacket().getX(), 2) + 
+                Math.pow(this.getY() - otherPacket.getPacket().getY(), 2)
+            );
+            
+            minDistance = Math.min(minDistance, distance);
+            
+            // If too close to another packet, need to adjust distance
+            if (distance < Config.CONFIDENTIAL_MIN_DISTANCE) {
+                needsDistanceAdjustment = true;
             }
-            Logger.getInstance().debug("LARGE ConfidentialPacket adjusting distance from other packets");
+        }
+        
+        if (needsDistanceAdjustment) {
+            // Implement forward/backward movement to maintain distance
+            // This simulates the requirement to move forward or backward on network connections
+            
+            if (minDistance < Config.CONFIDENTIAL_MIN_DISTANCE * 0.5) {
+                // Very close - move forward (speed up)
+                currentSpeed = Math.min(currentSpeed + Config.CONFIDENTIAL_DISTANCE_ADJUSTMENT, 
+                                      baseSpeed * Config.CONFIDENTIAL_MAX_SPEED_MULTIPLIER);
+                Logger.getInstance().debug("LARGE ConfidentialPacket moving forward to maintain distance");
+            } else {
+                // Close but not too close - move backward (slow down)
+                currentSpeed = Math.max(currentSpeed - Config.CONFIDENTIAL_DISTANCE_ADJUSTMENT, 
+                                      baseSpeed * Config.CONFIDENTIAL_MIN_SPEED_MULTIPLIER);
+                Logger.getInstance().debug("LARGE ConfidentialPacket moving backward to maintain distance");
+            }
+        } else {
+            // No other packets too close - maintain normal speed
+            currentSpeed = Math.min(currentSpeed + Config.CONFIDENTIAL_DISTANCE_ADJUSTMENT, baseSpeed);
         }
     }
 

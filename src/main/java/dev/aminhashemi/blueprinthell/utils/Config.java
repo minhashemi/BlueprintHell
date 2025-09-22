@@ -141,7 +141,13 @@ public class Config {
     /** Phase 1 Packet Types */
     public static class Phase1Packets {
         public static final Color SQUARE_MESSENGER_COLOR = Color.decode("#FF4757");
+        public static final int SQUARE_MESSENGER_SIZE = 2;
+        public static final int SQUARE_MESSENGER_COINS = 2;
+        
         public static final Color TRIANGLE_MESSENGER_COLOR = Color.decode("#2ED573");
+        public static final int TRIANGLE_MESSENGER_SIZE = 3;
+        public static final int TRIANGLE_MESSENGER_COINS = 3;
+        
         public static final int PROTECTED_PACKET_COINS = 5; // Protected packets give 5 coins
         public static final int PROTECTED_PACKET_SIZE = 2; // Size value for protected packets
     }
@@ -198,7 +204,6 @@ public class Config {
         public static final Color DIAMOND_COLOR = Color.decode("#00FFFF");
         public static final Color INFINITY_COLOR = Color.decode("#FFFF00");
         public static final Color PADLOCK_COLOR = Color.decode("#FF69B4");
-        public static final Color CAMOUFLAGE_COLOR = Color.decode("#FFD700");
         public static final Color VPN_COLOR = Color.decode("#FF00FF");
         public static final Color MALICIOUS_COLOR = Color.decode("#FF3838");
         public static final Color SPY_COLOR = Color.decode("#FF9F43");

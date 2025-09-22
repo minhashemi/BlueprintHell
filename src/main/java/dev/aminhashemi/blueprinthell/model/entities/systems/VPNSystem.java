@@ -4,6 +4,7 @@ import dev.aminhashemi.blueprinthell.core.GameEngine;
 import dev.aminhashemi.blueprinthell.model.LevelData;
 import dev.aminhashemi.blueprinthell.model.entities.packets.Packet;
 import dev.aminhashemi.blueprinthell.model.entities.packets.ProtectedPacket;
+import dev.aminhashemi.blueprinthell.model.entities.packets.ConfidentialPacket;
 import dev.aminhashemi.blueprinthell.model.MovingPacket;
 import dev.aminhashemi.blueprinthell.utils.Logger;
 import dev.aminhashemi.blueprinthell.utils.Config;
@@ -68,7 +69,40 @@ public class VPNSystem extends System {
             return;
         }
         
-        // Convert packet to protected packet
+        // Special handling for confidential packets
+        if (packet instanceof ConfidentialPacket) {
+            ConfidentialPacket confidentialPacket = (ConfidentialPacket) packet;
+            
+            // Convert SMALL confidential to LARGE confidential
+            if (confidentialPacket.getConfidentialType() == ConfidentialPacket.ConfidentialType.SMALL) {
+                Logger.getInstance().info("Converting SMALL confidential packet to LARGE confidential packet");
+                
+                // Create LARGE confidential packet
+                ConfidentialPacket largeConfidentialPacket = new ConfidentialPacket(
+                    packet.getX(), 
+                    packet.getY(), 
+                    ConfidentialPacket.ConfidentialType.LARGE
+                );
+                
+                // Copy properties
+                largeConfidentialPacket.setBaseSpeed(confidentialPacket.getCurrentSpeed());
+                largeConfidentialPacket.setNoise(confidentialPacket.getNoise());
+                
+                // Create new MovingPacket with LARGE confidential packet
+                MovingPacket largeConfidentialMovingPacket = new MovingPacket(largeConfidentialPacket, movingPacket.getWire());
+                largeConfidentialMovingPacket.setPlayerSpawned(movingPacket.isPlayerSpawned());
+                
+                super.receiveMovingPacket(largeConfidentialMovingPacket, engine);
+                return;
+            } else {
+                // LARGE confidential packets pass through normally
+                Logger.getInstance().info("LARGE confidential packet - routing normally");
+                super.receiveMovingPacket(movingPacket, engine);
+                return;
+            }
+        }
+        
+        // Convert other packets to protected packet
         ProtectedPacket protectedPacket = ProtectedPacket.fromPacket(packet);
         Logger.getInstance().info("Packet converted to ProtectedPacket by VPNSystem");
         

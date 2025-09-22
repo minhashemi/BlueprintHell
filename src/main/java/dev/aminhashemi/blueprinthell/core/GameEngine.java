@@ -800,9 +800,11 @@ public class GameEngine implements Runnable {
 
         MovingPacket movingPacket = new MovingPacket(packet, targetWire);
         
-        // Apply port compatibility effects
-        boolean isCompatible = isPortCompatible(targetWire.getStartPort().getType(), packet.getType());
-        movingPacket.applyPortCompatibilityEffect(targetWire.getStartPort().getType(), isCompatible);
+        // Apply port compatibility effects (except for confidential packets)
+        if (packet.getType() != PacketType.CAMOUFLAGE_ICON_SMALL && packet.getType() != PacketType.CAMOUFLAGE_ICON_LARGE) {
+            boolean isCompatible = isPortCompatible(targetWire.getStartPort().getType(), packet.getType());
+            movingPacket.applyPortCompatibilityEffect(targetWire.getStartPort().getType(), isCompatible);
+        }
         
         movingPackets.add(movingPacket);
     }
@@ -903,9 +905,11 @@ public class GameEngine implements Runnable {
                 // Successfully found a port - create moving packet
                 MovingPacket movingPacket = new MovingPacket(storedPacket, targetWire);
                 
-                // Apply port compatibility effects
-                boolean isCompatible = isPortCompatible(targetWire.getStartPort().getType(), storedPacket.getType());
-                movingPacket.applyPortCompatibilityEffect(targetWire.getStartPort().getType(), isCompatible);
+                // Apply port compatibility effects (except for confidential packets)
+                if (storedPacket.getType() != PacketType.CAMOUFLAGE_ICON_SMALL && storedPacket.getType() != PacketType.CAMOUFLAGE_ICON_LARGE) {
+                    boolean isCompatible = isPortCompatible(targetWire.getStartPort().getType(), storedPacket.getType());
+                    movingPacket.applyPortCompatibilityEffect(targetWire.getStartPort().getType(), isCompatible);
+                }
                 
                 movingPackets.add(movingPacket);
                 
@@ -954,9 +958,11 @@ public class GameEngine implements Runnable {
         MovingPacket newMovingPacket = new MovingPacket(movingPacket.getPacket(), targetWire);
         newMovingPacket.setPlayerSpawned(movingPacket.isPlayerSpawned());
         
-        // Apply port compatibility effects
-        boolean isCompatible = isPortCompatible(targetWire.getStartPort().getType(), movingPacket.getPacket().getType());
-        newMovingPacket.applyPortCompatibilityEffect(targetWire.getStartPort().getType(), isCompatible);
+        // Apply port compatibility effects (except for confidential packets)
+        if (movingPacket.getPacket().getType() != PacketType.CAMOUFLAGE_ICON_SMALL && movingPacket.getPacket().getType() != PacketType.CAMOUFLAGE_ICON_LARGE) {
+            boolean isCompatible = isPortCompatible(targetWire.getStartPort().getType(), movingPacket.getPacket().getType());
+            newMovingPacket.applyPortCompatibilityEffect(targetWire.getStartPort().getType(), isCompatible);
+        }
         
         movingPackets.add(newMovingPacket);
     }
@@ -977,7 +983,8 @@ public class GameEngine implements Runnable {
                 return PortType.PADLOCK;
             case CAMOUFLAGE_ICON_SMALL:
             case CAMOUFLAGE_ICON_LARGE:
-                return PortType.CAMOUFLAGE;
+                // Confidential packets have no corresponding ports
+                return null;
             default:
                 return PortType.SQUARE; // Fallback
         }
@@ -1002,7 +1009,8 @@ public class GameEngine implements Runnable {
                 return portType == PortType.PADLOCK || portType == PortType.VPN;
             case CAMOUFLAGE_ICON_SMALL:
             case CAMOUFLAGE_ICON_LARGE:
-                return portType == PortType.CAMOUFLAGE;
+                // Confidential packets have no port compatibility - they don't have corresponding ports
+                return true; // Allow any port, but compatibility effects won't be applied
             default:
                 return false;
         }
@@ -1132,9 +1140,6 @@ public class GameEngine implements Runnable {
                 return PacketType.INFINITY_SYMBOL;
             case PADLOCK:
                 return PacketType.PADLOCK_ICON;
-            case CAMOUFLAGE:
-                // Randomly choose one camouflage type
-                return Math.random() < 0.5 ? PacketType.CAMOUFLAGE_ICON_SMALL : PacketType.CAMOUFLAGE_ICON_LARGE;
             default:
                 return null;
         }

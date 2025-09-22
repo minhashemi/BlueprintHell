@@ -62,10 +62,23 @@ public class MaliciousSystem extends System {
         Packet packet = movingPacket.getPacket();
         Logger.getInstance().info("Packet " + packet.getType() + " entered MaliciousSystem at (" + x + ", " + y + ")");
         
-        // Check if packet is protected - protected packets are immune
+        // Check if packet is protected - convert back to original type
         if (packet instanceof ProtectedPacket) {
-            Logger.getInstance().info("Protected packet unaffected by MaliciousSystem - routing normally");
-            super.receiveMovingPacket(movingPacket, engine);
+            ProtectedPacket protectedPacket = (ProtectedPacket) packet;
+            Logger.getInstance().info("Protected packet converted back to original type " + protectedPacket.getOriginalType() + " by MaliciousSystem");
+            
+            // Convert back to original packet type
+            Packet originalPacket = createOriginalPacket(protectedPacket);
+            MovingPacket originalMovingPacket = new MovingPacket(originalPacket, movingPacket.getWire());
+            originalMovingPacket.setPlayerSpawned(movingPacket.isPlayerSpawned());
+            
+            // Apply malicious effects to the original packet
+            Packet corruptedPacket = applyMaliciousEffects(originalPacket);
+            MovingPacket corruptedMovingPacket = new MovingPacket(corruptedPacket, movingPacket.getWire());
+            corruptedMovingPacket.setPlayerSpawned(movingPacket.isPlayerSpawned());
+            
+            // Route to incompatible port (malicious behavior)
+            routeToIncompatiblePort(corruptedMovingPacket, engine);
             return;
         }
         
@@ -80,6 +93,25 @@ public class MaliciousSystem extends System {
         
         // Route to incompatible port (malicious behavior)
         routeToIncompatiblePort(corruptedMovingPacket, engine);
+    }
+
+    /**
+     * Creates the original packet from a protected packet
+     */
+    private Packet createOriginalPacket(ProtectedPacket protectedPacket) {
+        PacketType originalType = protectedPacket.getOriginalType();
+        
+        // Create the original packet based on its type
+        switch (originalType) {
+            case SQUARE_MESSENGER:
+            case TRIANGLE_MESSENGER:
+                return new MessengerPacket(protectedPacket.getX(), protectedPacket.getY(), originalType);
+            case INFINITY_SYMBOL:
+                return new MessengerPacket(protectedPacket.getX(), protectedPacket.getY(), originalType);
+            default:
+                // Fallback to messenger packet
+                return new MessengerPacket(protectedPacket.getX(), protectedPacket.getY(), PacketType.SQUARE_MESSENGER);
+        }
     }
 
     /**

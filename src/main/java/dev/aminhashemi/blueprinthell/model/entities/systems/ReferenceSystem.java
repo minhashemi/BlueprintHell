@@ -46,10 +46,6 @@ public class ReferenceSystem extends System {
                 case PADLOCK:
                     possibleTypes.add(PacketType.PADLOCK_ICON);
                     break;
-                case CAMOUFLAGE:
-                    possibleTypes.add(PacketType.CAMOUFLAGE_ICON_SMALL);
-                    possibleTypes.add(PacketType.CAMOUFLAGE_ICON_LARGE);
-                    break;
                 case VPN:
                     possibleTypes.add(PacketType.PADLOCK_ICON);
                     break;
