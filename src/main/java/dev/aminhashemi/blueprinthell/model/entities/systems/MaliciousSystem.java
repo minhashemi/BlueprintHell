@@ -62,23 +62,10 @@ public class MaliciousSystem extends System {
         Packet packet = movingPacket.getPacket();
         Logger.getInstance().info("Packet " + packet.getType() + " entered MaliciousSystem at (" + x + ", " + y + ")");
         
-        // Check if packet is protected - convert back to original type
+        // Check if packet is protected - unaffected by malicious systems
         if (packet instanceof ProtectedPacket) {
-            ProtectedPacket protectedPacket = (ProtectedPacket) packet;
-            Logger.getInstance().info("Protected packet converted back to original type " + protectedPacket.getOriginalType() + " by MaliciousSystem");
-            
-            // Convert back to original packet type
-            Packet originalPacket = createOriginalPacket(protectedPacket);
-            MovingPacket originalMovingPacket = new MovingPacket(originalPacket, movingPacket.getWire());
-            originalMovingPacket.setPlayerSpawned(movingPacket.isPlayerSpawned());
-            
-            // Apply malicious effects to the original packet
-            Packet corruptedPacket = applyMaliciousEffects(originalPacket);
-            MovingPacket corruptedMovingPacket = new MovingPacket(corruptedPacket, movingPacket.getWire());
-            corruptedMovingPacket.setPlayerSpawned(movingPacket.isPlayerSpawned());
-            
-            // Route to incompatible port (malicious behavior)
-            routeToIncompatiblePort(corruptedMovingPacket, engine);
+            Logger.getInstance().info("Protected packet unaffected by MaliciousSystem - routing normally");
+            super.receiveMovingPacket(movingPacket, engine);
             return;
         }
         

@@ -306,4 +306,15 @@ public class BulkPacket extends Packet {
     public boolean isOnCurve() {
         return isOnCurve;
     }
+    
+    /**
+     * Gets the size of the bulk packet
+     */
+    public int getSize() {
+        return bulkType.getSize();
+    }
+    
+    public void setCurrentSpeed(float speed) {
+        this.currentSpeed = speed;
+    }
 }

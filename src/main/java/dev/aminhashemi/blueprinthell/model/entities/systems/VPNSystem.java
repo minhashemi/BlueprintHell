@@ -13,8 +13,30 @@ import java.awt.*;
 
 public class VPNSystem extends System {
 
+    private boolean isActive = true; // VPN can fail and become inactive
+
     public VPNSystem(int x, int y, LevelData.SystemData data) {
         super(x, y, Config.SYSTEM_WIDTH, Config.SYSTEM_HEIGHT, data);
+    }
+    
+    /**
+     * Sets the VPN system as failed/inactive
+     * When VPN fails, all protected packets created by this VPN should revert to original type
+     */
+    public void setFailed(boolean failed) {
+        this.isActive = !failed;
+        if (failed) {
+            Logger.getInstance().warning("VPNSystem at (" + x + ", " + y + ") has failed!");
+        } else {
+            Logger.getInstance().info("VPNSystem at (" + x + ", " + y + ") is now active");
+        }
+    }
+    
+    /**
+     * Checks if the VPN system is active
+     */
+    public boolean isActive() {
+        return isActive;
     }
 
     @Override
@@ -61,6 +83,13 @@ public class VPNSystem extends System {
     public void receiveMovingPacket(MovingPacket movingPacket, GameEngine engine) {
         Packet packet = movingPacket.getPacket();
         Logger.getInstance().info("Packet " + packet.getType() + " entered VPNSystem at (" + x + ", " + y + ")");
+        
+        // Check if VPN system is active
+        if (!isActive) {
+            Logger.getInstance().info("VPNSystem is inactive - routing packet normally");
+            super.receiveMovingPacket(movingPacket, engine);
+            return;
+        }
         
         // Check if packet is already protected
         if (packet instanceof ProtectedPacket) {

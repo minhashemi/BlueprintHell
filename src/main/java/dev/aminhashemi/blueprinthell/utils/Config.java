@@ -207,6 +207,10 @@ public class Config {
         public static final Color VPN_COLOR = Color.decode("#FF00FF");
         public static final Color MALICIOUS_COLOR = Color.decode("#FF3838");
         public static final Color SPY_COLOR = Color.decode("#FF9F43");
+        public static final Color ANTITROJAN_COLOR = Color.decode("#00FF00");
+        public static final Color ANTITROJAN_INACTIVE_COLOR = Color.decode("#006600");
+        public static final Color DISTRIBUTOR_COLOR = Color.decode("#00FFFF");
+        public static final Color MERGER_COLOR = Color.decode("#FFA500");
     }
     
     // ==================== CONFIDENTIAL PACKET CONFIGURATION ====================
@@ -242,6 +246,12 @@ public class Config {
     /** Bulk packet random movement */
     public static final double BULK_RANDOM_MOVEMENT_CHANCE = 0.1;
     public static final float BULK_RANDOM_MOVEMENT_AMOUNT = 0.3f;
+    
+    // ==================== ANTI-TROJAN SYSTEM CONFIGURATION ====================
+    
+    /** AntiTrojan system parameters */
+    public static final long ANTITROJAN_COOLDOWN_DURATION = 5000; // 5 seconds cooldown
+    public static final float ANTITROJAN_DETECTION_RADIUS = 100.0f; // Detection radius
     
     // ==================== SHOP CONFIGURATION ====================
     
@@ -431,6 +441,10 @@ public class Config {
         public static final Color VPN_COLOR = Color.decode("#A55EEA"); // Bright purple
         public static final Color SPY_COLOR = Color.decode("#FF9F43"); // Bright orange-red
         public static final Color REFERENCE_COLOR = Color.decode("#00D2FF"); // Bright cyan
+        public static final Color ANTITROJAN_COLOR = Color.decode("#00FF00"); // Bright green
+        public static final Color ANTITROJAN_INACTIVE_COLOR = Color.decode("#006600"); // Dark green
+        public static final Color DISTRIBUTOR_COLOR = Color.decode("#00FFFF"); // Bright cyan
+        public static final Color MERGER_COLOR = Color.decode("#FFA500"); // Bright orange
     }
     
     // Input Constants
