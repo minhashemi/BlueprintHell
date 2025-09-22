@@ -1,8 +1,4 @@
-# 🏗️ BlueprintHell Architecture Documentation
-
-## 📋 Overview
-
-BlueprintHell is a network simulation game built with Java that demonstrates clean code principles, SOLID design patterns, and extensible architecture. The game simulates packet routing through various network systems with different behaviors and security properties.
+# BlueprintHell
 
 ## 🎯 Design Principles
 
@@ -243,3 +239,14 @@ This architecture demonstrates:
 
 # exception handling command
 `mvn exec:java -Dexec.mainClass="dev.aminhashemi.blueprinthell.test.GlobalExceptionHandlingTest"`
+
+
+## Build and Run
+
+```bash
+# Build the JAR
+mvn clean package -DskipTests
+
+# Run the game
+java -jar target/BlueprintHell-2.0-Snapping12WhereRU.jar
+```
