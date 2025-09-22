@@ -800,8 +800,9 @@ public class GameEngine implements Runnable {
 
         MovingPacket movingPacket = new MovingPacket(packet, targetWire);
         
-        // Apply port compatibility effects (except for confidential packets)
-        if (packet.getType() != PacketType.CAMOUFLAGE_ICON_SMALL && packet.getType() != PacketType.CAMOUFLAGE_ICON_LARGE) {
+        // Apply port compatibility effects (except for confidential and bulk packets)
+        if (packet.getType() != PacketType.CAMOUFLAGE_ICON_SMALL && packet.getType() != PacketType.CAMOUFLAGE_ICON_LARGE &&
+            packet.getType() != PacketType.BULK_PACKET_SMALL && packet.getType() != PacketType.BULK_PACKET_LARGE) {
             boolean isCompatible = isPortCompatible(targetWire.getStartPort().getType(), packet.getType());
             movingPacket.applyPortCompatibilityEffect(targetWire.getStartPort().getType(), isCompatible);
         }
@@ -905,8 +906,9 @@ public class GameEngine implements Runnable {
                 // Successfully found a port - create moving packet
                 MovingPacket movingPacket = new MovingPacket(storedPacket, targetWire);
                 
-                // Apply port compatibility effects (except for confidential packets)
-                if (storedPacket.getType() != PacketType.CAMOUFLAGE_ICON_SMALL && storedPacket.getType() != PacketType.CAMOUFLAGE_ICON_LARGE) {
+                // Apply port compatibility effects (except for confidential and bulk packets)
+                if (storedPacket.getType() != PacketType.CAMOUFLAGE_ICON_SMALL && storedPacket.getType() != PacketType.CAMOUFLAGE_ICON_LARGE &&
+                    storedPacket.getType() != PacketType.BULK_PACKET_SMALL && storedPacket.getType() != PacketType.BULK_PACKET_LARGE) {
                     boolean isCompatible = isPortCompatible(targetWire.getStartPort().getType(), storedPacket.getType());
                     movingPacket.applyPortCompatibilityEffect(targetWire.getStartPort().getType(), isCompatible);
                 }
@@ -958,8 +960,9 @@ public class GameEngine implements Runnable {
         MovingPacket newMovingPacket = new MovingPacket(movingPacket.getPacket(), targetWire);
         newMovingPacket.setPlayerSpawned(movingPacket.isPlayerSpawned());
         
-        // Apply port compatibility effects (except for confidential packets)
-        if (movingPacket.getPacket().getType() != PacketType.CAMOUFLAGE_ICON_SMALL && movingPacket.getPacket().getType() != PacketType.CAMOUFLAGE_ICON_LARGE) {
+        // Apply port compatibility effects (except for confidential and bulk packets)
+        if (movingPacket.getPacket().getType() != PacketType.CAMOUFLAGE_ICON_SMALL && movingPacket.getPacket().getType() != PacketType.CAMOUFLAGE_ICON_LARGE &&
+            movingPacket.getPacket().getType() != PacketType.BULK_PACKET_SMALL && movingPacket.getPacket().getType() != PacketType.BULK_PACKET_LARGE) {
             boolean isCompatible = isPortCompatible(targetWire.getStartPort().getType(), movingPacket.getPacket().getType());
             newMovingPacket.applyPortCompatibilityEffect(targetWire.getStartPort().getType(), isCompatible);
         }
@@ -1010,6 +1013,10 @@ public class GameEngine implements Runnable {
             case CAMOUFLAGE_ICON_SMALL:
             case CAMOUFLAGE_ICON_LARGE:
                 // Confidential packets have no port compatibility - they don't have corresponding ports
+                return true; // Allow any port, but compatibility effects won't be applied
+            case BULK_PACKET_SMALL:
+            case BULK_PACKET_LARGE:
+                // Bulk packets have no port compatibility - they don't have corresponding ports
                 return true; // Allow any port, but compatibility effects won't be applied
             default:
                 return false;
