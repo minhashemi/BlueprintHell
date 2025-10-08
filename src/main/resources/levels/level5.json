@@ -1,0 +1,183 @@
+{
+  "levelNumber": 5,
+  "levelName": "Bulk Packet Processing - Split and Merge",
+  "playerStart": {
+    "initialCoins": 100,
+    "initialWireLength": 12000
+  },
+  "systems": [
+    {
+      "id": "ref_start",
+      "type": "REFERENCE",
+      "position": { "x": 50, "y": 300 },
+      "inputPorts": [],
+      "outputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" }
+      ],
+      "packetGeneration": {
+        "packetType": "MIXED",
+        "count": 25,
+        "frequency": 0.8
+      }
+    },
+    {
+      "id": "ref_end",
+      "type": "REFERENCE",
+      "position": { "x": 1000, "y": 300 },
+      "inputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" }
+      ],
+      "outputPorts": []
+    },
+    {
+      "id": "distributor_1",
+      "type": "DISTRIBUTOR",
+      "position": { "x": 200, "y": 200 },
+      "inputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" }
+      ],
+      "outputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" }
+      ]
+    },
+    {
+      "id": "merger_1",
+      "type": "MERGER",
+      "position": { "x": 800, "y": 200 },
+      "inputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" }
+      ],
+      "outputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" }
+      ]
+    },
+    {
+      "id": "vpn_1",
+      "type": "VPN",
+      "position": { "x": 400, "y": 150 },
+      "inputPorts": [
+        { "type": "PADLOCK" }
+      ],
+      "outputPorts": [
+        { "type": "PADLOCK" }
+      ]
+    },
+    {
+      "id": "vpn_2",
+      "type": "VPN",
+      "position": { "x": 600, "y": 150 },
+      "inputPorts": [
+        { "type": "PADLOCK" }
+      ],
+      "outputPorts": [
+        { "type": "PADLOCK" }
+      ]
+    },
+    {
+      "id": "malicious_1",
+      "type": "MALICIOUS",
+      "position": { "x": 500, "y": 400 },
+      "inputPorts": [
+        { "type": "MALICIOUS" }
+      ],
+      "outputPorts": [
+        { "type": "MALICIOUS" }
+      ]
+    }
+  ],
+  "wires": [
+    {
+      "startSystemId": "ref_start",
+      "startPortIndex": 0,
+      "endSystemId": "distributor_1",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "ref_start",
+      "startPortIndex": 1,
+      "endSystemId": "distributor_1",
+      "endPortIndex": 1
+    },
+    {
+      "startSystemId": "ref_start",
+      "startPortIndex": 2,
+      "endSystemId": "vpn_1",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "ref_start",
+      "startPortIndex": 3,
+      "endSystemId": "malicious_1",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "distributor_1",
+      "startPortIndex": 0,
+      "endSystemId": "vpn_1",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "distributor_1",
+      "startPortIndex": 1,
+      "endSystemId": "vpn_2",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "distributor_1",
+      "startPortIndex": 2,
+      "endSystemId": "merger_1",
+      "endPortIndex": 2
+    },
+    {
+      "startSystemId": "distributor_1",
+      "startPortIndex": 3,
+      "endSystemId": "merger_1",
+      "endPortIndex": 3
+    },
+    {
+      "startSystemId": "vpn_1",
+      "startPortIndex": 0,
+      "endSystemId": "merger_1",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "vpn_2",
+      "startPortIndex": 0,
+      "endSystemId": "merger_1",
+      "endPortIndex": 1
+    },
+    {
+      "startSystemId": "malicious_1",
+      "startPortIndex": 0,
+      "endSystemId": "merger_1",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "merger_1",
+      "startPortIndex": 0,
+      "endSystemId": "ref_end",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "merger_1",
+      "startPortIndex": 1,
+      "endSystemId": "ref_end",
+      "endPortIndex": 1
+    }
+  ]
+}
+

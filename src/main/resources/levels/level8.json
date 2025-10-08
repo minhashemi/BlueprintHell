@@ -1,0 +1,434 @@
+{
+  "levelNumber": 8,
+  "levelName": "Ultimate Network Challenge - All Mechanics",
+  "playerStart": {
+    "initialCoins": 200,
+    "initialWireLength": 25000
+  },
+  "systems": [
+    {
+      "id": "ref_start",
+      "type": "REFERENCE",
+      "position": { "x": 50, "y": 400 },
+      "inputPorts": [],
+      "outputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" },
+        { "type": "PADLOCK" },
+        { "type": "VPN" },
+        { "type": "MALICIOUS" },
+        { "type": "SPY" }
+      ],
+      "packetGeneration": {
+        "packetType": "MIXED",
+        "count": 40,
+        "frequency": 0.5
+      }
+    },
+    {
+      "id": "ref_end",
+      "type": "REFERENCE",
+      "position": { "x": 1500, "y": 400 },
+      "inputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" },
+        { "type": "PADLOCK" },
+        { "type": "VPN" },
+        { "type": "MALICIOUS" },
+        { "type": "SPY" }
+      ],
+      "outputPorts": []
+    },
+    {
+      "id": "distributor_1",
+      "type": "DISTRIBUTOR",
+      "position": { "x": 200, "y": 200 },
+      "inputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" }
+      ],
+      "outputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" }
+      ]
+    },
+    {
+      "id": "merger_1",
+      "type": "MERGER",
+      "position": { "x": 1300, "y": 200 },
+      "inputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" }
+      ],
+      "outputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" }
+      ]
+    },
+    {
+      "id": "vpn_1",
+      "type": "VPN",
+      "position": { "x": 300, "y": 100 },
+      "inputPorts": [
+        { "type": "PADLOCK" }
+      ],
+      "outputPorts": [
+        { "type": "PADLOCK" }
+      ]
+    },
+    {
+      "id": "vpn_2",
+      "type": "VPN",
+      "position": { "x": 500, "y": 100 },
+      "inputPorts": [
+        { "type": "PADLOCK" }
+      ],
+      "outputPorts": [
+        { "type": "PADLOCK" }
+      ]
+    },
+    {
+      "id": "vpn_3",
+      "type": "VPN",
+      "position": { "x": 700, "y": 100 },
+      "inputPorts": [
+        { "type": "PADLOCK" }
+      ],
+      "outputPorts": [
+        { "type": "PADLOCK" }
+      ]
+    },
+    {
+      "id": "malicious_1",
+      "type": "MALICIOUS",
+      "position": { "x": 250, "y": 600 },
+      "inputPorts": [
+        { "type": "MALICIOUS" }
+      ],
+      "outputPorts": [
+        { "type": "MALICIOUS" }
+      ]
+    },
+    {
+      "id": "malicious_2",
+      "type": "MALICIOUS",
+      "position": { "x": 450, "y": 600 },
+      "inputPorts": [
+        { "type": "MALICIOUS" }
+      ],
+      "outputPorts": [
+        { "type": "MALICIOUS" }
+      ]
+    },
+    {
+      "id": "malicious_3",
+      "type": "MALICIOUS",
+      "position": { "x": 650, "y": 600 },
+      "inputPorts": [
+        { "type": "MALICIOUS" }
+      ],
+      "outputPorts": [
+        { "type": "MALICIOUS" }
+      ]
+    },
+    {
+      "id": "malicious_4",
+      "type": "MALICIOUS",
+      "position": { "x": 850, "y": 600 },
+      "inputPorts": [
+        { "type": "MALICIOUS" }
+      ],
+      "outputPorts": [
+        { "type": "MALICIOUS" }
+      ]
+    },
+    {
+      "id": "spy_1",
+      "type": "SPY",
+      "position": { "x": 350, "y": 300 },
+      "inputPorts": [
+        { "type": "SPY" },
+        { "type": "DIAMOND" }
+      ],
+      "outputPorts": [
+        { "type": "SPY" },
+        { "type": "DIAMOND" }
+      ]
+    },
+    {
+      "id": "spy_2",
+      "type": "SPY",
+      "position": { "x": 550, "y": 300 },
+      "inputPorts": [
+        { "type": "SPY" },
+        { "type": "INFINITY" }
+      ],
+      "outputPorts": [
+        { "type": "SPY" },
+        { "type": "INFINITY" }
+      ]
+    },
+    {
+      "id": "spy_3",
+      "type": "SPY",
+      "position": { "x": 750, "y": 300 },
+      "inputPorts": [
+        { "type": "SPY" },
+        { "type": "TRIANGLE" }
+      ],
+      "outputPorts": [
+        { "type": "SPY" },
+        { "type": "TRIANGLE" }
+      ]
+    },
+    {
+      "id": "spy_4",
+      "type": "SPY",
+      "position": { "x": 950, "y": 300 },
+      "inputPorts": [
+        { "type": "SPY" },
+        { "type": "SQUARE" }
+      ],
+      "outputPorts": [
+        { "type": "SPY" },
+        { "type": "SQUARE" }
+      ]
+    },
+    {
+      "id": "spy_5",
+      "type": "SPY",
+      "position": { "x": 400, "y": 500 },
+      "inputPorts": [
+        { "type": "SPY" },
+        { "type": "DIAMOND" }
+      ],
+      "outputPorts": [
+        { "type": "SPY" },
+        { "type": "DIAMOND" }
+      ]
+    },
+    {
+      "id": "spy_6",
+      "type": "SPY",
+      "position": { "x": 600, "y": 500 },
+      "inputPorts": [
+        { "type": "SPY" },
+        { "type": "INFINITY" }
+      ],
+      "outputPorts": [
+        { "type": "SPY" },
+        { "type": "INFINITY" }
+      ]
+    },
+    {
+      "id": "spy_7",
+      "type": "SPY",
+      "position": { "x": 800, "y": 500 },
+      "inputPorts": [
+        { "type": "SPY" },
+        { "type": "TRIANGLE" }
+      ],
+      "outputPorts": [
+        { "type": "SPY" },
+        { "type": "TRIANGLE" }
+      ]
+    },
+    {
+      "id": "spy_8",
+      "type": "SPY",
+      "position": { "x": 1000, "y": 500 },
+      "inputPorts": [
+        { "type": "SPY" },
+        { "type": "SQUARE" }
+      ],
+      "outputPorts": [
+        { "type": "SPY" },
+        { "type": "SQUARE" }
+      ]
+    }
+  ],
+  "wires": [
+    {
+      "startSystemId": "ref_start",
+      "startPortIndex": 0,
+      "endSystemId": "distributor_1",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "ref_start",
+      "startPortIndex": 1,
+      "endSystemId": "distributor_1",
+      "endPortIndex": 1
+    },
+    {
+      "startSystemId": "ref_start",
+      "startPortIndex": 2,
+      "endSystemId": "vpn_1",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "ref_start",
+      "startPortIndex": 3,
+      "endSystemId": "spy_1",
+      "endPortIndex": 1
+    },
+    {
+      "startSystemId": "ref_start",
+      "startPortIndex": 4,
+      "endSystemId": "vpn_2",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "ref_start",
+      "startPortIndex": 5,
+      "endSystemId": "vpn_3",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "ref_start",
+      "startPortIndex": 6,
+      "endSystemId": "malicious_1",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "ref_start",
+      "startPortIndex": 7,
+      "endSystemId": "spy_5",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "distributor_1",
+      "startPortIndex": 0,
+      "endSystemId": "vpn_1",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "distributor_1",
+      "startPortIndex": 1,
+      "endSystemId": "vpn_2",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "distributor_1",
+      "startPortIndex": 2,
+      "endSystemId": "spy_1",
+      "endPortIndex": 1
+    },
+    {
+      "startSystemId": "distributor_1",
+      "startPortIndex": 3,
+      "endSystemId": "spy_2",
+      "endPortIndex": 1
+    },
+    {
+      "startSystemId": "vpn_1",
+      "startPortIndex": 0,
+      "endSystemId": "malicious_2",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "vpn_2",
+      "startPortIndex": 0,
+      "endSystemId": "spy_3",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "vpn_3",
+      "startPortIndex": 0,
+      "endSystemId": "spy_4",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "malicious_1",
+      "startPortIndex": 0,
+      "endSystemId": "malicious_2",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "malicious_2",
+      "startPortIndex": 0,
+      "endSystemId": "malicious_3",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "malicious_3",
+      "startPortIndex": 0,
+      "endSystemId": "malicious_4",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "spy_1",
+      "startPortIndex": 0,
+      "endSystemId": "spy_2",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "spy_2",
+      "startPortIndex": 0,
+      "endSystemId": "spy_3",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "spy_3",
+      "startPortIndex": 0,
+      "endSystemId": "spy_4",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "spy_4",
+      "startPortIndex": 0,
+      "endSystemId": "spy_5",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "spy_5",
+      "startPortIndex": 0,
+      "endSystemId": "spy_6",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "spy_6",
+      "startPortIndex": 0,
+      "endSystemId": "spy_7",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "spy_7",
+      "startPortIndex": 0,
+      "endSystemId": "spy_8",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "spy_8",
+      "startPortIndex": 0,
+      "endSystemId": "merger_1",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "malicious_4",
+      "startPortIndex": 0,
+      "endSystemId": "merger_1",
+      "endPortIndex": 1
+    },
+    {
+      "startSystemId": "merger_1",
+      "startPortIndex": 0,
+      "endSystemId": "ref_end",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "merger_1",
+      "startPortIndex": 1,
+      "endSystemId": "ref_end",
+      "endPortIndex": 1
+    }
+  ]
+}

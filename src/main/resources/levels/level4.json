@@ -1,0 +1,158 @@
+{
+  "levelNumber": 4,
+  "levelName": "Spy Network - Teleportation Mechanics",
+  "playerStart": {
+    "initialCoins": 80,
+    "initialWireLength": 9000
+  },
+  "systems": [
+    {
+      "id": "ref_start",
+      "type": "REFERENCE",
+      "position": { "x": 50, "y": 300 },
+      "inputPorts": [],
+      "outputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" }
+      ],
+      "packetGeneration": {
+        "packetType": "MIXED",
+        "count": 20,
+        "frequency": 1.0
+      }
+    },
+    {
+      "id": "ref_end",
+      "type": "REFERENCE",
+      "position": { "x": 900, "y": 300 },
+      "inputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" }
+      ],
+      "outputPorts": []
+    },
+    {
+      "id": "spy_1",
+      "type": "SPY",
+      "position": { "x": 200, "y": 200 },
+      "inputPorts": [
+        { "type": "SPY" },
+        { "type": "SQUARE" }
+      ],
+      "outputPorts": [
+        { "type": "SPY" },
+        { "type": "TRIANGLE" }
+      ]
+    },
+    {
+      "id": "spy_2",
+      "type": "SPY",
+      "position": { "x": 400, "y": 400 },
+      "inputPorts": [
+        { "type": "SPY" },
+        { "type": "DIAMOND" }
+      ],
+      "outputPorts": [
+        { "type": "SPY" },
+        { "type": "INFINITY" }
+      ]
+    },
+    {
+      "id": "spy_3",
+      "type": "SPY",
+      "position": { "x": 600, "y": 200 },
+      "inputPorts": [
+        { "type": "SPY" },
+        { "type": "TRIANGLE" }
+      ],
+      "outputPorts": [
+        { "type": "SPY" },
+        { "type": "DIAMOND" }
+      ]
+    },
+    {
+      "id": "spy_4",
+      "type": "SPY",
+      "position": { "x": 800, "y": 400 },
+      "inputPorts": [
+        { "type": "SPY" },
+        { "type": "INFINITY" }
+      ],
+      "outputPorts": [
+        { "type": "SPY" },
+        { "type": "SQUARE" }
+      ]
+    },
+    {
+      "id": "malicious_1",
+      "type": "MALICIOUS",
+      "position": { "x": 300, "y": 100 },
+      "inputPorts": [
+        { "type": "MALICIOUS" }
+      ],
+      "outputPorts": [
+        { "type": "MALICIOUS" }
+      ]
+    }
+  ],
+  "wires": [
+    {
+      "startSystemId": "ref_start",
+      "startPortIndex": 0,
+      "endSystemId": "spy_1",
+      "endPortIndex": 1
+    },
+    {
+      "startSystemId": "ref_start",
+      "startPortIndex": 1,
+      "endSystemId": "malicious_1",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "ref_start",
+      "startPortIndex": 2,
+      "endSystemId": "spy_2",
+      "endPortIndex": 1
+    },
+    {
+      "startSystemId": "ref_start",
+      "startPortIndex": 3,
+      "endSystemId": "spy_3",
+      "endPortIndex": 1
+    },
+    {
+      "startSystemId": "spy_1",
+      "startPortIndex": 0,
+      "endSystemId": "spy_2",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "malicious_1",
+      "startPortIndex": 0,
+      "endSystemId": "spy_3",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "spy_2",
+      "startPortIndex": 0,
+      "endSystemId": "spy_3",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "spy_3",
+      "startPortIndex": 0,
+      "endSystemId": "spy_4",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "spy_4",
+      "startPortIndex": 0,
+      "endSystemId": "ref_end",
+      "endPortIndex": 0
+    }
+  ]
+}

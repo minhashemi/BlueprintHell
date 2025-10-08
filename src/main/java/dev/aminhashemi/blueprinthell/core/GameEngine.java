@@ -220,6 +220,10 @@ public class GameEngine implements Runnable {
         // Initialize shop manager
         shopManager = new ShopManager(getCoins());
         
+        // Start background music
+        AudioManager.getInstance().playBackgroundMusic(Config.AudioFiles.THEME_MUSIC);
+        AudioManager.getInstance().setVolume(0.3f); // Set volume to 30%
+        
         // Add Phase 1 shop items (extensible design)
         shopManager.addShopItem(new OAtar(
             () -> {
