@@ -1,0 +1,266 @@
+{
+  "levelNumber": 7,
+  "levelName": "Spy Network Warfare - Packet Loss Scenarios",
+  "playerStart": {
+    "initialCoins": 150,
+    "initialWireLength": 18000
+  },
+  "systems": [
+    {
+      "id": "ref_start",
+      "type": "REFERENCE",
+      "position": { "x": 50, "y": 400 },
+      "inputPorts": [],
+      "outputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" },
+        { "type": "PADLOCK" }
+      ],
+      "packetGeneration": {
+        "packetType": "MIXED",
+        "count": 35,
+        "frequency": 0.6
+      }
+    },
+    {
+      "id": "ref_end",
+      "type": "REFERENCE",
+      "position": { "x": 1400, "y": 400 },
+      "inputPorts": [
+        { "type": "SQUARE" },
+        { "type": "TRIANGLE" },
+        { "type": "DIAMOND" },
+        { "type": "INFINITY" },
+        { "type": "PADLOCK" }
+      ],
+      "outputPorts": []
+    },
+    {
+      "id": "spy_network_1_1",
+      "type": "SPY",
+      "position": { "x": 200, "y": 200 },
+      "inputPorts": [
+        { "type": "SPY" },
+        { "type": "SQUARE" }
+      ],
+      "outputPorts": [
+        { "type": "SPY" },
+        { "type": "TRIANGLE" }
+      ]
+    },
+    {
+      "id": "spy_network_1_2",
+      "type": "SPY",
+      "position": { "x": 400, "y": 200 },
+      "inputPorts": [
+        { "type": "SPY" },
+        { "type": "TRIANGLE" }
+      ],
+      "outputPorts": [
+        { "type": "SPY" },
+        { "type": "DIAMOND" }
+      ]
+    },
+    {
+      "id": "spy_network_1_3",
+      "type": "SPY",
+      "position": { "x": 600, "y": 200 },
+      "inputPorts": [
+        { "type": "SPY" },
+        { "type": "DIAMOND" }
+      ],
+      "outputPorts": [
+        { "type": "SPY" },
+        { "type": "INFINITY" }
+      ]
+    },
+    {
+      "id": "spy_network_2_1",
+      "type": "SPY",
+      "position": { "x": 300, "y": 600 },
+      "inputPorts": [
+        { "type": "SPY" },
+        { "type": "SQUARE" }
+      ],
+      "outputPorts": [
+        { "type": "SPY" },
+        { "type": "TRIANGLE" }
+      ]
+    },
+    {
+      "id": "spy_network_2_2",
+      "type": "SPY",
+      "position": { "x": 500, "y": 600 },
+      "inputPorts": [
+        { "type": "SPY" },
+        { "type": "TRIANGLE" }
+      ],
+      "outputPorts": [
+        { "type": "SPY" },
+        { "type": "DIAMOND" }
+      ]
+    },
+    {
+      "id": "spy_network_2_3",
+      "type": "SPY",
+      "position": { "x": 700, "y": 600 },
+      "inputPorts": [
+        { "type": "SPY" },
+        { "type": "DIAMOND" }
+      ],
+      "outputPorts": [
+        { "type": "SPY" },
+        { "type": "INFINITY" }
+      ]
+    },
+    {
+      "id": "vpn_1",
+      "type": "VPN",
+      "position": { "x": 250, "y": 100 },
+      "inputPorts": [
+        { "type": "PADLOCK" }
+      ],
+      "outputPorts": [
+        { "type": "PADLOCK" }
+      ]
+    },
+    {
+      "id": "vpn_2",
+      "type": "VPN",
+      "position": { "x": 450, "y": 100 },
+      "inputPorts": [
+        { "type": "PADLOCK" }
+      ],
+      "outputPorts": [
+        { "type": "PADLOCK" }
+      ]
+    },
+    {
+      "id": "malicious_1",
+      "type": "MALICIOUS",
+      "position": { "x": 350, "y": 400 },
+      "inputPorts": [
+        { "type": "MALICIOUS" }
+      ],
+      "outputPorts": [
+        { "type": "MALICIOUS" }
+      ]
+    },
+    {
+      "id": "malicious_2",
+      "type": "MALICIOUS",
+      "position": { "x": 550, "y": 400 },
+      "inputPorts": [
+        { "type": "MALICIOUS" }
+      ],
+      "outputPorts": [
+        { "type": "MALICIOUS" }
+      ]
+    },
+    {
+      "id": "malicious_3",
+      "type": "MALICIOUS",
+      "position": { "x": 750, "y": 400 },
+      "inputPorts": [
+        { "type": "MALICIOUS" }
+      ],
+      "outputPorts": [
+        { "type": "MALICIOUS" }
+      ]
+    }
+  ],
+  "wires": [
+    {
+      "startSystemId": "ref_start",
+      "startPortIndex": 0,
+      "endSystemId": "spy_network_1_1",
+      "endPortIndex": 1
+    },
+    {
+      "startSystemId": "ref_start",
+      "startPortIndex": 1,
+      "endSystemId": "vpn_1",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "ref_start",
+      "startPortIndex": 2,
+      "endSystemId": "spy_network_2_1",
+      "endPortIndex": 1
+    },
+    {
+      "startSystemId": "ref_start",
+      "startPortIndex": 3,
+      "endSystemId": "malicious_1",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "ref_start",
+      "startPortIndex": 4,
+      "endSystemId": "malicious_2",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "spy_network_1_1",
+      "startPortIndex": 0,
+      "endSystemId": "spy_network_1_2",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "spy_network_1_2",
+      "startPortIndex": 0,
+      "endSystemId": "spy_network_1_3",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "spy_network_2_1",
+      "startPortIndex": 0,
+      "endSystemId": "spy_network_2_2",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "spy_network_2_2",
+      "startPortIndex": 0,
+      "endSystemId": "spy_network_2_3",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "vpn_1",
+      "startPortIndex": 0,
+      "endSystemId": "vpn_2",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "vpn_2",
+      "startPortIndex": 0,
+      "endSystemId": "malicious_3",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "malicious_1",
+      "startPortIndex": 0,
+      "endSystemId": "malicious_2",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "malicious_2",
+      "startPortIndex": 0,
+      "endSystemId": "malicious_3",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "spy_network_1_3",
+      "startPortIndex": 0,
+      "endSystemId": "spy_network_2_3",
+      "endPortIndex": 0
+    },
+    {
+      "startSystemId": "spy_network_2_3",
+      "startPortIndex": 0,
+      "endSystemId": "ref_end",
+      "endPortIndex": 0
+    }
+  ]
+}
