@@ -2,6 +2,7 @@ package dev.aminhashemi.blueprinthell;
 
 import dev.aminhashemi.blueprinthell.server.GameServer;
 import dev.aminhashemi.blueprinthell.core.constants.GameConstants;
+import dev.aminhashemi.blueprinthell.utils.Config;
 import dev.aminhashemi.blueprinthell.utils.Logger;
 
 import java.net.InetAddress;
@@ -21,7 +22,7 @@ public class Server {
         try {
             // Get server IP
             String serverIP = getLocalIPAddress();
-            int serverPort = GameConstants.DEFAULT_SERVER_PORT;
+            int serverPort = Config.DEFAULT_SERVER_PORT;
             
             // Start the game server
             GameServer gameServer = new GameServer();

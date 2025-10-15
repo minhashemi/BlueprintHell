@@ -135,7 +135,9 @@ public class Config {
     
     /** Port size in pixels */
     public static final int PORT_SIZE = 10;
-    
+
+    public static final int DEFAULT_SERVER_PORT = 12345;
+
     // ==================== PACKET TYPE CONFIGURATION ====================
     
     /** Phase 1 Packet Types */
