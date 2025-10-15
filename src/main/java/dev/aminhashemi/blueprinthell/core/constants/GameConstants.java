@@ -71,7 +71,7 @@ public final class GameConstants {
     public static final float MASTER_VOLUME = 0.7f;
     
     // ==================== NETWORK SETTINGS ====================
-    public static final int DEFAULT_SERVER_PORT = 8080;
+    public static final int DEFAULT_SERVER_PORT = 12345;
     public static final String DEFAULT_SERVER_HOST = "localhost";
     public static final int CONNECTION_TIMEOUT = 5000;
     

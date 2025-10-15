@@ -2,6 +2,7 @@ package dev.aminhashemi.blueprinthell;
 
 import dev.aminhashemi.blueprinthell.core.GameEngine;
 import dev.aminhashemi.blueprinthell.network.NetworkManager;
+import dev.aminhashemi.blueprinthell.utils.Config;
 import dev.aminhashemi.blueprinthell.view.GameFrame;
 import dev.aminhashemi.blueprinthell.core.constants.GameConstants;
 import dev.aminhashemi.blueprinthell.utils.Logger;
@@ -18,7 +19,7 @@ import java.awt.event.ActionListener;
 public class Main {
     
     private static final String DEFAULT_SERVER_IP = "localhost";
-    private static final int DEFAULT_SERVER_PORT = GameConstants.DEFAULT_SERVER_PORT;
+    private static final int DEFAULT_SERVER_PORT = Config.DEFAULT_SERVER_PORT;
     
     private static GameFrame gameFrame;
     private static GameEngine gameEngine;
